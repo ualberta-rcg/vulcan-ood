@@ -1,6 +1,0 @@
----
-name: Kingspeak Node Status
-description: |-
-  Detailed Node Status of the Kingspeak Cluster
-category: Clusters
-icon: fa://tachometer
