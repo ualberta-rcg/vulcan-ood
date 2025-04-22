@@ -1,6 +1,0 @@
----
-name: Cluster Status
-description: |-
-  System Status of CHPC Clusters
-category: Clusters
-icon: fa://tachometer
