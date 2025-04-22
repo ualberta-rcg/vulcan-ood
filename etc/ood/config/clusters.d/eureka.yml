@@ -1,0 +1,16 @@
+---
+v2:
+   metadata:
+     title: "Eureka"
+   login:
+     host: "login.cluster.paice-ua.com"
+   job:
+     adapter: "slurm"
+     bin: "/usr/bin/"
+     conf: "/etc/slurm/slurm.conf"
+     # bin_overrides:
+       # sbatch: "/usr/local/bin/sbatch"
+       # squeue: ""
+       # scontrol: ""
+       # scancel: ""
+     copy_environment: false
