@@ -1,11 +1,7 @@
 ---
 title: "MATLAB"
 cluster: 
-  - "notchpeak"
-  - "kingspeak"
-  - "lonepeak"
-  - "ash"
-  - "tangent"
+  - "eureka"
 description: |
   This app will launch a MATLAB GUI on one cluster node. You will be
   able to interact with MATLAB through a VNC session.
@@ -15,10 +11,10 @@ attributes:
     label: "Number of cores"
     value: 1
     help: |
-    <%- if cluster == "notchpeak" -%>
-      Maximum of 32 tasks is allowed on notchpeak-shared-short partition
+    <%- if cluster == "eureka" -%>
+      Maximum of 8 tasks is allowed on eureka partition
     <%- else -%>
-      Maximum of 32 tasks is allowed on other clusters
+      Maximum of 16 tasks is allowed on other clusters
     <%- end -%>
     min: 1
     step: 1
@@ -26,7 +22,7 @@ attributes:
     value: 1
     min: 1
     step: 1
-    help: "Maximum notchpeak-shared-short walltime is 8 hours, general 72 hours, owner 14 days"
+    help: "Maximum eureka walltime is 8 hours, general 72 hours, owner 14 days"
   bc_vnc_resolution:
     required: true
   version:
@@ -43,10 +39,10 @@ attributes:
       - [ "R2015b", "matlab/R2015b" ]
   bc_account:
     label: "Account"
-    value: "notchpeak-shared-short"
+    value: "eureka"
   bc_queue:
     label: "Partition"
-    value: "notchpeak-shared-short"
+    value: "eureka"
   memtask:
     widget: "text_field"
     value: "default"
@@ -54,20 +50,16 @@ attributes:
     help: |
       - **default** - Use default, 4 GB per task.
       - **512M** - Use 512 MB.
-      - **128G** - Use 128 GB, this is the maximum on notchpeak-shared-short.
+      - **4G** - Use 128 GB, this is the maximum on eureka.
   gpu_type:
     label: "GPU type:count"
     help: |
       - GPU type:
           - **none** - No GPU
-          - **k80** - Tesla K80 GPU(s) (double precision)
           - **1080ti** - GeForce 1080 Ti GPU(s) (single precision)
-          - **2080ti** - GeForce 2080 Ti GPU(s) (single precision)
           - **titanv** - GeForce Titan V GPU(s) (single precision)
-          - **c40** - Tesla C40 GPU (single precision)
-          - **v100** - Tesla V100 GPU(s) (double precision)
       - GPU count: 
-          - Specify count with :count after the GPU name (e.g. **v100:2**)
+          - Specify count with :count after the GPU name (e.g. **1080ti:2**)
     value: "none"
 form:
   - version
