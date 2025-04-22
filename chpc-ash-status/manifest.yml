@@ -1,6 +1,0 @@
----
-name: Ash Node Status
-description: |-
-  Detailed Node Status of the Ash Cluster
-category: Clusters
-icon: fa://tachometer
