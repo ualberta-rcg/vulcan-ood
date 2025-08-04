@@ -1,9 +1,23 @@
 ---
+# ----------------------------------------------------------
+# Namespace for Redis
+# This ensures all Redis-related objects (deployment, secrets, services, PVCs)
+# are grouped into the `redis-system` namespace for isolation and easier management.
+# Adaptation: You can change the namespace name, but ensure all resources
+# in this file are updated to match if you do so.
+# ----------------------------------------------------------
 apiVersion: v1
 kind: Namespace
 metadata:
   name: redis-system
 ---
+# ----------------------------------------------------------
+# Secret containing the Redis password
+# This stores the Redis authentication password securely in Kubernetes.
+# The password is mounted into the Redis container as an environment variable.
+# Adaptation: Replace `REDIS_SECRET_KEY_STR` with your own secure password.
+# Ensure it matches any client connections.
+# ----------------------------------------------------------
 apiVersion: v1
 kind: Secret
 metadata:
@@ -13,6 +27,13 @@ type: Opaque
 stringData:
   REDIS_PASSWORD: REDIS_SECRET_KEY_STR
 ---
+# ----------------------------------------------------------
+# MetalLB IP Address Pool
+# This allocates a single IP (172.16.254.19) from MetalLB to be used by the Redis service.
+# Adaptation: Change this IP to one available in your MetalLB address pool range.
+# This must be configured to match your cluster’s network environment.
+# Prerequisite: MetalLB must already be installed in the `metallb-system` namespace.
+# ----------------------------------------------------------
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
@@ -20,8 +41,14 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-    - 172.26.92.19-172.26.92.19
+    - 172.16.254.19-172.16.254.19
 ---
+# ----------------------------------------------------------
+# MetalLB L2Advertisement
+# This announces the IP (from the IPAddressPool) to your network via L2 protocols.
+# Adaptation: Change `eth0` to the network interface that connects
+# your cluster nodes to the external network.
+# ----------------------------------------------------------
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
 metadata:
@@ -29,8 +56,14 @@ metadata:
   namespace: metallb-system
 spec:
   interfaces:
-    - bond0.2000
+    - eth0
 ---
+# ----------------------------------------------------------
+# Persistent Volume Claim for Redis data
+# This claims storage from the `nfs-client` StorageClass to store Redis data persistently.
+# Adaptation: You need an existing NFS server and the `nfs-subdir-external-provisioner`
+# installed in your cluster to use `nfs-client`.
+# ----------------------------------------------------------
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -44,6 +77,15 @@ spec:
     requests:
       storage: 1Gi
 ---
+# ----------------------------------------------------------
+# Redis StatefulSet
+# Deploys a single Redis pod with persistent storage and password authentication.
+# Uses StatefulSet to ensure stable network identity and persistent storage binding.
+# Adaptation:
+# - Change the Redis image version if needed.
+# - Adjust `replicas` if you want Redis replication (requires extra config).
+# - Ensure `nfs-client` StorageClass is available.
+# ----------------------------------------------------------
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -85,6 +127,12 @@ spec:
           requests:
             storage: 1Gi
 ---
+# ----------------------------------------------------------
+# Redis Service (LoadBalancer)
+# Exposes Redis on port 6379 via a LoadBalancer IP from MetalLB.
+# Clients inside or outside the cluster can connect using this IP.
+# Adaptation: Ensure `loadBalancerIP` matches an address in your MetalLB pool.
+# ----------------------------------------------------------
 apiVersion: v1
 kind: Service
 metadata:
