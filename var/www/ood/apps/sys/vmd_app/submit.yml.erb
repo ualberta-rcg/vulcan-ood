@@ -5,8 +5,7 @@
 batch_connect:
   template: "vnc"
   websockify_cmd: "/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/bin/websockify"
-  vnc_args: "-geometry 1920x1080 +extension GLX +iglx"
-  extra_args: "-depth 24"
+  vnc_args: "-geometry 1920x1080"
 
 script:
   cluster: "<%= cluster %>"
