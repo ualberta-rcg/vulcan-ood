@@ -1,1 +1,2 @@
+# Needed on Compute Hosts Where OOD Jobs are Run
 ALL ALL=(ALL) NOPASSWD: /usr/local/bin/create-ice.sh
