@@ -1,0 +1,10 @@
+# Wait for the RStudio Server to start
+echo "Waiting for RStudio Server on port ${port}..."
+if wait_until_port_used "${host}:${port}" 120; then
+  echo "RStudio Server is up on port ${port}"
+else
+  echo "Timed out waiting for RStudio to start"
+  clean_up 1
+fi
+sleep 2
+

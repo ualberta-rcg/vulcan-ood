@@ -1,0 +1,51 @@
+echo "[after.sh.erb] Waiting for VS Code Server to start on ${host}:${port}..."
+
+# Debug: Show path, tools, shell details
+echo "[after.sh.erb] Using shell: $SHELL"
+echo "[after.sh.erb] PATH: $PATH"
+echo "[after.sh.erb] Checking available tools for port check..."
+
+for tool in nc lsof python python3 bash; do
+  which $tool >/dev/null 2>&1 && echo " - Found: $tool at $(which $tool)" || echo " - Missing: $tool"
+done
+
+# Try standard wait
+echo "[after.sh.erb] Invoking wait_until_port_used..."
+if wait_until_port_used "${host}:${port}" 120; then
+  echo "[after.sh.erb] ✅ VS Code Server is now accessible on port ${port}."
+else
+  echo "[after.sh.erb] ❌ wait_until_port_used failed! Trying fallback method..."
+
+  # Fallback: bash TCP check
+  function wait_for_port_bash() {
+    local host=$1
+    local port=$2
+    local timeout=${3:-60}
+    local waited=0
+
+    while (( waited < timeout )); do
+      if (echo > /dev/tcp/$host/$port) >/dev/null 2>&1; then
+        return 0
+      fi
+      echo "[after.sh.erb] [waited ${waited}s] Still waiting for $host:$port..."
+      sleep 1
+      ((waited++))
+    done
+    return 1
+  }
+
+  if wait_for_port_bash "${host}" "${port}" 30; then
+    echo "[after.sh.erb] ✅ Port became available using bash fallback."
+  else
+    echo "[after.sh.erb] ❌ ERROR: Port never became available after fallback."
+    echo "[after.sh.erb] Final netstat (if available):"
+    which netstat && netstat -tulpn | grep "$port" || echo " - netstat not available"
+    echo "[after.sh.erb] Final ss (if available):"
+    which ss && ss -tulpn | grep "$port" || echo " - ss not available"
+    clean_up 1
+  fi
+fi
+
+# Let OOD settle
+sleep 2
+

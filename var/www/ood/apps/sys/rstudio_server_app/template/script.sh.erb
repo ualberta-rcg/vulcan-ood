@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+
+set -x
+echo "[script.sh.erb] Starting RStudio Server launch script..."
+
+# Change to user's home directory
+cd "${HOME}"
+echo "[script.sh.erb] Changed working directory to ${HOME}"
+
+# Load required modules
+#echo "[script.sh.erb] Loading RStudio and R modules..."
+#module purge
+#module load <%= context.rstudio_server_version %>
+#echo "[script.sh.erb] Modules loaded."
+
+# Load required modules
+echo "[script.sh.erb] Loading RStudio and R modules..."
+module purge
+
+TARGET_MODULE="<%= context.rstudio_server_version %>"
+
+# Try initial load
+if module load "$TARGET_MODULE"; then
+  echo "[script.sh.erb] Successfully loaded $TARGET_MODULE"
+else
+  echo "[script.sh.erb] Initial load failed, checking prerequisites..."
+
+  # Extract all possible prerequisites from spider
+  ALL_MODULES=$(module spider "$TARGET_MODULE" 2>&1 | \
+                awk '/You will need to load all module\(s\)/, /This module provides/' | \
+                grep -Eo '[A-Za-z0-9_/-]+/[0-9.]+' | sort -u)
+
+  # Filter out the target module from the list
+  PREREQS=""
+  for mod in $ALL_MODULES; do
+    if [[ "$mod" != "$TARGET_MODULE" ]]; then
+      PREREQS="$PREREQS $mod"
+    fi
+  done
+
+  if [[ -n "$PREREQS" ]]; then
+    echo "[script.sh.erb] Detected prerequisites: $PREREQS"
+    module load $PREREQS
+    echo "[script.sh.erb] Retrying load of $TARGET_MODULE..."
+    if module load "$TARGET_MODULE"; then
+      echo "[script.sh.erb] Successfully loaded $TARGET_MODULE after loading prerequisites."
+    else
+      echo "[script.sh.erb] Failed to load $TARGET_MODULE even after loading prerequisites."
+      exit 1
+    fi
+  else
+    echo "[script.sh.erb] No prerequisites found. Giving up."
+    exit 1
+  fi
+fi
+
+
+# Set working dir for RStudio session
+WORKDIR="${RSTUDIO_DATA_HOME}"
+echo "[script.sh.erb] Creating RStudio working directories under ${WORKDIR}"
+mkdir -p "${WORKDIR}/var/run" \
+         "${WORKDIR}/var/lib" \
+         "${WORKDIR}/tmp" \
+         "${WORKDIR}/etc" \
+         "${WORKDIR}/rstudio-server" \
+         "${WORKDIR}/database"
+
+# Secure cookie key
+COOKIE_KEY="${WORKDIR}/rstudio-server/secure-cookie-key"
+if [ ! -f "$COOKIE_KEY" ]; then
+  echo "[script.sh.erb] Generating secure cookie key..."
+  head -c 32 /dev/urandom > "$COOKIE_KEY"
+  chmod 600 "$COOKIE_KEY"
+else
+  echo "[script.sh.erb] Secure cookie key already exists."
+fi
+
+# PAM Auth script
+AUTH_SCRIPT="${WORKDIR}/rstudio-server/auth.sh"
+echo "[script.sh.erb] Writing PAM auth helper script to ${AUTH_SCRIPT}"
+cat > "${AUTH_SCRIPT}" <<EOF
+#!/usr/bin/env bash
+read -s PASSWORD
+WORKDIR="${WORKDIR}"
+RSTUDIO_PASSWORD="${RSTUDIO_PASSWORD}"
+echo "\$(date): auth attempt" >> "\${WORKDIR}/auth_debug.log"
+if [[ "\$PASSWORD" == "\$RSTUDIO_PASSWORD" ]]; then
+  echo "\$(date): success" >> "\${WORKDIR}/auth_debug.log"
+  exit 0
+else
+  echo "\$(date): fail" >> "\${WORKDIR}/auth_debug.log"
+  exit 1
+fi
+EOF
+
+chmod 700 "${AUTH_SCRIPT}"
+echo "[script.sh.erb] PAM auth helper ready."
+
+# RSession wrapper
+echo "[script.sh.erb] Creating RSession wrapper at ${RSESSION_WRAPPER_FILE}"
+cat > "${RSESSION_WRAPPER_FILE}" <<EOF
+#!/usr/bin/env bash
+exec >> "${RSESSION_LOG_FILE}" 2>&1
+echo "RSession wrapper invoked"
+exec rsession "\$@"
+EOF
+chmod +x "${RSESSION_WRAPPER_FILE}"
+echo "[script.sh.erb] RSession wrapper script created."
+
+# Database config
+DB_CONFIG="${WORKDIR}/rstudio-server/database.conf"
+echo "[script.sh.erb] Writing database config to ${DB_CONFIG}"
+cat > "${DB_CONFIG}" <<EOF
+provider=sqlite
+directory=${WORKDIR}/database
+EOF
+echo "[script.sh.erb] Database config written."
+
+# Launch RStudio Server
+echo "[script.sh.erb] Launching rserver..."
+echo "[script.sh.erb] Logging to ${RSTUDIO_LOG_FILE}"
+rserver \
+  --server-user "${USER}" \
+  --www-port "${port}" \
+  --auth-none 0 \
+  --auth-encrypt-password 0 \
+  --auth-pam-helper-path "${AUTH_SCRIPT}" \
+  --server-working-dir "${WORKDIR}" \
+  --server-data-dir "${WORKDIR}/var/run" \
+  --secure-cookie-key-file "${COOKIE_KEY}" \
+  --database-config-file "${DB_CONFIG}" \
+  --rsession-path "${RSESSION_WRAPPER_FILE}" \
+  --server-app-armor-enabled=0 
+
+echo "[script.sh.erb] rserver process exited."
+

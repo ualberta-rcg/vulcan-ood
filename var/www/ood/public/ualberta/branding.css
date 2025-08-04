@@ -1,0 +1,124 @@
+/* Make navbar text gold */
+.navbar-inverse .navbar-brand,
+.navbar-inverse .navbar-nav > li > a {
+  color: #FFDB05 !important;  /* UAlberta gold */
+}
+
+/* On hover */
+.navbar-inverse .navbar-nav > li > a:hover {
+  color: #FFFFFF !important;
+}
+
+/* Optional: override footer, panel titles, etc. */
+.panel-heading {
+  background-color: #007C41 !important;
+  color: #ffffff !important;
+}
+
+footer.footer {
+  background-color: #005A2C !important;
+  color: #FFDB05 !important;
+}
+
+/* Restrict logo image size in navbar */
+.navbar-brand-logo img {
+  max-height: 35px !important;  /* Adjust as needed */
+  width: auto;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+.system-and-shared-apps-header {
+  background-color: #007C41 !important;
+}
+
+.list-group-item.active {
+  background-color: #008F4B !important;
+  border-color: #007C41 !important;
+}
+
+.list-group-item:hover {
+  background-color: #7bc47f !important;
+  border-color: #007C41 !important;
+}
+
+.breadcrumb .breadcrumb-item a {
+  color: #005a2b; /* Light U of A green */
+}
+
+.breadcrumb .breadcrumb-item a:hover {
+  color: #007C41; /* Deep green on hover */
+}
+
+/* Make current (last) breadcrumb green & bold */
+.breadcrumb .breadcrumb-item.active a[aria-current="page"] {
+  color: #007C41;
+}
+
+.breadcrumb .breadcrumb-item.active {
+  color: #007C41;
+}
+
+.btn-primary {
+  background-color: #007C41 !important;
+  border-color: #007C41 !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #005a2b !important;
+  border-color: #005a2b !important;
+}
+
+/* Green checkbox/radio checked state */
+.form-check-input:checked {
+  background-color: #007C41;
+  border-color: #007C41;
+}
+
+/* Focus ring on green (optional) */
+.form-check-input:focus {
+  border-color: #007C41;
+  box-shadow: 0 0 0 0.2rem rgba(0, 124, 65, 0.25);
+}
+
+.form-select:focus {
+  border-color: #007C41;
+  box-shadow: 0 0 0 0.2rem rgba(0, 124, 65, 0.25);
+}
+
+.form-control:focus {
+  border-color: #007C41;
+  box-shadow: 0 0 0 0.2rem rgba(0, 124, 65, 0.25);
+}
+
+.app-launcher .launcher-click {
+  border-color: #007C41 !important;
+}
+
+.pagination .page-link {
+  color: #007C41;
+  border-color: #007C41;
+}
+
+.pagination .page-link:hover {
+  background-color: #e6f2e9;
+  color: #005a2b;
+  border-color: #007C41;
+}
+
+.pagination .active .page-link {
+  background-color: #007C41;
+  border-color: #007C41;
+  color: white;
+}
+
+.dropdown-item:active,
+.dropdown-item:focus {
+  background-color: #008F4B !important;
+}
+
+.dropdown-item:hover {
+  background-color: #7bc47f !important;
+}
+
