@@ -484,7 +484,6 @@
 #    dir: /usr/share/ondemand-dex/web
 
 servername: vulcan.alliancecan.ca
-  #listen_addr_port: 443
 
 node_uri: "/node"
 rnode_uri: "/rnode"
@@ -498,12 +497,9 @@ auth:
   - "Require valid-user"
 
 # Use OIDC logout
-logout_redirect: "https://alliancecan.ca"
+logout_redirect: "https://idp.alliancecan.ca/idp/profile/Logout?return=https://alliancecan.ca"    # Return URL Needs some TLC
 
-# Capture system user name from authenticated user name
-#user_map_cmd: "/opt/ood/ood_auth_map/bin/ood_auth_map.regex"
-
-pun_pre_hook_root_cmd: "/opt/ood/scripts/ood_pun_oidc_email.sh"
+pun_pre_hook_root_cmd: "/opt/ood/scripts/ood_pun_oidc_email.sh"  # This Passes the OIDC Email Value to the Users PUN
 pun_pre_hook_exports: "OIDC_CLAIM_email"
 
 oidc_uri: "/oidc"
@@ -521,14 +517,14 @@ oidc_settings:
   OIDCPassClaimsAs: "environment"
   OIDCStripCookies: "mod_auth_openidc_session mod_auth_openidc_session_chunks mod_auth_openidc_session_0 mod_auth_openidc_session_1"
   OIDCResponseType: "code"
-  OIDCCacheType: "redis"
-  OIDCRedisCacheServer: "172.26.92.19:6379"
-  OIDCRedisCachePassword: "REDIS_SECRET"
+#  OIDCCacheType: "redis"                      #  Only Needed If Redis
+#  OIDCRedisCacheServer: "172.26.92.19:6379"   #  Only Needed If Redis
+#  OIDCRedisCachePassword: "REDIS_SECRET"      #  Only Needed If Redis
   OIDCXForwardedHeaders: "X-Forwarded-Proto"
 
 ssl:
-  - 'SSLCertificateFile "/etc/ssl/ood/fullchain.pem"'
-  - 'SSLCertificateKeyFile "/etc/ssl/ood/privkey.pem"'
+  - 'SSLCertificateFile "/etc/ssl/ood/fullchain.pem"'   # You must Generate the Certs yourself.
+  - 'SSLCertificateKeyFile "/etc/ssl/ood/privkey.pem"'  # You must Generate the Certs yourself.
 
 custom_vhost_directives:
   - 'LogLevel auth_openidc:debug'
