@@ -1,0 +1,82 @@
+<%
+app_name = "Interactive Desktop"
+template_root = "/var/www/ood/apps/templates/"
+gpu_data = {
+  "gpu_types" => CustomGPUInfo.gpu_types,
+  "gpu_name_mappings" => CustomGPUInfo.gpu_name_mappings.transform_keys(&:to_s),
+  "gpu_max_counts" => CustomGPUInfo.gpu_max_counts.transform_keys(&:to_s)
+}
+# Define custom per-app min values
+min_cores = 8
+min_mem_gb = 16
+%>
+---
+title: <%= app_name %>
+
+attributes:
+  gpudata:
+    widget: hidden_field
+    cacheable: false
+    value: "<%= gpu_data.to_json.gsub('"','\\"') %>"
+
+  memorydata:
+    widget: hidden_field
+    cacheable: false
+    value: "<%= CustomClusterInfo.max_memory_per_node %>"
+
+  cpunum:
+    widget: hidden_field
+    cacheable: false
+    value: "<%= CustomClusterInfo.max_cpus_per_node %>"
+
+  mincpu:
+    widget: hidden_field
+    cacheable: false
+    value: "<%= min_cores %>"
+
+  minram:
+    widget: hidden_field
+    cacheable: false
+    value: "<%= min_mem_gb %>"
+
+  cluster:
+    widget: select
+    label: Cluster
+    options:
+      - "<%= CustomClusterInfo.cluster_name %>"
+
+  vnc_options:
+    widget: hidden_field
+    value: "+extension GLX +iglx"
+
+  desktop:
+    label: "Desktop Environment"
+    widget: select
+    options:
+      - "gnome"
+      - "mate"
+      - "xfce"
+    help: |
+      - GNOME: Full-featured desktop with modern interface.
+      - MATE: Lightweight desktop, good for low-resource sessions.
+      - XFCE: Minimal desktop with very low resource usage.
+
+<% IO.foreach(template_root+"job_params") do |line| %><%= line %><% end %>
+
+  memtask_checkbox:
+    value: "1"
+    cacheable: false
+    widget: hidden_field
+
+
+form:
+  - cluster
+  - bc_num_hours
+  - desktop
+  - memorydata
+  - cpunum
+  - vnc_options
+  - mincpu
+  - minram
+<% IO.foreach(template_root+"form_params_gpu") do |line| %><%= line %><% end %>
+

@@ -1,0 +1,16 @@
+---
+name: AFNI
+category: Interactive Apps
+subcategory: Visualization
+role: batch_connect
+description: |
+  Launch an [AFNI] session on the [Vulcan] high-performance computing (HPC) cluster, operated by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].
+
+  AFNI is a suite of programs for processing and displaying functional MRI data. You will interact through a VNC session. GPU acceleration is available if selected.
+
+  [AFNI]: https://afni.nimh.nih.gov/
+  [AMII]: https://www.amii.ca/
+  [University of Alberta]: https://www.ualberta.ca/
+  [Digital Research Alliance of Canada]: https://alliancecan.ca/en
+  [Vulcan]: https://docs.alliancecan.ca/wiki/Vulcan
+

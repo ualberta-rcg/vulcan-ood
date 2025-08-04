@@ -1,0 +1,18 @@
+---
+name: MATLAB
+category: Interactive Apps
+subcategory: Simulation 
+role: batch_connect
+description: |
+  Launch a [MATLAB] session on the [Vulcan] high-performance computing (HPC) cluster, operated by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].
+
+  MATLAB runs from a restricted CVMFS path and requires a valid [MathWorks] license to function. If you do not have access to a license, this application will not start.
+
+  You will interact with the MATLAB GUI through a VNC session. GPU acceleration is available if selected.
+
+  [MATLAB]: https://www.mathworks.com/products/matlab.html
+  [MathWorks]: https://www.mathworks.com/
+  [AMII]: https://www.amii.ca/
+  [University of Alberta]: https://www.ualberta.ca/
+  [Digital Research Alliance of Canada]: https://alliancecan.ca/en
+  [Vulcan]: https://docs.alliancecan.ca/wiki/Vulcan

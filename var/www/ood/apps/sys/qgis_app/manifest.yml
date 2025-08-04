@@ -1,0 +1,16 @@
+---
+name: QGIS
+category: Interactive Apps
+subcategory: Visualization
+role: batch_connect
+description: |
+  Launch a [QGIS] session on the [Vulcan] high-performance computing (HPC) cluster, operated by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].
+
+  QGIS is a free and open-source geographic information system for viewing, editing, and analyzing geospatial data. GPU acceleration is available if selected.
+
+  [QGIS]: https://qgis.org/
+  [AMII]: https://www.amii.ca/
+  [University of Alberta]: https://www.ualberta.ca/
+  [Digital Research Alliance of Canada]: https://alliancecan.ca/en
+  [Vulcan]: https://docs.alliancecan.ca/wiki/Vulcan
+
