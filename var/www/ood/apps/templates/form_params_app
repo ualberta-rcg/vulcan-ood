@@ -1,0 +1,10 @@
+  - num_cores
+  - memtask_checkbox  
+  - memtask            
+  - gpu_checkbox
+  - gpu_type
+  - gpu_count
+  - bc_vnc_resolution
+  - bc_email_on_started
+  - gpudata
+
