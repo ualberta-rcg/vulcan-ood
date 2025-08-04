@@ -1,0 +1,13 @@
+#!/bin/bash
+
+echo "[after.sh.erb] Waiting for RStudio Server to start on ${host}:${port}..."
+
+if wait_until_port_used "${host}:${port}" 120; then
+  echo "RStudio Server is up on port ${port}"
+else
+  echo "Timed out waiting for RStudio to start"
+  clean_up 1
+fi
+sleep 2
+
+echo "[after.sh.erb] RStudio Server exited."

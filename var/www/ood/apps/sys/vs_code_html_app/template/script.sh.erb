@@ -1,0 +1,69 @@
+#!/bin/bash
+
+echo "[script.sh.erb] Starting VS Code Server"
+
+# Change to user's home directory
+cd "${HOME}"
+echo "[script.sh.erb] Changed working directory to ${HOME}"
+
+# Load selected module
+echo "[script.sh.erb] Loading VS Code Server module..."
+module purge
+
+TARGET_MODULE="<%= context.code_server_version %>"
+
+# Try initial load
+if module load "$TARGET_MODULE"; then
+  echo "[script.sh.erb] Successfully loaded $TARGET_MODULE"
+else
+  echo "[script.sh.erb] Initial load failed, checking prerequisites..."
+
+  # Extract all possible prerequisites from spider
+  ALL_MODULES=$(module spider "$TARGET_MODULE" 2>&1 | \
+                awk '/You will need to load all module\(s\)/, /This module provides/' | \
+                grep -Eo '[A-Za-z0-9_/-]+/[0-9.]+' | sort -u)
+
+  # Filter out the target module from the list
+  PREREQS=""
+  for mod in $ALL_MODULES; do
+    if [[ "$mod" != "$TARGET_MODULE" ]]; then
+      PREREQS="$PREREQS $mod"
+    fi
+  done
+
+  if [[ -n "$PREREQS" ]]; then
+    echo "[script.sh.erb] Detected prerequisites: $PREREQS"
+    module load $PREREQS
+    echo "[script.sh.erb] Retrying load of $TARGET_MODULE..."
+    if module load "$TARGET_MODULE"; then
+      echo "[script.sh.erb] Successfully loaded $TARGET_MODULE after loading prerequisites."
+    else
+      echo "[script.sh.erb] Failed to load $TARGET_MODULE even after loading prerequisites."
+      exit 1
+    fi
+  else
+    echo "[script.sh.erb] No prerequisites found. Giving up."
+    exit 1
+  fi
+fi
+
+# Set working directory for code-server data
+WORKDIR="${CODESERVER_DATA_HOME}"
+echo "[script.sh.erb] Ensuring VS Code working directory exists: ${WORKDIR}"
+mkdir -p "$WORKDIR"
+
+# Launch code-server
+echo "[script.sh.erb] Launching code-server..."
+echo "[script.sh.erb] Logging to ${CODESERVER_LOG_FILE}"
+
+export PASSWORD="${CODESERVER_PASSWORD}"
+
+code-server \
+  --auth password \
+  --bind-addr "0.0.0.0:${port}" \
+  --disable-telemetry \
+  --user-data-dir "${WORKDIR}" \
+  "${HOME}" \
+  > "${CODESERVER_LOG_FILE}" 2>&1
+
+echo "[script.sh.erb] VS Code Server Started."

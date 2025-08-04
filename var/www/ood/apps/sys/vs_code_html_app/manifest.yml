@@ -1,0 +1,17 @@
+---
+name: VS Code Server
+category: Interactive Apps
+subcategory: IDEs
+role: batch_connect
+description: |
+  Launch a [Visual Studio Code] session in your browser, running on the [Vulcan] HPC cluster, managed by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].
+
+  This uses [code-server], an open-source implementation of VS Code that runs entirely in the browser.
+
+  [Visual Studio Code]: https://code.visualstudio.com/
+  [code-server]: https://github.com/coder/code-server
+  [Vulcan]: https://docs.alliancecan.ca/wiki/Vulcan
+  [AMII]: https://www.amii.ca/
+  [University of Alberta]: https://www.ualberta.ca/
+  [Digital Research Alliance of Canada]: https://alliancecan.ca/en
+

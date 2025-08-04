@@ -1,0 +1,14 @@
+---
+name: RStudio Server
+category: Interactive Apps
+subcategory: IDEs
+role: batch_connect
+description: |
+  Launch an [RStudio Server] session on the [Vulcan] HPC cluster, managed by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].
+
+  [RStudio Server]: https://posit.co/products/open-source/rstudio/
+  [Vulcan]: https://docs.alliancecan.ca/wiki/Vulcan
+  [AMII]: https://www.amii.ca/
+  [University of Alberta]: https://www.ualberta.ca/
+  [Digital Research Alliance of Canada]: https://alliancecan.ca/en
+

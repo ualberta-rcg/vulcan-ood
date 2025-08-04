@@ -1,0 +1,58 @@
+#!/bin/bash
+
+echo "[before.sh.erb] Starting Jupyter Lab Setup..."
+
+# Export the module function if available
+if [[ $(type -t module) == "function" ]]; then
+  echo "[before.sh.erb] 'module' function is available."
+  export -f module
+else
+  echo "[before.sh.erb] WARNING: 'module' function not available."
+fi
+
+# Find available port to run server on
+export port=$(find_port ${host})
+if [[ -z "$port" ]]; then
+  echo "[before.sh.erb] ERROR: Failed to allocate a port."
+  exit 1
+else
+  echo "[before.sh.erb] Selected available port: $port"
+fi
+
+# Generate SHA1 encrypted password (requires OpenSSL installed)
+SALT="$(create_passwd 16)"
+password="$(create_passwd 16)"
+PASSWORD_SHA1="$(echo -n "${password}${SALT}" | openssl dgst -sha1 | awk '{print $NF}')"
+
+# Needed for Allaince Clusters
+export CC_CLUSTER=vulcan
+
+# Notebook root directory
+export NOTEBOOK_ROOT="${NOTEBOOK_ROOT:-${HOME}}"
+
+# The `$CONFIG_FILE` environment variable is exported as it is used in the main
+# `script.sh.erb` file when launching the Jupyter Notebook server.
+export CONFIG_FILE="${PWD}/config.py"
+
+# Generate Jupyter configuration file with secure file permissions
+(
+umask 077
+cat > "${CONFIG_FILE}" << EOL
+c.JupyterApp.config_file_name = 'ondemand_config'
+c.NotebookApp.ip = '*'
+c.NotebookApp.port = ${port}
+c.NotebookApp.port_retries = 0
+c.NotebookApp.password = u'sha1:${SALT}:${PASSWORD_SHA1}'
+c.NotebookApp.base_url = '/node/${host}/${port}/'
+c.NotebookApp.open_browser = False
+c.NotebookApp.allow_origin = '*'
+c.NotebookApp.notebook_dir = '${HOME}'
+c.NotebookApp.disable_check_xsrf = True
+#c.NotebookApp.nbserver_extensions = {"jupyterlmod": True}
+EOL
+)
+#c.NotebookApp.notebook_dir = '${NOTEBOOK_ROOT}'
+# this causes python not to appear as a choice in the notebook
+#c.KernelSpecManager.ensure_native_kernel = False
+
+echo "[before.sh.erb] Setup complete."

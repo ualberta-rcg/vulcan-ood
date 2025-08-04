@@ -1,0 +1,47 @@
+#!/bin/bash
+
+echo "[before.sh.erb] Starting VS Code Server Setup..."
+
+# Export the module function if available
+if [[ $(type -t module) == "function" ]]; then
+  echo "[before.sh.erb] 'module' function is available."
+  export -f module
+else
+  echo "[before.sh.erb] WARNING: 'module' function not available."
+fi
+
+# Capture key paths
+USER_NAME="${USER:-$(whoami)}"
+JOB_DIR="$PWD"
+HOME_DIR="$HOME"
+echo "[before.sh.erb] USER_NAME: $USER_NAME"
+echo "[before.sh.erb] JOB_DIR: $JOB_DIR"
+echo "[before.sh.erb] HOME_DIR: $HOME_DIR"
+
+# Find available port to run server on
+export port=$(find_port ${host})
+if [[ -z "$port" ]]; then
+  echo "[before.sh.erb] ERROR: Failed to allocate a port."
+  exit 1
+else
+  echo "[before.sh.erb] Selected available port: $port"
+fi
+
+# Set environment variables
+export CODESERVER_LOG_FILE="${JOB_DIR}/code-server.log"
+export CODESERVER_DATA_HOME="${HOME_DIR}/.vscode-ood"
+export CODESERVER_PASSWORD="$(create_passwd 16)"
+export password="$CODESERVER_PASSWORD"
+
+echo "[before.sh.erb] CODESERVER_LOG_FILE: $CODESERVER_LOG_FILE"
+echo "[before.sh.erb] CODESERVER_DATA_HOME: $CODESERVER_DATA_HOME"
+
+# Create data directory
+if ! mkdir -p "$CODESERVER_DATA_HOME"; then
+  echo "[before.sh.erb] ERROR: Failed to create $CODESERVER_DATA_HOME"
+  exit 1
+else
+  echo "[before.sh.erb] Successfully created $CODESERVER_DATA_HOME"
+fi
+
+echo "[before.sh.erb] Setup complete."

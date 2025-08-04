@@ -1,0 +1,66 @@
+<%
+app_name = "Jupyter Lab"
+template_root = "/var/www/ood/apps/templates/"
+gpu_data = {
+  "gpu_types" => CustomGPUInfo.gpu_types,
+  "gpu_name_mappings" => CustomGPUInfo.gpu_name_mappings.transform_keys(&:to_s),
+  "gpu_max_counts" => CustomGPUInfo.gpu_max_counts.transform_keys(&:to_s)
+}
+min_cores = 8
+min_mem_gb = 4
+%>
+---
+javascript:
+  - form.js
+
+title: <%= app_name %>
+
+attributes:
+  gpudata:
+    widget: hidden_field
+    cacheable: false
+    value: "<%= gpu_data.to_json.gsub('"','\\"') %>"
+
+  memorydata:
+    widget: hidden_field
+    cacheable: false
+    value: "<%= CustomClusterInfo.max_memory_per_node %>"
+
+  cpunum:
+    widget: hidden_field
+    cacheable: false
+    value: "<%= CustomClusterInfo.max_cpus_per_node %>"
+
+  mincpu:
+    widget: hidden_field
+    cacheable: false
+    value: "<%= min_cores %>"
+
+  minram:
+    widget: hidden_field
+    cacheable: false
+    value: "<%= min_mem_gb %>"
+
+  cluster:
+    widget: select
+    label: Cluster
+    options:
+      - "<%= CustomClusterInfo.cluster_name %>"
+
+<% IO.foreach(template_root+"job_params") do |line| %><%= line %><% end %>
+
+  memtask_checkbox:
+    value: "1"
+    cacheable: false
+    widget: hidden_field
+
+
+form:
+  - cluster
+  - bc_num_hours
+<% IO.foreach(template_root+"form_params_app") do |line| %><%= line %><% end %>
+  - memorydata
+  - cpunum
+  - mincpu
+  - minram
+

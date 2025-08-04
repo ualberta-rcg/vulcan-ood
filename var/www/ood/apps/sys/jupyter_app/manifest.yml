@@ -1,0 +1,17 @@
+---
+name: Jupyter Lab
+category: Interactive Apps
+subcategory: Servers
+role: batch_connect
+description: |
+  Launch a [JupyterLab] server on the [Vulcan] high-performance computing (HPC) cluster, powered by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].
+
+  Jobs are scheduled with [SLURM], and you can request CPU or GPU resources for your Jupyter environment.
+
+  [JupyterLab]: https://jupyterlab.readthedocs.io/en/stable/
+  [AMII]: https://www.amii.ca/
+  [University of Alberta]: https://www.ualberta.ca/
+  [Digital Research Alliance of Canada]: https://alliancecan.ca/en
+  [SLURM]: https://slurm.schedmd.com/documentation.html
+  [Vulcan]: https://docs.alliancecan.ca/wiki/Vulcan
+
