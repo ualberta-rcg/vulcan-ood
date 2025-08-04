@@ -10,7 +10,9 @@ batch_connect:
 
 script:
   cluster: "<%= cluster %>"
+  <% if defined?(bc_email_on_started) && bc_email_on_started == "1" && emailaddr != "" %>
   email: <%= emailaddr.inspect %>
+  <% end %>
   native:
     - "-N"
     - "1"
