@@ -49,10 +49,6 @@ attributes:
     options:
       - "<%= CustomClusterInfo.cluster_name %>"
 
-  vnc_options:
-    widget: hidden_field
-    value: "+extension GLX +iglx"
-
   desktop:
     label: "Desktop Environment"
     widget: select
@@ -89,4 +85,5 @@ form:
   - mincpu
   - minram
 <% IO.foreach(template_root+"form_params_app") do |line| %><%= line %><% end %>
+
 
