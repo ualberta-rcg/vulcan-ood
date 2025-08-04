@@ -1,0 +1,81 @@
+dashboard_title: "Vulcan HPC Cluster"
+dashboard_header_img_logo: "/public/ualberta/logo.png"
+public_url: "/public/ualberta/"
+brand_bg_color: "#007C41"  # Green background
+brand_link_active_bg_color: "#005A2C"  # Optional darker green for active tab
+
+dashboard_logo: "/public/amii/amii-logo.png"
+dashboard_logo_height: 150
+
+custom_css_files:
+  - "branding.css"
+
+help_menu:
+  - group: "Alliance Documentation"
+  - title: "Vulcan HPC Cluster Information"
+    icon: "fas://brain"
+    url: "https://docs.alliancecan.ca/wiki/Vulcan"
+  - title: "Alliance - Getting Started"
+    icon: "fas://rocket"
+    url: "https://docs.alliancecan.ca/wiki/Getting_started"
+  - title: "Alliance - Job Scheduling"
+    icon: "fas://tasks"
+    url: "https://docs.alliancecan.ca/wiki/Running_jobs"
+
+  - group: "Tools and Portals"
+  - title: "Alliance CCDB Portal"
+    icon: "fas://database"
+    url: "https://ccdb.alliancecan.ca/"
+  - title: "Vulcan's Trailblazing Turtle Portal"
+    icon: "fas://cogs"
+    url: "https://portal.vulcan.alliancecan.ca/"
+
+  - group: "Links"
+  - title: "Alberta Machine Intelligence Institute"
+    icon: "fas://puzzle-piece"
+    url: "https://www.amii.ca/"
+  - title: "University of Alberta - Research Computing"
+    icon: "fas://server"
+    url: "https://www.ualberta.ca/en/information-services-and-technology/research-computing/index.html"
+
+  - group: "Support"
+  - title: "Alliance Support Website"
+    icon: "fas://life-ring"
+    url: "https://alliancecan.ca/en/services/advanced-research-computing/technical-support"
+  - title: "Alliance Support Email"
+    icon: "fas://envelope"
+    url: "mailto:support@tech.alliancecan.ca"
+
+
+pinned_apps:
+  - sys/shell
+  - sys/myjobs
+  - sys/activejobs
+  - sys/system-status
+  - sys/desktop_expert
+  - sys/jupyter_app
+  - sys/rstudio_server_app
+  - sys/vs_code_html_app
+
+dashboard_layout:
+  rows:
+    - columns:
+      - width: 8
+        widgets:
+          - motd
+          - pinned_apps
+
+globus_endpoints:
+  - path: "/home"
+    endpoint: "97bda3da-a723-4dc0-ba7e-728f35183b43"
+    endpoint_path: "/home"
+
+  - path: "/project"
+    endpoint: "97bda3da-a723-4dc0-ba7e-728f35183b43"
+    endpoint_path: "/project"
+
+  - path: "/scratch"
+    endpoint: "97bda3da-a723-4dc0-ba7e-728f35183b43"
+    endpoint_path: "/scratch"
+
+

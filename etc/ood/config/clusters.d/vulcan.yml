@@ -1,0 +1,16 @@
+---
+v2:
+   metadata:
+     title: "Vulcan"
+   login:
+     host: "vulcan.alliancecan.ca"
+   job:
+     adapter: "slurm"
+     bin: "/usr/bin/"
+     conf: "/etc/slurm/slurm.conf"
+     copy_environment: false
+   submit:
+     host_allowlist:
+       - "rack*"
+       - "vulcan*"
+

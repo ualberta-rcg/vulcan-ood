@@ -1,0 +1,2 @@
+OOD_SSHHOST_ALLOWLIST="rack[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]:vulcan1:vulcan2:rack*"
+
