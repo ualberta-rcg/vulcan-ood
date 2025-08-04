@@ -59,32 +59,14 @@ spec:
     - eth0
 ---
 # ----------------------------------------------------------
-# Persistent Volume Claim for Redis data
-# This claims storage from the `nfs-client` StorageClass to store Redis data persistently.
-# Adaptation: You need an existing NFS server and the `nfs-subdir-external-provisioner`
-# installed in your cluster to use `nfs-client`.
-# ----------------------------------------------------------
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: redis-data
-  namespace: redis-system
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: nfs-client
-  resources:
-    requests:
-      storage: 1Gi
----
-# ----------------------------------------------------------
 # Redis StatefulSet
 # Deploys a single Redis pod with persistent storage and password authentication.
 # Uses StatefulSet to ensure stable network identity and persistent storage binding.
+# Password is passed to redis-server from a Secret via the REDIS_PASSWORD env var.
 # Adaptation:
 # - Change the Redis image version if needed.
-# - Adjust `replicas` if you want Redis replication (requires extra config).
-# - Ensure `nfs-client` StorageClass is available.
+# - Adjust replicas if you want Redis replication (requires extra config).
+# - Ensure nfs-client StorageClass is available.
 # ----------------------------------------------------------
 apiVersion: apps/v1
 kind: StatefulSet
@@ -104,7 +86,7 @@ spec:
     spec:
       containers:
         - name: redis
-          image: redis:7.2
+          image: redis:latest
           ports:
             - containerPort: 6379
           volumeMounts:
@@ -142,7 +124,7 @@ spec:
   selector:
     app: redis
   type: LoadBalancer
-  loadBalancerIP: 172.26.92.19
+  loadBalancerIP: 172.16.254.19
   ports:
     - port: 6379
       targetPort: 6379
