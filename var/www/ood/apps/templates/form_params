@@ -1,8 +1,0 @@
-  - num_cores
-  - memtask_checkbox  
-  - memtask        
-  - add_env_checkbox
-  - additional_environment
-  - bc_vnc_resolution
-  - bc_email_on_started
-  - gpudata
