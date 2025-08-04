@@ -1,0 +1,100 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: redis-system
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redis-secret
+  namespace: redis-system
+type: Opaque
+stringData:
+  REDIS_PASSWORD: REDIS_SECRET_KEY_STR
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: redis-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 172.26.92.19-172.26.92.19
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: redis-advertisement
+  namespace: metallb-system
+spec:
+  interfaces:
+    - bond0.2000
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data
+  namespace: redis-system
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: nfs-client
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: redis-system
+spec:
+  selector:
+    matchLabels:
+      app: redis
+  serviceName: redis
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7.2
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+               secretKeyRef:
+                 name: redis-secret
+                 key: REDIS_PASSWORD
+          args: ["--save", "", "--appendonly", "yes", "--requirepass", "$(REDIS_PASSWORD)"]
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: nfs-client
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: redis-system
+spec:
+  selector:
+    app: redis
+  type: LoadBalancer
+  loadBalancerIP: 172.26.92.19
+  ports:
+    - port: 6379
+      targetPort: 6379
