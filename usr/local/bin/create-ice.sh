@@ -1,4 +1,5 @@
 #!/bin/bash
+# Needed on Compute Hosts Where OOD Jobs are Run
 
 mkdir -p /tmp/.ICE-unix
 chown -R root:root /tmp/.ICE-unix
