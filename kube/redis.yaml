@@ -14,7 +14,8 @@ metadata:
 # ----------------------------------------------------------
 # Secret containing the Redis password
 # This stores the Redis authentication password securely in Kubernetes.
-# The password is mounted into the Redis container as an environment variable.
+# The value is injected into the container as the REDIS_PASSWORD env var and
+# never appears directly in the pod manifest.
 # Adaptation: Replace `REDIS_SECRET_KEY_STR` with your own secure password.
 # Ensure it matches any client connections.
 # ----------------------------------------------------------
@@ -62,7 +63,9 @@ spec:
 # Redis StatefulSet
 # Deploys a single Redis pod with persistent storage and password authentication.
 # Uses StatefulSet to ensure stable network identity and persistent storage binding.
-# Password is passed to redis-server from a Secret via the REDIS_PASSWORD env var.
+# Password is passed to redis-server from a Secret via the REDIS_PASSWORD env var,
+# expanded at runtime through the shell before starting Redis.
+# Prerequisite: nfs-client StorageClass must be installed and available.
 # Adaptation:
 # - Change the Redis image version if needed.
 # - Adjust replicas if you want Redis replication (requires extra config).
