@@ -228,29 +228,29 @@ fr-CA:
       Les applications d’accès aux clusters sont disponibles via les menus déroulants dans la barre de navigation ci-dessus.
       <br>Les applications partagées personnalisées sont disponibles ci-dessous.
     shell_app_title: "%{cluster_title} Accès Shell"
-    show: Afficher
+    show: "Afficher"
     support_ticket:
-      creation_success: 'Courriel de billet de soutien envoyé à : %{to}'
-      generic_error: 'Erreur lors du traitement de votre requête : %{error}'
-      header: Billet de soutien
+      creation_success: "Courriel de billet de soutien envoyé à : %{to}"
+      generic_error: "Erreur lors du traitement de votre requête : %{error}"
+      header: "Billet de soutien"
       rt:
-        creation_success: 'Billet créé dans le système RequestTracker. ID du billet : %{ticket_id}'
-      title: Billet de soutien
+        creation_success: "Billet créé dans le système RequestTracker. ID du billet : %{ticket_id}"
+      title: "Billet de soutien"
       validation:
-        attachments_items: Les %{id} sont invalides. %{items} ajoutés, nombre maximal de pièces jointes : %{max}
-        attachments_size: Les %{id} sont invalides. Taille maximale de la pièce jointe : %{max}
-        email: Le format de %{id} est invalide. Adresse courriel valide attendue
+        attachments_items: "Les %{id} sont invalides. %{items} ajoutés, nombre maximal de pièces jointes : %{max}"
+        attachments_size: "Les %{id} sont invalides. Taille maximale de la pièce jointe : %{max}"
+        email: "Le format de %{id} est invalide. Adresse courriel valide attendue"
         items:
-          attachments_js: Plus de pièces jointes autorisées
-        required: Le champ %{id} est requis
+          attachments_js: "Plus de pièces jointes autorisées"
+        required: "Le champ %{id} est requis"
         size:
-          attachments_js: Taille max de la pièce jointe : %{max}. Taille du fichier sélectionné : %{size}
-      validation_error: Requête invalide. Veuillez revoir les messages d’erreur ci-dessous
-    system_apps_caption: Application système installée
-    unknown: Inconnu
-    uppy: Uppy
+          attachments_js: "Taille max de la pièce jointe : %{max}. Taille du fichier sélectionné : %{size}"
+      validation_error: "Requête invalide. Veuillez revoir les messages d’erreur ci-dessous"
+    system_apps_caption: "Application système installée"
+    unknown: "Inconnu"
+    uppy: "Uppy"
     user_configuration:
-      support_ticket_error: support_ticket est mal configuré. Les sections « email » ou « rt_api » sont requises dans le YAML de configuration.
+      support_ticket_error: "support_ticket est mal configuré. Les sections « email » ou « rt_api » sont requises dans le YAML de configuration."
     welcome_html: |
       %{logo_img_tag}
       <p class="lead">OnDemand offre un point d'accès intégré et unique à toutes vos ressources HPC.</p>
