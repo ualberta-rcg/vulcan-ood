@@ -1,7 +1,6 @@
 ---
 name: VS Code Server
-category: Interactive Apps
-subcategory: IDEs
+category: Development
 role: batch_connect
 description: |
   Launch a [Visual Studio Code] session in your browser, running on the [Vulcan] HPC cluster, managed by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].

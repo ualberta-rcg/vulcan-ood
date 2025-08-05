@@ -1,7 +1,6 @@
 ---
 name: ParaView
-category: Interactive Apps
-subcategory: Visualization
+category: Visualization
 role: batch_connect
 description: |
   Launch a [ParaView] session on the [Vulcan] high-performance computing (HPC) cluster, operated by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].

@@ -1,7 +1,6 @@
 ---
 name: Jupyter Lab
-category: Interactive Apps
-subcategory: Servers
+category: Development
 role: batch_connect
 description: |
   Launch a [JupyterLab] server on the [Vulcan] high-performance computing (HPC) cluster, powered by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].

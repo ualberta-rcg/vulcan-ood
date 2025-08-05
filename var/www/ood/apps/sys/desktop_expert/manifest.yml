@@ -1,8 +1,7 @@
 ---
 name: Interactive Desktop
 icon: fa://desktop
-category: Interactive Apps
-subcategory: Desktops
+category: Development
 role: batch_connect
 description: |
   This app will launch an interactive desktop on one or more compute nodes. You
