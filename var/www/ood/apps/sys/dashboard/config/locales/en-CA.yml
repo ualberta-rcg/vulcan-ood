@@ -1,5 +1,5 @@
 ---
-en:
+en-CA:
   activemodel:
     errors:
       messages:
@@ -30,7 +30,7 @@ en:
       <pre>%{exception_message}</pre>
       <h4>Stack trace:</h4>
       <pre>%{exception_trace}</pre>
-    apps_system_apps_title: System Apps
+    apps_system_apps_title: System Applications
     auto_log_location_title: Log Location
     balance_additional_message: Consider requesting additional %{balanace_units}
     balance_message: "%{units_balance} is %{value}"
@@ -94,7 +94,7 @@ en:
     batch_connect_sessions_stats_undetermined_host: Undetermined
     batch_connect_sessions_status_bad: Your session has entered a bad state. Feel free to contact support for further information.
     batch_connect_sessions_status_blurb_cancel_failure: Failed to cancel session.
-    batch_connect_sessions_status_blurb_cancel_success: Session was successfully canceled.
+    batch_connect_sessions_status_blurb_cancel_success: Session was successfully cancelled.
     batch_connect_sessions_status_blurb_create_success: Session was successfully created.
     batch_connect_sessions_status_blurb_delete_failure: Failed to delete session.
     batch_connect_sessions_status_blurb_delete_success: Session was successfully deleted.
@@ -184,12 +184,12 @@ en:
     nav_help_change_password: Change HPC Password
     nav_help_custom: Nav help custom
     nav_help_docs: Online Documentation
-    nav_help_support: Contact Support
+    nav_help_support: Contact Technical Support
     nav_help_support_ticket: Submit Support Ticket
     nav_help_title: Help
     nav_help_two_factor: Configure Two-Factor Authentication
     nav_limit_caption: showing %{subset_count} of %{total_count}
-    nav_logout: Log Out
+    nav_logout: Sign Out
     nav_restart_server: Restart Web Server
     nav_sessions: My Interactive Sessions
     nav_user: Logged in as %{username}
