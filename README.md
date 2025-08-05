@@ -11,7 +11,7 @@
 
 ## 🧰 Description
 
-This repository contains the complete configuration files, scripts, and application definitions for **Open OnDemand (OOD) deployment on the Vulcan HPC cluster** at the University of Alberta.
+This repository contains the complete configuration files, scripts, and application definitions for **Open OnDemand (OOD) deployment on the Vulcan HPC cluster** - a Digital Research Alliance of Canada compute resource operated by the University of Alberta as part of the PAICE (Platform for Advanced Infrastructure and Computing Excellence) initiative.
 
 The goal is to provide a reproducible setup for OOD using Apache, OIDC authentication (Shibboleth/Keycloak/AzureAD/etc), and Let's Encrypt SSL. This repository serves as a template that can be adapted for other HPC clusters.
 
@@ -43,7 +43,7 @@ This repository mirrors the filesystem structure of a deployed OOD installation.
     - `paice_app_versions.rb` - Application version tracking
 
 ### `/var/www/ood/apps/sys/` - System Applications
-Pre-configured interactive applications for Vulcan:
+Pre-configured interactive applications for Vulcan (Digital Research Alliance of Canada):
 
 - **`jupyter_app/`** - JupyterLab server
 - **`rstudio_server_app/`** - RStudio Server
@@ -170,6 +170,9 @@ To adapt this configuration for your own cluster:
 ## 📚 References
 
 * [Open OnDemand Documentation](https://osc.github.io/ood-documentation/latest/)
+* [Digital Research Alliance of Canada](https://alliancecan.ca/en)
+* [Vulcan Cluster Documentation](https://docs.alliancecan.ca/wiki/Vulcan)
+* [PAICE Platform](https://www.ualberta.ca/information-services-and-technology/research-computing/paice)
 * [mod_auth_openidc GitHub](https://github.com/zmartzone/mod_auth_openidc)
 * [Certbot Guide](https://certbot.eff.org/instructions?ws=apache&os=ubuntufocal)
 * [OIDC Protocol Explainer](https://openid.net/connect/)
@@ -201,4 +204,4 @@ That's it! No other strings attached. The MIT License is trusted by major projec
 
 The [Research Computing Group](https://www.ualberta.ca/en/information-services-and-technology/research-computing/index.html) supports high-performance computing, data-intensive research, and advanced infrastructure for researchers at the University of Alberta and across Canada.
 
-We help design and operate compute environments that power innovation — from AI training clusters to national research infrastructure.
+We help design and operate compute environments that power innovation — from AI training clusters to national research infrastructure, including the Vulcan cluster as part of the Digital Research Alliance of Canada's PAICE (Platform for Advanced Infrastructure and Computing Excellence) initiative.
