@@ -67,16 +67,10 @@ Pre-configured interactive applications organized by category:
 ##### **System** (1 app)
 - **`myjobs/`** - Job management and monitoring interface
 
-**Built-in OOD Applications** (referenced in dashboard)
-- **`shell`** - Built-in terminal access
-- **`activejobs`** - Active job monitoring
-- **`system-status`** - System status and health monitoring
-
-Each application contains:
+Each application contains at least:
 - `manifest.yml` - Application metadata and description
 - `form.yml.erb` - User interface form configuration
 - `submit.yml.erb` - Job submission and SLURM integration
-- `view.html.erb` - Application launch interface
 - `template/` - Application-specific templates and scripts
 
 #### **Public Assets** (`/var/www/ood/public/`)
@@ -88,12 +82,6 @@ Each application contains:
   - `amii-logo.png` - AMII logo
 - **`drac/`** - Digital Research Alliance of Canada branding
   - `drac_banner.png` - DRAC banner
-
-#### **Utility Scripts** (`/usr/local/bin/`)
-- **`create-ice.sh`** - XDG runtime directory setup for compute nodes
-  - Creates `/tmp/.ICE-unix` directory for X11 forwarding
-  - Sets up XDG runtime symlinks for user sessions
-  - Required for interactive applications on compute nodes
 
 #### **OOD Integration Scripts** (`/opt/ood/scripts/`)
 - **`ood_pun_oidc_email.sh`** - OIDC email claim handler
@@ -117,17 +105,25 @@ Each application contains:
   - Updates `paice_app_versions.rb` with current application versions
   - Supports: RStudio, VS Code, ParaView, QGIS, Blender, Octave, MuJoCo, AFNI, etc.
 
-#### **Privilege Configuration** (`/etc/sudoers.d/`)
-- **`create-ice-xdg`** - Sudoers entry for XDG runtime setup
-  - Allows all users to run `create-ice.sh` without password
-  - Required for interactive applications on compute nodes
-  - Security configuration for user session management
-
 #### **System Messages** (`/etc/`)
 - **`motd`** - Message of the Day
   - Welcome message for Vulcan cluster
   - Support contact information and portal links
   - Integration with OOD dashboard
+
+## 🐳 Compute Node Infrastructure
+
+#### **Utility Scripts** (`/usr/local/bin/`)
+- **`create-ice.sh`** - XDG runtime directory setup for compute nodes
+  - Creates `/tmp/.ICE-unix` directory for X11 forwarding
+  - Sets up XDG runtime symlinks for user sessions
+  - Required for interactive applications on compute nodes
+
+#### **Privilege Configuration** (`/etc/sudoers.d/`)
+- **`create-ice-xdg`** - Sudoers entry for XDG runtime setup
+  - Allows all users to run `create-ice.sh` without password
+  - Required for interactive applications on compute nodes
+  - Security configuration for user session management
 
 ## 🐳 Kubernetes Infrastructure
 
@@ -139,84 +135,3 @@ Each application contains:
   - **MetalLB**: Load balancer configuration for external access
   - **Storage**: NFS-based persistent volume claims
   - **Network**: L2 advertisement for IP allocation
-
-## 🔧 Configuration Details
-
-### **Cluster Configuration** (`vulcan.yml`)
-```yaml
-v2:
-  metadata:
-    title: "Vulcan"
-  login:
-    host: "vulcan.alliancecan.ca"
-  job:
-    adapter: "slurm"
-    bin: "/usr/bin/"
-    conf: "/etc/slurm/slurm.conf"
-  submit:
-    host_allowlist:
-      - "rack*"
-      - "vulcan*"
-```
-
-### **OIDC Authentication** (`ood_portal.yml`)
-- **Provider**: Digital Research Alliance of Canada identity provider
-- **Client**: `vulcan.alliancecan.ca`
-- **Scopes**: `openid profile email`
-- **Session**: 8-hour timeout with refresh tokens
-- **Integration**: Email claim extraction for user management
-
-### **Auto-Generated Components**
-The system includes three automated configuration generators:
-
-1. **GPU Discovery** - Automatically detects available GPU types and counts
-2. **Cluster Info** - Extracts SLURM partition and resource information
-3. **App Versions** - Queries environment modules for software versions
-
-### **Application Configuration**
-Each interactive application includes:
-- Resource request forms (CPU, memory, GPU)
-- SLURM partition selection
-- Application-specific environment setup
-- Session timeout and cleanup
-- VNC integration for GUI applications
-
-## 🎯 Deployment Targets
-
-### **OOD Portal Server**
-- Apache2 with OIDC authentication
-- SSL/TLS termination
-- Session management and load balancing
-- User interface and application routing
-
-### **Compute Nodes**
-- SLURM job execution
-- XDG runtime directory setup
-- Interactive application hosting
-- GPU acceleration support
-
-### **Kubernetes Cluster**
-- Redis session storage
-- MetalLB load balancing
-- NFS persistent storage
-- Container orchestration
-
-## 🔄 Automation & Maintenance
-
-### **Cron Jobs**
-- GPU information updates
-- Cluster configuration synchronization
-- Application version discovery
-- System health monitoring
-
-### **Security**
-- OIDC-based authentication
-- SSH key-based compute node access
-- Sudoers configuration for user sessions
-- SSL/TLS encryption
-
-### **Monitoring**
-- Apache access and error logs
-- SLURM job monitoring
-- Redis session tracking
-- Application health checks 
