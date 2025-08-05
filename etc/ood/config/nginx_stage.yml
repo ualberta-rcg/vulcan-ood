@@ -1,0 +1,4 @@
+pun_custom_env:
+  MOTD_PATH: "/etc/motd"
+  MOTD_FORMAT: "txt"
+  OOD_LOCALE: "en-CA"
