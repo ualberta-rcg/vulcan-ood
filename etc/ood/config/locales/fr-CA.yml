@@ -34,7 +34,7 @@ fr-CA:
     auto_log_location_title: Emplacement du journal
     balance_additional_message: Envisagez de demander %{balanace_units} supplémentaires
     balance_message: "%{units_balance} est %{value}"
-    balance_reload_message_html: Rechargez la page pour voir le solde mis à jour. Les soldes sont mis à jour quotidiennement.<br>Dernière mise à jour : %{last_update}
+    balance_reload_message_html: "Rechargez la page pour voir le solde mis à jour. Les soldes sont mis à jour quotidiennement.<br>Dernière mise à jour : %{last_update}"
     balance_warning_prefix_html: "%{units_balance} avertissement pour"
     batch_connect_apps_menu_title: Applications interactives
     batch_connect_form_attr_cache_error: Impossible d'utiliser les valeurs en cache, utilisation des valeurs par défaut. (%{error_message})
