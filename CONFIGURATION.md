@@ -220,30 +220,6 @@ sudo cp /etc/letsencrypt/live/your-ood-domain.com/privkey.pem /etc/ssl/ood/
 sudo chmod 600 /etc/ssl/ood/privkey.pem
 ```
 
-## 🖥️ Compute Node Configuration
-
-### **Shell Application Environment** (`/etc/ood/config/apps/shell/env`)
-
-```bash
-OOD_SSHHOST_ALLOWLIST="rack[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]:vulcan1:vulcan2:rack*"
-```
-
-**Required Changes:**
-1. **Host Patterns**: Update to match your compute node naming scheme
-2. **SSH Access**: Ensure OOD server can SSH to compute nodes without password
-
-### **Sudoers Configuration** (`/etc/sudoers.d/create-ice-xdg`)
-
-```bash
-# Needed on Compute Hosts Where OOD Jobs are Run
-ALL ALL=(ALL) NOPASSWD: /usr/local/bin/create-ice.sh
-```
-
-**Purpose:**
-- Allows users to create XDG runtime directories on compute nodes
-- Required for interactive applications with GUI
-- Must be deployed to all compute nodes
-
 ### **Message of the Day** (`/etc/motd`)
 
 ```bash
@@ -272,20 +248,6 @@ __   ___   _| | ___ __ _ _ __      Support:         support@tech.alliancecan.ca
 **Available Locales:**
 - `en-CA.yml` - English (Canada)
 - `fr-CA.yml` - French (Canada)
-
-**Adding New Locales:**
-1. Create new locale file in `/etc/ood/config/locales/`
-2. Update `nginx_stage.yml` to use new locale
-3. Translate all strings in the locale file
-
-**Locale File Structure:**
-```yaml
----
-en-US:  # Your locale code
-  dashboard:
-    title: "Your Cluster Dashboard"
-    # ... more translations
-```
 
 ## 🐳 Kubernetes Configuration (Optional)
 
@@ -350,74 +312,3 @@ kubectl get svc -n redis-system
 - AFNI
 - MATLAB
 - VMD
-
-## 📋 Configuration Checklist
-
-### **Before Deployment:**
-
-- [ ] **Domain Configuration**
-  - [ ] DNS record for OOD domain
-  - [ ] SSL certificates obtained
-  - [ ] Firewall rules configured
-
-- [ ] **Identity Provider Setup**
-  - [ ] OIDC client registered
-  - [ ] Client secret obtained
-  - [ ] Redirect URIs configured
-  - [ ] Required scopes enabled
-
-- [ ] **Cluster Integration**
-  - [ ] SLURM commands available on OOD host
-  - [ ] SSH key-based access to compute nodes
-  - [ ] User home directories accessible
-  - [ ] Compute node hostnames configured
-
-- [ ] **File System Setup**
-  - [ ] `/etc/ood/` directory structure
-  - [ ] `/var/www/ood/` web files
-  - [ ] `/opt/ood/` scripts and utilities
-  - [ ] `/usr/local/bin/` utility scripts
-
-### **After Deployment:**
-
-- [ ] **Configuration Updates**
-  - [ ] Update all domain references
-  - [ ] Configure SSL certificates
-  - [ ] Set up OIDC authentication
-  - [ ] Update branding and styling
-
-- [ ] **Testing**
-  - [ ] Portal accessibility
-  - [ ] User authentication
-  - [ ] Application launching
-  - [ ] Compute node connectivity
-
-- [ ] **Monitoring**
-  - [ ] Log file monitoring
-  - [ ] Session tracking
-  - [ ] Error reporting
-  - [ ] Performance monitoring
-
-## 🚨 Common Issues
-
-### **Authentication Problems**
-- **OIDC Configuration**: Verify client ID, secret, and redirect URIs
-- **SSL Certificates**: Check certificate validity and file permissions
-- **Network Connectivity**: Ensure OOD can reach identity provider
-
-### **Application Launch Issues**
-- **Compute Node Access**: Verify SSH connectivity and sudoers configuration
-- **Resource Allocation**: Check SLURM partition availability
-- **Environment Modules**: Ensure required software is available
-
-### **Session Management**
-- **Redis Configuration**: Verify Kubernetes deployment and connectivity
-- **Session Timeouts**: Adjust OIDC session settings if needed
-- **User Permissions**: Check file system permissions and quotas
-
-## 📚 Additional Resources
-
-- [Open OnDemand Documentation](https://osc.github.io/ood-documentation/latest/)
-- [mod_auth_openidc Configuration](https://github.com/zmartzone/mod_auth_openidc)
-- [SLURM Documentation](https://slurm.schedmd.com/documentation.html)
-- [Kubernetes Documentation](https://kubernetes.io/docs/) 
