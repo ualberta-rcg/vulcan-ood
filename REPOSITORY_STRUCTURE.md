@@ -37,12 +37,19 @@ This repository contains the complete Open OnDemand (OOD) deployment configurati
   - `en-CA.yml` - English (Canada) translations
   - `fr-CA.yml` - French (Canada) translations
 
+- **`ondemand.d/ondemand.yml`** - Dashboard configuration
+  - Custom branding and styling
+  - Help menu with external links
+  - Pinned applications configuration
+  - Dashboard layout and widgets
+  - Globus endpoint integration
+
 #### **Web Applications** (`/var/www/ood/apps/sys/`)
 Pre-configured interactive applications organized by category:
 
 ##### **Mathematics** (2 apps)
-- **`jupyter_app/`** - JupyterLab server for interactive computing
-- **`rstudio_server_app/`** - RStudio Server for R development
+- **`matlab_app/`** - MATLAB numerical computing environment
+- **`octave_app/`** - GNU Octave open-source numerical computing
 
 ##### **Visualization** (5 apps)
 - **`paraview_app/`** - Scientific visualization and data analysis
@@ -51,16 +58,19 @@ Pre-configured interactive applications organized by category:
 - **`qgis_app/`** - Geographic information system (GIS)
 - **`afni_app/`** - fMRI data visualization and analysis
 
-##### **Development** (3 apps)
+##### **Development** (4 apps)
+- **`jupyter_app/`** - JupyterLab server for interactive computing
+- **`rstudio_server_app/`** - RStudio Server for R development
 - **`vs_code_html_app/`** - VS Code Server for web-based development
-- **`matlab_app/`** - MATLAB numerical computing environment
-- **`octave_app/`** - GNU Octave open-source numerical computing
-
-##### **Desktop** (1 app)
 - **`desktop_expert/`** - Remote desktop environment
 
 ##### **System** (1 app)
 - **`myjobs/`** - Job management and monitoring interface
+
+**Built-in OOD Applications** (referenced in dashboard)
+- **`shell`** - Built-in terminal access
+- **`activejobs`** - Active job monitoring
+- **`system-status`** - System status and health monitoring
 
 Each application contains:
 - `manifest.yml` - Application metadata and description
