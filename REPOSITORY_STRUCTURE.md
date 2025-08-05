@@ -125,7 +125,7 @@ Each application contains at least:
   - Required for interactive applications on compute nodes
   - Security configuration for user session management
 
-## 🐳 Kubernetes Infrastructure
+## 🐳 Kubernetes Infrastructure ( Optional )
 
 ### **Session Management** (`/kube/`)
 - **`redis.yaml`** - Redis deployment for OOD session management
