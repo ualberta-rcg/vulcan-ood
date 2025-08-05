@@ -2,7 +2,6 @@
 
 # Vulcan Open OnDemand Deployment
 
-[![CI/CD](https://github.com/ualberta-rcg/vulcan-ood/actions/workflows/deploy-ood.yml/badge.svg)](https://github.com/ualberta-rcg/vulcan-ood/actions/workflows/deploy-ood.yml)
 ![Ubuntu Version](https://img.shields.io/badge/Ubuntu-22.04+-green?style=flat-square)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
@@ -167,23 +166,6 @@ To adapt this configuration for your own cluster:
 
 ---
 
-## 🤝 Support
-
-Open an issue or email **[khoja1@ualberta.ca](mailto:khoja1@ualberta.ca)** for support, or just catch me at 2am on Slack.
-
----
-
-## 📜 License
-
-MIT License — [see LICENSE](./LICENSE)
-
----
-
-## 🧠 About University of Alberta Research Computing
-
-The [Research Computing Group](https://www.ualberta.ca/information-services-and-technology/research-computing/) supports high-performance computing, data-intensive research, and advanced infrastructure for researchers at the University of Alberta and across Canada.
-
----
 
 ## 📚 References
 
@@ -191,3 +173,32 @@ The [Research Computing Group](https://www.ualberta.ca/information-services-and-
 * [mod_auth_openidc GitHub](https://github.com/zmartzone/mod_auth_openidc)
 * [Certbot Guide](https://certbot.eff.org/instructions?ws=apache&os=ubuntufocal)
 * [OIDC Protocol Explainer](https://openid.net/connect/)
+
+
+## 🤝 Support
+
+Many Bothans died to bring us this information. This project is provided as-is, but reasonable questions may be answered based on my coffee intake or mood. ;)
+
+Feel free to open an issue or email **[khoja1@ualberta.ca](mailto:khoja1@ualberta.ca)** or **[kali2@ualberta.ca](mailto:kali2@ualberta.ca)** for U of A related deployments.
+
+## 📜 License
+
+This project is released under the **MIT License** - one of the most permissive open-source licenses available.
+
+**What this means:**
+- ✅ Use it for anything (personal, commercial, whatever)
+- ✅ Modify it however you want
+- ✅ Distribute it freely
+- ✅ Include it in proprietary software
+
+**The only requirement:** Keep the copyright notice somewhere in your project.
+
+That's it! No other strings attached. The MIT License is trusted by major projects worldwide and removes virtually all legal barriers to using this code.
+
+**Full license text:** [MIT License](./LICENSE)
+
+## 🧠 About University of Alberta Research Computing
+
+The [Research Computing Group](https://www.ualberta.ca/en/information-services-and-technology/research-computing/index.html) supports high-performance computing, data-intensive research, and advanced infrastructure for researchers at the University of Alberta and across Canada.
+
+We help design and operate compute environments that power innovation — from AI training clusters to national research infrastructure.
