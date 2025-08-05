@@ -19,6 +19,65 @@ The goal is to provide a reproducible setup for OOD using Apache, OIDC authentic
 
 ---
 
+## ✅ Prerequisites & Requirements
+
+Before deploying Open OnDemand, ensure you have the following in place:
+
+### **System Requirements**
+- **Ubuntu 24.04** (or compatible version)
+- **Root/sudo access** on the OOD host
+- **Public DNS domain** (e.g., `ood.yourcluster.edu`)
+- **SSL certificates** for your domain (Let's Encrypt recommended)
+
+### **Network & Infrastructure**
+- **Static IP address** for the OOD host
+- **DNS resolution** configured for your OOD domain
+- **Network connectivity** to compute nodes and login nodes
+- **Firewall rules** allowing HTTP/HTTPS traffic (ports 80/443)
+
+### **Authentication & Identity**
+- **OIDC Identity Provider** (Shibboleth, Keycloak, AzureAD, etc.)
+- **OIDC Client Registration** with your identity provider:
+  - Client ID (e.g., `ood.yourcluster.edu`)
+  - Client Secret
+  - Redirect URIs configured
+  - Required scopes: `openid profile email`
+- **SSSD (System Security Services Daemon)** installed and configured
+  - User authentication against your identity provider
+  - Home directory mapping
+
+### **Cluster Integration**
+- **SLURM job scheduler** installed and configured
+  - SLURM commands available on OOD host (`squeue`, `sinfo`, `scontrol`, etc.)
+  - SLURM configuration file (`/etc/slurm/slurm.conf`)
+  - **MUNGE** authentication service (required for SLURM)
+- **User home directories** mounted or accessible on OOD host
+- **Compute node access** from OOD host (SSH key-based authentication)
+
+### **Session Management (Optional)**
+- **Kubernetes cluster** (for Redis deployment)
+- **MetalLB** load balancer configured
+- **NFS storage class** for Redis persistence
+- **Redis deployment** for shared session management
+
+### **Open OnDemand Repository**
+- **Open OnDemand APT repository** added to your system
+- **Apache2** with required modules (`auth_openidc`, `ssl`, `proxy`, `proxy_http`, `rewrite`, `headers`)
+
+### **File System Requirements**
+- **/etc/ood/** - Configuration directory
+- **/var/www/ood/** - Web application files
+- **/opt/ood/** - Scripts and utilities
+- **/usr/local/bin/** - Utility scripts
+- **/etc/sudoers.d/** - Privilege configuration
+
+### **User Environment**
+- **XDG runtime directories** setup on compute nodes
+- **User session management** configured
+- **Environment modules** (if used by your cluster)
+
+---
+
 ## 📂 Repository Structure
 
 This repository mirrors the filesystem structure of a deployed OOD installation. Here's what each directory contains:
