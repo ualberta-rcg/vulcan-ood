@@ -5,7 +5,7 @@ This document outlines the essential requirements for deploying Open OnDemand (O
 ## OOD Server Requirements
 
 ### System Requirements
-- **Ubuntu 22.04+** or compatible Linux distribution
+- **Ubuntu 24.04** (tested and built from this version)
 - **Root/sudo access** on the OOD host
 - **Public DNS domain** (e.g., `ood.yourcluster.edu`)
 - **SSL certificates** for your domain
@@ -15,6 +15,7 @@ This document outlines the essential requirements for deploying Open OnDemand (O
 - **DNS resolution** configured for your OOD domain
 - **Network connectivity** to compute nodes and login nodes
 - **Firewall rules** allowing HTTP/HTTPS traffic (ports 80/443)
+- **Network access** to SLURM cluster
 
 ### Authentication Requirements
 - **OIDC Identity Provider** (Shibboleth or other OIDC-compliant provider)
@@ -23,12 +24,16 @@ This document outlines the essential requirements for deploying Open OnDemand (O
   - Client Secret
   - Redirect URIs: `https://your-ood-domain/oidc`
   - Required scopes: `openid profile email`
+- **SSSD (System Security Services Daemon)** installed and running
+  - User authentication against your identity provider
+  - Home directory mapping
 
 ### Cluster Integration
 - **SLURM job scheduler** installed and configured
   - SLURM commands available on OOD host (`squeue`, `sinfo`, `scontrol`)
-  - SLURM configuration file (`/etc/slurm/slurm.conf`)
-- **User home directories** mounted or accessible on OOD host
+  - SLURM configuration file (`/etc/slurm/slurm.conf`) must be available
+  - **MUNGE** authentication service (required for SLURM)
+- **User home directories** mounted and accessible on OOD host
 - **Compute node access** from OOD host (SSH key-based authentication)
 
 ### File System Requirements
@@ -38,9 +43,9 @@ This document outlines the essential requirements for deploying Open OnDemand (O
 - **/usr/local/bin/** - Utility scripts
 - **/etc/sudoers.d/** - Privilege configuration
 
-### Optional Components
-- **Kubernetes cluster** (for Redis session management)
-- **CVMFS** for application distribution (recommended)
+### Required Components
+- **CVMFS** for application distribution (required with Compute Canada settings)
+- **Redis** for session management (recommended for login node deployments)
 
 ## Compute Node Requirements
 
@@ -53,10 +58,16 @@ This document outlines the essential requirements for deploying Open OnDemand (O
 - **XDG runtime directories** setup for user sessions
 - **X11 forwarding** support for graphical applications
 - **Environment modules** (if used by your cluster)
+- **VirtualGL** installed for GPU applications
 
 ### File System
-- **/tmp/.ICE-unix** directory for X11 forwarding
+- **/tmp/.ICE-unix** directory for X11 forwarding (created by `create-ice.sh`)
 - **User session directories** for interactive applications
+
+### Privilege Configuration
+- **Sudoers entry** for XDG runtime setup (`create-ice-xdg`)
+  - Allows all users to run `create-ice.sh` without password
+  - Required for interactive applications on compute nodes
 
 ### Network
 - **SSH connectivity** from OOD server
