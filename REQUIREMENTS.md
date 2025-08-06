@@ -36,13 +36,6 @@ This document outlines the essential requirements for deploying Open OnDemand (O
 - **User home directories** mounted and accessible on OOD host
 - **Compute node access** from OOD host (SSH key-based authentication)
 
-### File System Requirements
-- **/etc/ood/** - Configuration directory
-- **/var/www/ood/** - Web application files
-- **/opt/ood/** - Scripts and utilities
-- **/usr/local/bin/** - Utility scripts
-- **/etc/sudoers.d/** - Privilege configuration
-
 ### Optional Components
 - **Redis** for session management (recommended for multiple OOD deployments)
 
