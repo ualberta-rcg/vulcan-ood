@@ -55,15 +55,24 @@ This document outlines the essential requirements for deploying Open OnDemand (O
 - **CVMFS** for application distribution
 - **VirtualGL** installed for GPU applications
 
+### XDG Runtime Setup
+- **`/usr/local/bin/create-ice.sh`** script installed
+  - Creates `/tmp/.ICE-unix` directory for X11 forwarding
+  - Sets up XDG runtime symlinks (`/run/user/$UID` → `/tmp/xdg-runtime-$UID`)
+  - Called by OOD applications during job startup
+- **Sudoers configuration** (`/etc/sudoers.d/create-ice-xdg`)
+  - Allows all users to run `create-ice.sh` without password
+  - Required for interactive applications on compute nodes
+  - Entry: `ALL ALL=(ALL) NOPASSWD: /usr/local/bin/create-ice.sh`
+
+### Session Management
+- **XDG runtime directories** setup for user sessions
+- **X11 forwarding** support for graphical applications
+- **Environment modules** (if used by your cluster)
 
 ### File System
 - **/tmp/.ICE-unix** directory for X11 forwarding (created by `create-ice.sh`)
 - **User session directories** for interactive applications
-
-### Privilege Configuration
-- **Sudoers entry** for XDG runtime setup (`create-ice-xdg`)
-  - Allows all users to run `create-ice.sh` without password
-  - Required for interactive applications on compute nodes
 
 ### Network
 - **SSH connectivity** from OOD server
