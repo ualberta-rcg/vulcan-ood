@@ -9,9 +9,9 @@ This document outlines the essential requirements for deploying Open OnDemand (O
 - **Root/sudo access** on the OOD host
 - **Public DNS domain** (e.g., `ood.yourcluster.edu`)
 - **SSL certificates** for your domain
+- **CVMFS** for application distribution
 
 ### Network Requirements
-- **Static IP address** for the OOD host
 - **DNS resolution** configured for your OOD domain
 - **Network connectivity** to compute nodes and login nodes
 - **Firewall rules** allowing HTTP/HTTPS traffic (ports 80/443)
@@ -43,9 +43,8 @@ This document outlines the essential requirements for deploying Open OnDemand (O
 - **/usr/local/bin/** - Utility scripts
 - **/etc/sudoers.d/** - Privilege configuration
 
-### Required Components
-- **CVMFS** for application distribution (required with Compute Canada settings)
-- **Redis** for session management (recommended for login node deployments)
+### Optional Components
+- **Redis** for session management (recommended for multiple OOD deployments)
 
 ## Compute Node Requirements
 
@@ -53,12 +52,9 @@ This document outlines the essential requirements for deploying Open OnDemand (O
 - **Linux distribution** compatible with your cluster
 - **SSH access** from OOD server
 - **User home directories** accessible
-
-### Session Management
-- **XDG runtime directories** setup for user sessions
-- **X11 forwarding** support for graphical applications
-- **Environment modules** (if used by your cluster)
+- **CVMFS** for application distribution
 - **VirtualGL** installed for GPU applications
+
 
 ### File System
 - **/tmp/.ICE-unix** directory for X11 forwarding (created by `create-ice.sh`)
