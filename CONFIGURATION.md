@@ -1,12 +1,10 @@
 # Configuration Guide
 
-This document explains all the configuration files and settings needed to deploy Open OnDemand (OOD) for your HPC cluster. Each section details the current Vulcan configuration and what you need to change for your environment.
+This document outlines the key configuration files and settings needed to deploy Open OnDemand (OOD) for your HPC cluster.
 
-## 🔧 Core Configuration Files
+## Core Configuration Files
 
-### **Main Portal Configuration** (`/etc/ood/config/ood_portal.yml`)
-
-This is the primary configuration file for the OOD portal. Here's the current Vulcan configuration with explanations:
+### Main Portal Configuration (`/etc/ood/config/ood_portal.yml`)
 
 ```yaml
 ---
@@ -14,10 +12,6 @@ This is the primary configuration file for the OOD portal. Here's the current Vu
 servername: vulcan.alliancecan.ca                    # CHANGE: Your OOD domain
 node_uri: "/node"                                    # OOD node URI (usually keep default)
 rnode_uri: "/rnode"                                  # OOD reverse node URI (usually keep default)
-
-# Logging
-errorlog: 'ood-error.log'                            # Error log filename
-accesslog: 'ood-access.log'                          # Access log filename
 
 # Authentication Configuration
 auth:
@@ -43,34 +37,20 @@ oidc_remote_user_claim: "preferred_username"         # User identifier claim
 oidc_scope: "openid profile email"                   # Required OIDC scopes
 oidc_session_inactivity_timeout: 28800               # 8-hour session timeout
 oidc_session_max_duration: 28800                     # 8-hour max session duration
-oidc_state_max_number_of_cookies: "10 true"
-
-# OIDC Advanced Settings
-oidc_settings:
-  OIDCPassIDTokenAs: "serialized"
-  OIDCPassRefreshToken: "On"
-  OIDCPassClaimsAs: "environment"
-  OIDCStripCookies: "mod_auth_openidc_session mod_auth_openidc_session_chunks mod_auth_openidc_session_0 mod_auth_openidc_session_1"
-  OIDCResponseType: "code"
-  OIDCXForwardedHeaders: "X-Forwarded-Proto"
 
 # SSL Configuration
 ssl:
   - 'SSLCertificateFile "/etc/ssl/ood/fullchain.pem"'    # CHANGE: Your SSL certificate path
   - 'SSLCertificateKeyFile "/etc/ssl/ood/privkey.pem"'   # CHANGE: Your SSL private key path
-
-# Debugging
-custom_vhost_directives:
-  - 'LogLevel auth_openidc:debug'
 ```
 
 **Required Changes:**
-1. **Domain**: Change `servername` to your OOD domain
-2. **OIDC Provider**: Update metadata URL and client credentials
-3. **SSL Certificates**: Point to your SSL certificate files
-4. **Logout URL**: Configure your identity provider logout URL
+- **Domain**: Change `servername` to your OOD domain
+- **OIDC Provider**: Update metadata URL and client credentials
+- **SSL Certificates**: Point to your SSL certificate files
+- **Logout URL**: Configure your identity provider logout URL
 
-### **Nginx Stage Configuration** (`/etc/ood/config/nginx_stage.yml`)
+### Nginx Stage Configuration (`/etc/ood/config/nginx_stage.yml`)
 
 ```yaml
 pun_custom_env:
@@ -80,10 +60,9 @@ pun_custom_env:
 ```
 
 **Required Changes:**
-1. **Locale**: Set to your preferred locale
-2. **MOTD**: Ensure `/etc/motd` exists or change path
+- **Locale**: Set to your preferred locale
 
-### **Cluster Configuration** (`/etc/ood/config/clusters.d/vulcan.yml`)
+### Cluster Configuration (`/etc/ood/config/clusters.d/vulcan.yml`)
 
 ```yaml
 ---
@@ -104,12 +83,12 @@ v2:
 ```
 
 **Required Changes:**
-1. **Cluster Name**: Update title and hostname
-2. **Login Node**: Set your login node hostname
-3. **Job Scheduler**: Verify SLURM paths or change to your scheduler
-4. **Host Allowlist**: Update compute node naming patterns
+- **Cluster Name**: Update title and hostname
+- **Login Node**: Set your login node hostname
+- **Job Scheduler**: Verify SLURM paths or change to your scheduler
+- **Host Allowlist**: Update compute node naming patterns
 
-### **Dashboard Configuration** (`/etc/ood/config/ondemand.d/ondemand.yml`)
+### Dashboard Configuration (`/etc/ood/config/ondemand.d/ondemand.yml`)
 
 ```yaml
 # Branding
@@ -133,7 +112,6 @@ help_menu:
   - title: "Vulcan HPC Cluster Information"
     icon: "fas://brain"
     url: "https://docs.alliancecan.ca/wiki/Vulcan"  # CHANGE: Your documentation URL
-  # ... more help menu items
 
 # Pinned Applications
 pinned_apps:                                         # CHANGE: Your preferred apps
@@ -154,31 +132,26 @@ dashboard_layout:
         widgets:
           - motd
           - pinned_apps
-
-# Globus Integration (Optional)
-globus_endpoints:                                    # CHANGE: Your Globus endpoints
-  - path: "/home"
-    endpoint: "97bda3da-a723-4dc0-ba7e-728f35183b43"
-    endpoint_path: "/home"
-  - path: "/project"
-    endpoint: "97bda3da-a723-4dc0-ba7e-728f35183b43"
-    endpoint_path: "/project"
-  - path: "/scratch"
-    endpoint: "97bda3da-a723-4dc0-ba7e-728f35183b43"
-    endpoint_path: "/scratch"
 ```
 
 **Required Changes:**
-1. **Branding**: Update title, logos, colors, and CSS
-2. **Help Menu**: Configure your documentation and support links
-3. **Pinned Apps**: Choose which apps to pin to dashboard
-4. **Globus**: Configure your Globus endpoints (optional)
+- **Branding**: Update title, logos, colors, and CSS
+- **Help Menu**: Configure your documentation and support links
+- **Pinned Apps**: Choose which apps to pin to dashboard
 
-## 🔐 Authentication & Security
+## SSL Certificate Requirements
 
-### **OIDC Identity Provider Setup**
+**Certificate Files:**
+- **Certificate**: `/etc/ssl/ood/fullchain.pem`
+- **Private Key**: `/etc/ssl/ood/privkey.pem`
 
-You need to register your OOD instance with your identity provider:
+**Certificate Requirements:**
+- Valid for your OOD domain
+- Issued by a trusted Certificate Authority
+- Include full certificate chain
+- Proper file permissions (600 for private key)
+
+## OIDC Identity Provider Setup
 
 **Required OIDC Configuration:**
 - **Client ID**: Your OOD domain (e.g., `ood.yourcluster.edu`)
@@ -194,121 +167,30 @@ You need to register your OOD instance with your identity provider:
 - **Google**: Google Workspace integration
 - **Okta**: Enterprise identity platform
 
-### **SSL Certificate Requirements**
+## Kubernetes Configuration (Optional)
 
-**Certificate Files:**
-- **Certificate**: `/etc/ssl/ood/fullchain.pem`
-- **Private Key**: `/etc/ssl/ood/privkey.pem`
-
-**Certificate Requirements:**
-- Valid for your OOD domain
-- Issued by a trusted Certificate Authority
-- Include full certificate chain
-- Proper file permissions (600 for private key)
-
-**Let's Encrypt Setup:**
-```bash
-# Install Certbot
-sudo apt install certbot python3-certbot-apache
-
-# Obtain certificate
-sudo certbot --apache -d your-ood-domain.com
-
-# Copy certificates to OOD location
-sudo cp /etc/letsencrypt/live/your-ood-domain.com/fullchain.pem /etc/ssl/ood/
-sudo cp /etc/letsencrypt/live/your-ood-domain.com/privkey.pem /etc/ssl/ood/
-sudo chmod 600 /etc/ssl/ood/privkey.pem
-```
-
-### **Message of the Day** (`/etc/motd`)
-
-```bash
-###############################################################################
-
-             _                                  Welcome to Vulcan
-            | |
-__   ___   _| | ___ __ _ _ __      Support:         support@tech.alliancecan.ca
-\ \ / / | | | |/ __/ _` | '_ \     Documentation:           docs.alliancecan.ca
- \ V /| |_| | | (_| (_| | | | |    Portal: https://portal.vulcan.alliancecan.ca
-  \_/  \__,_|_|\___\__,_|_| |_|    OOD:           https://vulcan.alliancecan.ca
-                                   Helpy:     https://chat.cluster.paice-ua.com
-
-###############################################################################
-```
+### Redis Session Management (`/kube/redis.yaml`)
 
 **Required Changes:**
-1. **Cluster Name**: Update welcome message
-2. **Support Info**: Update contact information
-3. **Portal URLs**: Update your portal and documentation links
+- **Namespace**: Update if needed
+- **IP Address**: Change MetalLB IP to available address
+- **Network Interface**: Update to your network interface
+- **Storage Class**: Ensure NFS storage class exists
+- **Password**: Change Redis password
 
-## 🌐 Internationalization
+## Automated Configuration
 
-### **Locale Configuration**
-
-**Available Locales:**
-- `en-CA.yml` - English (Canada)
-- `fr-CA.yml` - French (Canada)
-
-## 🐳 Kubernetes Configuration (Optional)
-
-### **Redis Session Management** (`/kube/redis.yaml`)
-
-**Required Changes:**
-1. **Namespace**: Update if needed
-2. **IP Address**: Change MetalLB IP to available address
-3. **Network Interface**: Update to your network interface
-4. **Storage Class**: Ensure NFS storage class exists
-5. **Password**: Change Redis password
-
-**Deployment:**
-```bash
-# Apply Redis configuration
-kubectl apply -f kube/redis.yaml
-
-# Verify deployment
-kubectl get pods -n redis-system
-kubectl get svc -n redis-system
-```
-
-## 🔄 Automated Configuration
-
-### **GPU Information Generator** (`/opt/ood/cron/gen_gpu_rb.sh`)
-
-**Purpose:**
+### GPU Information Generator (`/opt/ood/cron/gen_gpu_rb.sh`)
 - Auto-discovers GPU types and counts from SLURM
 - Updates `/etc/ood/config/apps/dashboard/initializers/paice_gpu_info.rb`
 - Runs via cron job
 
-**Configuration:**
-- No changes needed if using SLURM
-- Updates automatically when GPU configuration changes
-
-### **Cluster Information Generator** (`/opt/ood/cron/gen_cluster_rb.sh`)
-
-**Purpose:**
+### Cluster Information Generator (`/opt/ood/cron/gen_cluster_rb.sh`)
 - Extracts SLURM partition information
 - Updates `/etc/ood/config/apps/dashboard/initializers/paice_cluster_info.rb`
 - Auto-discovers CPU and memory limits
 
-**Configuration:**
-- No changes needed if using SLURM
-- Updates automatically when cluster configuration changes
-
-### **Application Version Generator** (`/opt/ood/cron/gen_app_rb.sh`)
-
-**Purpose:**
+### Application Version Generator (`/opt/ood/cron/gen_app_rb.sh`)
 - Queries environment modules for software versions
 - Updates `/etc/ood/config/apps/dashboard/initializers/paice_app_versions.rb`
 - Supports multiple applications
-
-**Supported Applications:**
-- RStudio Server
-- VS Code Server
-- ParaView
-- QGIS
-- Blender
-- Octave
-- MuJoCo
-- AFNI
-- MATLAB
-- VMD
