@@ -7,6 +7,8 @@ This document outlines the essential requirements for deploying Open OnDemand (O
 ### System Requirements
 - **Ubuntu 24.04** (tested and built from this version)
 - **Root/sudo access** on the OOD host
+- **SSH access** for the users
+- **User home directories** accessible
 - **Public DNS domain** (e.g., `ood.yourcluster.edu`)
 - **SSL certificates** for your domain
 - **CVMFS** for application distribution
