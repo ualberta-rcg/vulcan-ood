@@ -65,16 +65,7 @@ This document outlines the essential requirements for deploying Open OnDemand (O
   - Required for interactive applications on compute nodes
   - Entry: `ALL ALL=(ALL) NOPASSWD: /usr/local/bin/create-ice.sh`
 
-### Session Management
-- **XDG runtime directories** setup for user sessions
-- **X11 forwarding** support for graphical applications
-- **Environment modules** (if used by your cluster)
-
-### File System
-- **/tmp/.ICE-unix** directory for X11 forwarding (created by `create-ice.sh`)
-- **User session directories** for interactive applications
-
 ### Network
-- **SSH connectivity** from OOD server
+- **Direct Network Access** from OOD server
 - **Network access** to shared file systems
 - **DNS resolution** for compute node hostnames 
