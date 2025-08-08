@@ -17,10 +17,11 @@ if [[ -n "$OOD_USER" && -n "$OIDC_EMAIL" ]]; then
   USER_ONDEMAND_HOME="/home/${OOD_USER}/ondemand"
   EMAIL_FILE="${USER_ONDEMAND_HOME}/oidc_email.txt"
   mkdir -p "${USER_ONDEMAND_HOME}"
+  chown "${OOD_USER}:${OOD_USER}" "${USER_ONDEMAND_HOME}"
+  chmod 700 "${USER_ONDEMAND_HOME}"
   echo "${OIDC_EMAIL}" > "${EMAIL_FILE}"
   chown "${OOD_USER}:${OOD_USER}" "${EMAIL_FILE}"
   chmod 0600 "${EMAIL_FILE}"
 fi
 
 exit 0
-
