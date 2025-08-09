@@ -1,6 +1,6 @@
 ---
 name: RStudio Server
-category: Development
+category: Development & Data Science
 role: batch_connect
 description: |
   Launch an [RStudio Server] session on the [Vulcan] HPC cluster, managed by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].
