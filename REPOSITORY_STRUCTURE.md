@@ -37,29 +37,36 @@ This repository contains the complete Open OnDemand (OOD) deployment configurati
   - `fr-CA.yml` - French (Canada) translations
 
 - **`ondemand.d/ondemand.yml`** - Dashboard configuration
-  - Custom branding and styling
-  - Help menu with external links
-  - Pinned applications configuration
+  - Custom branding and styling (Vulcan HPC Cluster theme)
+  - Help menu with external links (Alliance docs, support, tools)
+  - Pinned applications configuration (shell, myjobs, desktop, dev tools)
   - Dashboard layout and widgets
+  - Globus file transfer endpoints (`/home`, `/project`, `/scratch`)
+
+- **`ondemand.d/motd`** - Message of the Day for dashboard
+  - Welcome message for Vulcan platform
+  - Support contact information
 
 #### Web Applications (`/var/www/ood/apps/sys/`)
 Pre-configured interactive applications:
 
-##### Mathematics (2 apps)
+##### Development & Data Science (3 apps)
+- **`jupyter_app/`** - JupyterLab server for interactive computing
+- **`rstudio_server_app/`** - RStudio Server for R development
+- **`vs_code_html_app/`** - VS Code Server for web-based development
+
+##### Mathematics & Computing (2 apps)
 - **`matlab_app/`** - MATLAB numerical computing environment
 - **`octave_app/`** - GNU Octave open-source numerical computing
 
-##### Visualization (5 apps)
+##### Visualization & Graphics (5 apps)
 - **`paraview_app/`** - Scientific visualization and data analysis
 - **`vmd_app/`** - Molecular visualization and analysis
 - **`blender_app/`** - 3D modeling, animation, and rendering
 - **`qgis_app/`** - Geographic information system (GIS)
 - **`afni_app/`** - fMRI data visualization and analysis
 
-##### Development (4 apps)
-- **`jupyter_app/`** - JupyterLab server for interactive computing
-- **`rstudio_server_app/`** - RStudio Server for R development
-- **`vs_code_html_app/`** - VS Code Server for web-based development
+##### Desktop (1 app)
 - **`desktop_expert/`** - Remote desktop environment
 
 ##### System (1 app)
@@ -70,6 +77,23 @@ Each application contains:
 - `form.yml.erb` - User interface form configuration
 - `submit.yml.erb` - Job submission and SLURM integration
 - `template/` - Application-specific templates and scripts
+- `icon.png` - Application icon (most apps)
+- `form.js` - Client-side form validation and behavior
+
+Additional files for specific applications:
+- `info.html.erb` - Additional information page (MATLAB, VMD)
+- `view.html.erb` - Custom application view (Jupyter, RStudio, VS Code)
+- `template/after.sh.erb` - Post-launch scripts (Jupyter, RStudio, VS Code)
+- `template/assets/` - Application-specific assets (Jupyter: Python/Julia logos)
+- `template/desktops/` - Desktop environment scripts (VNC apps)
+
+#### Application Templates (`/var/www/ood/apps/templates/`)
+Reusable template components for application forms:
+- **`form_params`** - Common form parameters shared across applications
+- **`form_params_app`** - Application-specific form parameter templates
+- **`form_params_cpu_app`** - CPU-focused application form parameters
+- **`form_params_gpu`** - GPU-enabled application form parameters
+- **`job_params`** - SLURM job submission parameter templates
 
 #### Public Assets (`/var/www/ood/public/`)
 - **`ualberta/`** - University of Alberta branding
