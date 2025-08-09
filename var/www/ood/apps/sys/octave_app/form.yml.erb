@@ -1,54 +1,67 @@
 <%
+# Application configuration and template setup
 app_name = "Octave"
 template_root = "/var/www/ood/apps/templates/"
+
+# GPU configuration data passed to JavaScript (even though this app is CPU-only)
 gpu_data = {
   "gpu_types" => CustomGPUInfo.gpu_types,
   "gpu_name_mappings" => CustomGPUInfo.gpu_name_mappings.transform_keys(&:to_s),
   "gpu_max_counts" => CustomGPUInfo.gpu_max_counts.transform_keys(&:to_s)
 }
 
-# Define custom per-app min values
+# Application-specific minimum resource requirements
 min_cores = 8 
 min_mem_gb = 8
 %>
 ---
+# JavaScript file for client-side form validation and dynamic behavior
 javascript:
   - form.js
 
+# Application title displayed in the interface
 title: <%= app_name %>
 
+# Form field definitions and configuration
 attributes:
+  # Hidden field containing GPU information (for form consistency, though this app is CPU-only)
   gpudata:
     widget: hidden_field
     cacheable: false
     value: "<%= gpu_data.to_json.gsub('"','\\"') %>"
 
+  # Hidden field with cluster's maximum memory per node for validation
   memorydata:
     widget: hidden_field
     cacheable: false
     value: "<%= CustomClusterInfo.max_memory_per_node %>"
 
+  # Hidden field with application-specific minimum CPU requirement
   mincpu:
     widget: hidden_field
     cacheable: false
     value: "<%= min_cores %>"
 
+  # Hidden field with application-specific minimum memory requirement
   minram:
     widget: hidden_field
     cacheable: false
     value: "<%= min_mem_gb %>"
 
+  # Hidden field with cluster's maximum CPUs per node for validation
   cpunum:
     widget: hidden_field
     cacheable: false
     value: "<%= CustomClusterInfo.max_cpus_per_node %>"
 
+  # Cluster selection dropdown (typically only one option)
   cluster:
     widget: select
     label: Cluster
     options:
       - "<%= CustomClusterInfo.cluster_name %>"
 
+  # Desktop environment selection for VNC applications
   desktop:
     label: "Desktop Environment"
     widget: select
@@ -63,6 +76,7 @@ attributes:
       - MATE: Lightweight desktop, good for low-resource sessions.
       - XFCE: Minimal desktop with very low resource usage.
 
+  # Application version/module selection
   launch_app:
     widget: select
     label: Octave Version
@@ -72,23 +86,26 @@ attributes:
       - [ "<%= label %>", "<%= value %>", { data-hide-custom-environment: true } ]
       <% end %>
 
+# Import common job parameters from template (cores, hours, email, VNC resolution, etc.)
 <% IO.foreach(template_root+"job_params") do |line| %><%= line %><% end %>
 
+  # Force memory customization to be enabled for this application
   memtask_checkbox:
     value: "1"
     widget: hidden_field
     cacheable: false
 
-
+# Form field display order and layout
 form:
-  - cluster
-  - bc_num_hours
-  - desktop
-  - launch_app
-  - memorydata
-  - cpunum
-  - mincpu
-  - minram
+  - cluster                    # Cluster selection
+  - bc_num_hours              # Job runtime limit
+  - desktop                   # Desktop environment choice
+  - launch_app                # Application version/module
+  - memorydata                # Hidden: max memory available
+  - cpunum                    # Hidden: max CPUs available
+  - mincpu                    # Hidden: minimum CPUs required
+  - minram                    # Hidden: minimum memory required
+# Import CPU-only form fields from template (CPU cores, memory, VNC settings - no GPU options)
 <% IO.foreach(template_root+"form_params_cpu") do |line| %><%= line %><% end %>
 
 

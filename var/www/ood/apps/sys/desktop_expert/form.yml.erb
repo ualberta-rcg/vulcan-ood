@@ -1,50 +1,63 @@
 <%
+# Application configuration and template setup
 app_name = "Interactive Desktop"
 template_root = "/var/www/ood/apps/templates/"
+
+# GPU configuration data passed to JavaScript for dynamic form behavior
 gpu_data = {
   "gpu_types" => CustomGPUInfo.gpu_types,
   "gpu_name_mappings" => CustomGPUInfo.gpu_name_mappings.transform_keys(&:to_s),
   "gpu_max_counts" => CustomGPUInfo.gpu_max_counts.transform_keys(&:to_s)
 }
-# Define custom per-app min values
+
+# Application-specific minimum resource requirements (desktop needs more resources)
 min_cores = 8
 min_mem_gb = 16
 %>
 ---
+# Application title displayed in the interface
 title: <%= app_name %>
 
+# Form field definitions and configuration
 attributes:
+  # Hidden field containing GPU information for JavaScript form logic
   gpudata:
     widget: hidden_field
     cacheable: false
     value: "<%= gpu_data.to_json.gsub('"','\\"') %>"
 
+  # Hidden field with cluster's maximum memory per node for validation
   memorydata:
     widget: hidden_field
     cacheable: false
     value: "<%= CustomClusterInfo.max_memory_per_node %>"
 
+  # Hidden field with cluster's maximum CPUs per node for validation
   cpunum:
     widget: hidden_field
     cacheable: false
     value: "<%= CustomClusterInfo.max_cpus_per_node %>"
 
+  # Hidden field with application-specific minimum CPU requirement
   mincpu:
     widget: hidden_field
     cacheable: false
     value: "<%= min_cores %>"
 
+  # Hidden field with application-specific minimum memory requirement
   minram:
     widget: hidden_field
     cacheable: false
     value: "<%= min_mem_gb %>"
 
+  # Cluster selection dropdown (typically only one option)
   cluster:
     widget: select
     label: Cluster
     options:
       - "<%= CustomClusterInfo.cluster_name %>"
 
+  # Desktop environment selection (no "none" option since this IS a desktop app)
   desktop:
     label: "Desktop Environment"
     widget: select
@@ -57,22 +70,25 @@ attributes:
       - MATE: Lightweight desktop, good for low-resource sessions.
       - XFCE: Minimal desktop with very low resource usage.
 
+# Import common job parameters from template (cores, hours, email, VNC resolution, etc.)
 <% IO.foreach(template_root+"job_params") do |line| %><%= line %><% end %>
 
+  # Force memory customization to be enabled for this application
   memtask_checkbox:
     value: "1"
     cacheable: false
     widget: hidden_field
 
-
+# Form field display order and layout
 form:
-  - cluster
-  - bc_num_hours
-  - desktop
-  - memorydata
-  - cpunum
-  - mincpu
-  - minram
+  - cluster                    # Cluster selection
+  - bc_num_hours              # Job runtime limit
+  - desktop                   # Desktop environment choice
+  - memorydata                # Hidden: max memory available
+  - cpunum                    # Hidden: max CPUs available
+  - mincpu                    # Hidden: minimum CPUs required
+  - minram                    # Hidden: minimum memory required
+# Import form fields from template with environment options (CPU cores, memory, GPU, environment setup, VNC settings, etc.)
 <% IO.foreach(template_root+"form_params_env") do |line| %><%= line %><% end %>
 
 
