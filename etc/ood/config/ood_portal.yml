@@ -1,47 +1,85 @@
 ---
+# Open OnDemand Portal Configuration for Vulcan HPC Cluster
+# This file configures the Apache web server settings and authentication for OOD
+
+# =============================================================================
+# BASIC SERVER CONFIGURATION
+# =============================================================================
+
+# Primary hostname for the OOD web portal
 servername: vulcan.alliancecan.ca
 
-node_uri: "/node"
-rnode_uri: "/rnode"
+# URI paths for compute node access (reverse proxy)
+node_uri: "/node"                    # Standard compute node access
+rnode_uri: "/rnode"                  # Reverse proxy for compute nodes
 
-errorlog: 'ood-error.log'
-accesslog: 'ood-access.log'
+# Apache log file configurations
+errorlog: 'ood-error.log'           # Error log filename
+accesslog: 'ood-access.log'         # Access log filename
 
-# Use OIDC authentication
+# =============================================================================
+# AUTHENTICATION CONFIGURATION
+# =============================================================================
+
+# Enable OpenID Connect (OIDC) authentication
 auth:
-  - "AuthType openid-connect"
-  - "Require valid-user"
+  - "AuthType openid-connect"         # Use OIDC for authentication
+  - "Require valid-user"              # Require authenticated users only
 
-# Use OIDC logout
-logout_redirect: "https://idp.alliancecan.ca/idp/profile/Logout?return=https://alliancecan.ca"    # Return URL Needs some TLC
+# OIDC logout configuration
+logout_redirect: "https://idp.alliancecan.ca/idp/profile/Logout?return=https://alliancecan.ca"    # Redirect after logout
 
-pun_pre_hook_root_cmd: "/opt/ood/scripts/ood_pun_oidc_email.sh"  # This Passes the OIDC Email Value to the Users PUN
-pun_pre_hook_exports: "OIDC_CLAIM_email"
+# Per-user NGINX (PUN) pre-execution hooks
+pun_pre_hook_root_cmd: "/opt/ood/scripts/ood_pun_oidc_email.sh"  # Script to pass OIDC email to user's PUN
+pun_pre_hook_exports: "OIDC_CLAIM_email"                        # Export OIDC email claim as environment variable
 
-oidc_uri: "/oidc"
-oidc_provider_metadata_url: "https://idp.alliancecan.ca/.well-known/openid-configuration"
-oidc_client_id: "vulcan.alliancecan.ca"
-oidc_client_secret: "OIDC_SECRET"
-oidc_remote_user_claim: "preferred_username"
-oidc_scope: "openid profile email"
-oidc_session_inactivity_timeout: 28800
-oidc_session_max_duration: 28800
-oidc_state_max_number_of_cookies: "10 true"
+# =============================================================================
+# OIDC PROVIDER CONFIGURATION
+# =============================================================================
+
+# OIDC endpoint and provider settings
+oidc_uri: "/oidc"                                                                  # OOD OIDC endpoint path
+oidc_provider_metadata_url: "https://idp.alliancecan.ca/.well-known/openid-configuration"  # Alliance Canada OIDC discovery
+oidc_client_id: "vulcan.alliancecan.ca"                                          # OIDC client identifier
+oidc_client_secret: "OIDC_SECRET"                                                 # OIDC client secret (should be set via environment)
+
+# OIDC claims and scopes
+oidc_remote_user_claim: "preferred_username"                                     # Claim to use for username mapping
+oidc_scope: "openid profile email"                                               # Requested OIDC scopes
+
+# Session timeout configuration
+oidc_session_inactivity_timeout: 28800                                           # 8 hours inactivity timeout
+oidc_session_max_duration: 28800                                                 # 8 hours maximum session duration
+oidc_state_max_number_of_cookies: "10 true"                                     # Cookie management settings
+# Advanced OIDC module settings for Apache mod_auth_openidc
 oidc_settings:
-  OIDCPassIDTokenAs: "serialized"
-  OIDCPassRefreshToken: "On"
-  OIDCPassClaimsAs: "environment"
-  OIDCStripCookies: "mod_auth_openidc_session mod_auth_openidc_session_chunks mod_auth_openidc_session_0 mod_auth_openidc_session_1"
-  OIDCResponseType: "code"
-#  OIDCCacheType: "redis"                      #  Only Needed If Redis
-#  OIDCRedisCacheServer: "172.26.92.19:6379"   #  Only Needed If Redis
-#  OIDCRedisCachePassword: "REDIS_SECRET"      #  Only Needed If Redis
-  OIDCXForwardedHeaders: "X-Forwarded-Proto"
+  OIDCPassIDTokenAs: "serialized"             # Pass ID token as serialized string
+  OIDCPassRefreshToken: "On"                  # Enable refresh token passing
+  OIDCPassClaimsAs: "environment"             # Pass OIDC claims as environment variables
+  OIDCStripCookies: "mod_auth_openidc_session mod_auth_openidc_session_chunks mod_auth_openidc_session_0 mod_auth_openidc_session_1"  # Strip OIDC cookies
+  OIDCResponseType: "code"                    # Use authorization code flow
+  
+  # Redis session storage (commented out - using default file-based storage)
+  #OIDCCacheType: "redis"                      # Use Redis for session storage
+  #OIDCRedisCacheServer: "172.26.92.19:6379"   # Redis server address
+  #OIDCRedisCachePassword: "REDIS_SECRET"      # Redis authentication password
+  
+  OIDCXForwardedHeaders: "X-Forwarded-Proto"  # Trust X-Forwarded-Proto header for SSL detection
 
+# =============================================================================
+# SSL/TLS CONFIGURATION
+# =============================================================================
+
+# SSL certificate configuration for HTTPS
 ssl:
-  - 'SSLCertificateFile "/etc/ssl/ood/fullchain.pem"'   # You must Generate the Certs yourself.
-  - 'SSLCertificateKeyFile "/etc/ssl/ood/privkey.pem"'  # You must Generate the Certs yourself.
+  - 'SSLCertificateFile "/etc/ssl/ood/fullchain.pem"'   # Full certificate chain (generate manually)
+  - 'SSLCertificateKeyFile "/etc/ssl/ood/privkey.pem"'  # Private key file (generate manually)
 
+# =============================================================================
+# CUSTOM APACHE DIRECTIVES
+# =============================================================================
+
+# Additional Apache virtual host directives
 custom_vhost_directives:
-  - 'LogLevel auth_openidc:debug'
+  - 'LogLevel auth_openidc:debug'                       # Enable debug logging for OIDC authentication
 

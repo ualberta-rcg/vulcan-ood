@@ -1,16 +1,36 @@
+# Vulcan Open OnDemand Dashboard Configuration
+# This file customizes the appearance and behavior of the OOD web interface
+
+# =============================================================================
+# BRANDING AND APPEARANCE
+# =============================================================================
+
+# Main dashboard title displayed in browser and interface
 dashboard_title: "Vulcan HPC Cluster"
+
+# University of Alberta logo in header navigation
 dashboard_header_img_logo: "/public/ualberta/logo.png"
 public_url: "/public/ualberta/"
-brand_bg_color: "#007C41"  # Green background
-brand_link_active_bg_color: "#005A2C"  # Optional darker green for active tab
 
+# University of Alberta brand colors
+brand_bg_color: "#007C41"              # UofA green background
+brand_link_active_bg_color: "#005A2C"  # Darker green for active navigation tabs
+
+# AMII (Alberta Machine Intelligence Institute) logo on main dashboard
 dashboard_logo: "/public/amii/amii-logo.png"
 dashboard_logo_height: 150
 
+# Custom CSS for additional branding
 custom_css_files:
-  - "branding.css"
+  - "branding.css"                      # Located in /public/ualberta/branding.css
 
+# =============================================================================
+# HELP MENU CONFIGURATION
+# =============================================================================
+
+# Custom help menu with grouped links for user assistance
 help_menu:
+  # Documentation section
   - group: "Alliance Documentation"
   - title: "Vulcan HPC Cluster Information"
     icon: "fas://brain"
@@ -22,14 +42,16 @@ help_menu:
     icon: "fas://tasks"
     url: "https://docs.alliancecan.ca/wiki/Running_jobs"
 
+  # External tools and portals
   - group: "Tools and Portals"
-  - title: "Alliance CCDB Portal"
+  - title: "Alliance CCDB Portal"             # Compute Canada Database
     icon: "fas://database"
     url: "https://ccdb.alliancecan.ca/"
-  - title: "Vulcan's Trailblazing Turtle Portal"
+  - title: "Vulcan's Trailblazing Turtle Portal"  # Vulcan-specific portal
     icon: "fas://cogs"
     url: "https://portal.vulcan.alliancecan.ca/"
 
+  # Institutional links
   - group: "Links"
   - title: "Alberta Machine Intelligence Institute"
     icon: "fas://puzzle-piece"
@@ -38,6 +60,7 @@ help_menu:
     icon: "fas://server"
     url: "https://www.ualberta.ca/en/information-services-and-technology/research-computing/index.html"
 
+  # Support channels
   - group: "Support"
   - title: "Alliance Support Website"
     icon: "fas://life-ring"
@@ -47,35 +70,47 @@ help_menu:
     url: "mailto:support@tech.alliancecan.ca"
 
 
-pinned_apps:
-  - sys/shell
-  - sys/myjobs
-  - sys/activejobs
-  - sys/system-status
-  - sys/desktop_expert
-  - sys/jupyter_app
-  - sys/rstudio_server_app
-  - sys/vs_code_html_app
+# =============================================================================
+# DASHBOARD LAYOUT AND NAVIGATION
+# =============================================================================
 
+# Applications prominently displayed on the main dashboard
+pinned_apps:
+  - sys/shell              # Terminal access to cluster
+  - sys/myjobs             # User's job queue management
+  - sys/activejobs         # Currently running jobs
+  - sys/system-status      # Cluster status information
+  - sys/desktop_expert     # VNC desktop sessions
+  - sys/jupyter_app        # Jupyter notebook environment
+  - sys/rstudio_server_app # RStudio IDE for R development
+  - sys/vs_code_html_app   # VS Code web interface
+
+# Dashboard widget layout configuration
 dashboard_layout:
   rows:
     - columns:
-      - width: 8
+      - width: 8           # Bootstrap column width (8 out of 12)
         widgets:
-          - motd
-          - pinned_apps
+          - motd           # Message of the Day widget
+          - pinned_apps    # Featured applications widget
 
+# =============================================================================
+# GLOBUS FILE TRANSFER INTEGRATION
+# =============================================================================
+
+# Globus endpoints for high-speed data transfer
+# All endpoints use the same Globus endpoint ID for Vulcan cluster
 globus_endpoints:
-  - path: "/home"
-    endpoint: "97bda3da-a723-4dc0-ba7e-728f35183b43"
+  - path: "/home"                                        # User home directories
+    endpoint: "97bda3da-a723-4dc0-ba7e-728f35183b43"   # Vulcan Globus endpoint
     endpoint_path: "/home"
 
-  - path: "/project"
-    endpoint: "97bda3da-a723-4dc0-ba7e-728f35183b43"
+  - path: "/project"                                     # Shared project storage
+    endpoint: "97bda3da-a723-4dc0-ba7e-728f35183b43"   # Vulcan Globus endpoint
     endpoint_path: "/project"
 
-  - path: "/scratch"
-    endpoint: "97bda3da-a723-4dc0-ba7e-728f35183b43"
+  - path: "/scratch"                                     # High-speed temporary storage
+    endpoint: "97bda3da-a723-4dc0-ba7e-728f35183b43"   # Vulcan Globus endpoint
     endpoint_path: "/scratch"
 
 

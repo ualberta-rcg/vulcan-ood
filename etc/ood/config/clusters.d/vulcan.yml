@@ -1,16 +1,26 @@
 ---
+# Vulcan HPC Cluster Configuration for Open OnDemand
+# This file defines the cluster connection and job submission settings
+
 v2:
-   metadata:
-     title: "Vulcan"
-   login:
-     host: "vulcan.alliancecan.ca"
-   job:
-     adapter: "slurm"
-     bin: "/usr/bin/"
-     conf: "/etc/slurm/slurm.conf"
-     copy_environment: false
-   submit:
-     host_allowlist:
-       - "rack*"
-       - "vulcan*"
+  metadata:
+    # Display name shown in the OOD interface
+    title: "Vulcan"
+    
+  login:
+    # SSH login host for shell access and file operations
+    host: "vulcan.alliancecan.ca"
+    
+  job:
+    # Job scheduler configuration
+    adapter: "slurm"                    # Use SLURM workload manager
+    bin: "/usr/bin/"                    # Path to SLURM binaries (sbatch, squeue, etc.)
+    conf: "/etc/slurm/slurm.conf"      # SLURM configuration file location
+    copy_environment: false             # Don't copy user's shell environment to jobs
+    
+  submit:
+    # Allowed hosts for job submission - restricts where jobs can be submitted from
+    host_allowlist:
+      - "rack*"      # Allow submission from any rack node (compute nodes)
+      - "vulcan*"    # Allow submission from vulcan login nodes
 
