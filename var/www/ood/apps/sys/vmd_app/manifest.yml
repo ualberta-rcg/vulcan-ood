@@ -1,6 +1,6 @@
 ---
 name: VMD
-category: Visualization
+category: Visualization & Graphics
 role: batch_connect
 description: |
   Launch a [VMD] session on the [Vulcan] high-performance computing (HPC) cluster, operated by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].
