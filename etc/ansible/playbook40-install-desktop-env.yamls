@@ -1,0 +1,76 @@
+- name: Install Desktop Environments
+  hosts: localhost
+  become: yes
+  environment:
+    DEBIAN_FRONTEND: "noninteractive"
+  vars:
+    desktop_packages:
+      - adwaita-icon-theme
+      - dbus-x11
+      - dolphin
+      - engrampa
+      - file-roller
+      - fonts-dejavu
+      - fonts-noto
+      - gnome-control-center
+      - gnome-panel
+      - gnome-session
+      - gnome-session-flashback
+      - gnome-settings-daemon
+      - gnome-shell
+      - gnome-shell-extensions
+      - gnome-terminal
+      - gnome-themes-extra
+      - gnome-tweaks
+      - gvfs
+      - gvfs-backends
+      - gvfs-daemons
+      - kate
+      - konsole
+      - light-locker
+      - lxqt
+      - mate-desktop-environment-core
+      - mate-system-monitor
+      - mate-utils
+      - metacity
+      - nautilus-extension-gnome-terminal
+      - network-manager-gnome
+      - pm-utils
+      - policykit-1
+      - policykit-1-gnome
+      - pulseaudio-utils
+      - shared-mime-info
+      - thunar-volman
+      - tumbler
+      - x11-utils
+      - x11-xserver-utils
+      - xdg-user-dirs
+      - xdg-user-dirs-gtk
+      - xdg-utils
+      - xfce4
+      - xfce4-goodies
+      - xfce4-screensaver
+      - xfce4-terminal
+      - xfce4-whiskermenu-plugin
+      - xfonts-base
+      - xinit
+      - gnome-screenshot
+      - xfce4-screenshooter
+      - ark
+      - pluma
+      - mutter
+      - virtualgl
+
+  tasks:
+    - name: Install desktop environment packages
+      apt:
+        name: "{{ desktop_packages }}"
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Run vglserver_config to finalize VirtualGL setup
+      command: >
+        /opt/VirtualGL/bin/vglserver_config
+        +glx +s +f +t
+      args:
+        creates: /etc/opt/VirtualGL/vgl_xauth_key
