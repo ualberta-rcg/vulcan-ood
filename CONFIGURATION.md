@@ -134,6 +134,20 @@ Located in `/opt/ood/cron/`:
 
 **Important**: Run these cron scripts **before** starting OOD to populate the initial configuration files. The auto-generated files contain essential cluster information that OOD needs to function properly.
 
+## Configuration Updates
+
+When making configuration changes, use these commands to apply updates:
+
+```bash
+# Update OOD portal configuration
+sudo /opt/ood/ood-portal-generator/sbin/update_ood_portal -f
+
+# Clean up user PUN directories (run on all OOD nodes)
+sudo /opt/ood/nginx_stage/sbin/nginx_stage nginx_clean --force
+```
+
+**Note**: The `nginx_clean` command removes all user PUN directories and should be run on all OOD nodes when making configuration changes.
+
 **Cron Setup**:
 - **Copy or symlink** scripts to `/etc/cron.weekly/` or `/etc/cron.d/`
 - **Run as root** since scripts need access to SLURM commands and system paths
