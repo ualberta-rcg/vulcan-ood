@@ -51,19 +51,17 @@ sudo apt update
 sudo apt install ondemand
 ```
 
-### 2. Install Apache OIDC Module
+### 2. Install Apache and OIDC Module
 
 ```bash
-# Install Apache OIDC module for authentication
-sudo apt install libapache2-mod-auth-openidc
+# Install Apache and OIDC module with required dependencies
+sudo apt-get install apache2 libapache2-mod-auth-openidc python3-requests python3-requests-oauthlib
 
-# Enable required Apache modules
-sudo a2enmod ssl
+# Enable the OIDC module
 sudo a2enmod auth_openidc
-sudo a2enmod proxy
-sudo a2enmod proxy_http
-sudo a2enmod headers
-sudo a2enmod rewrite
+
+# Restart Apache to load the module
+sudo systemctl restart apache2
 ```
 
 
@@ -178,16 +176,14 @@ Ensure each compute node has access to:
 
 ## Start and Test
 
-### 1. Start OOD Services
+### 1. Start Apache Service
 
 ```bash
-# Start Apache
+# Start and enable Apache
 sudo systemctl start apache2
 sudo systemctl enable apache2
 
-# Start OOD services
-sudo systemctl start ondemand
-sudo systemctl enable ondemand
+# Note: OOD runs as part of Apache, not as a separate systemd service
 ```
 
 ### 2. Apply Configuration Updates
@@ -203,11 +199,11 @@ sudo /opt/ood/nginx_stage/sbin/nginx_stage nginx_clean --force
 ### 3. Verify Installation
 
 ```bash
-# Check OOD status
-sudo systemctl status ondemand
-
 # Check Apache status
 sudo systemctl status apache2
+
+# Verify OIDC module is loaded
+apache2ctl -M | grep openidc
 
 # Test web access
 curl -k https://your-ood-domain
@@ -247,6 +243,23 @@ sudo tail -f /var/log/apache2/ood-*.log
 sudo tail -f /var/log/slurm/*
 ```
 
+## OOD Restart Process
+
+When making configuration changes, use this sequence to restart OOD:
+
+```bash
+# Clean up user PUN directories (run on all OOD nodes)
+sudo /opt/ood/nginx_stage/sbin/nginx_stage nginx_clean --force
+
+# Update OOD portal configuration
+sudo /opt/ood/ood-portal-generator/sbin/update_ood_portal -f
+
+# Restart Apache (OOD runs as part of Apache)
+sudo systemctl restart apache2
+```
+
+**Note**: OOD does not run as a separate systemd service. It runs as part of Apache, so restarting Apache restarts OOD.
+
 ## Troubleshooting
 
 ### Common Issues
@@ -255,6 +268,7 @@ sudo tail -f /var/log/slurm/*
    - Verify SSSD configuration
    - Check OIDC provider connectivity
    - Verify SSL certificates
+   - Ensure OIDC module is loaded: `apache2ctl -M | grep openidc`
 
 2. **SLURM Integration Issues**
    - Check SLURM commands availability
@@ -272,8 +286,8 @@ sudo tail -f /var/log/slurm/*
 # Check OOD configuration
 sudo /opt/ood/ood-portal-generator/sbin/update_ood_portal -f
 
-# Restart OOD services
-sudo systemctl restart ondemand
+# Restart OOD (Apache restart required)
+sudo systemctl restart apache2
 
 # Check SLURM connectivity
 sinfo -N -l
