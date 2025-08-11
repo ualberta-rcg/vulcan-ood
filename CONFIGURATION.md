@@ -157,6 +157,23 @@ Located in `/opt/ood/cron/`:
 
 **Important**: Run these cron scripts **before** starting OOD to populate the initial configuration files. The auto-generated files contain essential cluster information that OOD needs to function properly.
 
+**Cron Setup**:
+- **Copy or symlink** scripts to `/etc/cron.weekly/` or `/etc/cron.d/`
+- **Run as root** since scripts need access to SLURM commands and system paths
+- **Recommended frequency**: Weekly (cluster configuration changes infrequently)
+
+**Example cron entries** (add to `/etc/cron.d/ood-config`):
+```bash
+# Update cluster partition information weekly
+0 2 * * 0 root /opt/ood/cron/gen_cluster_rb.sh
+
+# Update GPU configuration weekly  
+0 3 * * 0 root /opt/ood/cron/gen_gpu_rb.sh
+
+# Update application versions weekly
+0 4 * * 0 root /opt/ood/cron/gen_app_rb.sh
+```
+
 ## Deployment Checklist
 
 ### Required Changes
