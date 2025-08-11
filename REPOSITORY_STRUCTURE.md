@@ -31,10 +31,15 @@ vulcan-ood/                                 # Repository root
 │   │       │   └── fr-CA.yml             # French (Canada) translations
 │   │       └── apps/                      # Application configurations
 │   │           ├── dashboard/             # Dashboard customizations
-│   │           │   └── initializers/      # Auto-generated Ruby modules
-│   │           │       ├── paice_cluster_info.rb    # SLURM partition info
-│   │           │       ├── paice_gpu_info.rb        # GPU configuration
-│   │           │       └── paice_app_versions.rb    # Software versions
+│   │           │   ├── initializers/      # Auto-generated Ruby modules
+│   │           │   │   ├── paice_cluster_info.rb    # SLURM partition info
+│   │           │   │   ├── paice_gpu_info.rb        # GPU configuration
+│   │           │   │   └── paice_app_versions.rb    # Software versions
+│   │           │   └── views/             # Dashboard view customizations
+│   │           │       └── layouts/       # Layout templates
+│   │           │           ├── _footer.html.erb     # Footer template
+│   │           │           └── nav/                 # Navigation components
+│   │           │               └── _logo.html.erb   # Logo template
 │   │           └── shell/
 │   │               └── env                # Shell app security settings
 │   └── ansible/                           # Ansible automation for compute hosts
@@ -118,6 +123,9 @@ vulcan-ood/                                 # Repository root
     - `paice_cluster_info.rb` - Auto-generated cluster metadata
     - `paice_gpu_info.rb` - Auto-generated GPU information
     - `paice_app_versions.rb` - Auto-generated application versions
+  - **`views/layouts/`** - Dashboard view customizations
+    - `_footer.html.erb` - Footer template with branding
+    - `nav/_logo.html.erb` - Navigation logo template
 
 - **`apps/shell/env`** - Shell application environment
   - SSH host allowlist for compute node access
