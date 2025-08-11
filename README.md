@@ -92,6 +92,8 @@ This project wouldn't have been possible without the generous help and support o
 The following individuals have also contributed to this project through various channels:
 - David Magda  
 - Grigory Shamov
+- Olexa Bilaniuk
+- Many Others
 
 *Note: Some contributors may have profiles on institutional GitLab instances (e.g., git.computecanada.ca, gitlab.rcg.sfu.ca) rather than public GitHub profiles.*
 
