@@ -11,9 +11,9 @@
 
 ## Description
 
-This repository contains the complete configuration files, scripts, and application definitions for **Open OnDemand (OOD) deployment on the Vulcan HPC cluster** - a Digital Research Alliance of Canada compute resource operated by the University of Alberta as part of the PAICE (Platform for Advanced Infrastructure and Computing Excellence) initiative.
+This repository contains the complete configuration files, scripts, and application definitions for deploying **Open OnDemand (OOD) on the Vulcan HPC cluster** - a Digital Research Alliance of Canada compute resource operated by the University of Alberta as part of the PAICE (Platform for Advanced Infrastructure and Computing Excellence) initiative.
 
-The goal is to provide a reproducible setup for OOD using Apache, OIDC authentication, and Let's Encrypt SSL. This repository serves as a template that can be adapted for other HPC clusters.
+The project provides a production-ready, reproducible setup for OOD using Apache, OIDC authentication, and Let's Encrypt SSL. This repository serves as both a working deployment for Vulcan and a comprehensive template that can be adapted for other HPC clusters and institutions.
 
 **Key Features:**
 - **Production-ready OOD deployment** with OIDC authentication
