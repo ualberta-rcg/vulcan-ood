@@ -90,9 +90,8 @@ Additional files for specific applications:
 #### Application Templates (`/var/www/ood/apps/templates/`)
 Reusable template components for application forms:
 - **`form_params`** - Common form parameters shared across applications
-- **`form_params_app`** - Application-specific form parameter templates
-- **`form_params_cpu_app`** - CPU-focused application form parameters
-- **`form_params_gpu`** - GPU-enabled application form parameters
+- **`form_params_cpu`** - CPU-focused application form parameters
+- **`form_params_env`** - Environment-specific form parameters
 - **`job_params`** - SLURM job submission parameter templates
 
 #### Public Assets (`/var/www/ood/public/`)

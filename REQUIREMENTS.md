@@ -2,16 +2,12 @@
 
 This document outlines the essential requirements for deploying Open OnDemand (OOD) on your HPC cluster.
 
-## OOD Server Requirements
+## System Requirements
 
-### System Requirements
+### Operating System
 - **Ubuntu 24.04** (tested and built from this version)
 - **Root/sudo access** on the OOD host
 - **SSH access** for the users
-- **User home directories** accessible
-- **Public DNS domain** (e.g., `ood.yourcluster.edu`)
-- **SSL certificates** for your domain
-- **CVMFS** for application distribution
 
 ### Network Requirements
 - **DNS resolution** configured for your OOD domain
@@ -19,48 +15,65 @@ This document outlines the essential requirements for deploying Open OnDemand (O
 - **Firewall rules** allowing HTTP/HTTPS traffic (ports 80/443)
 - **Network access** to SLURM cluster
 
-### Authentication Requirements
-- **OIDC Identity Provider** (Shibboleth or other OIDC-compliant provider)
+## Authentication Requirements
+
+### OIDC Identity Provider
+- **OIDC-compliant provider** (Shibboleth, Keycloak, Azure AD, etc.)
 - **OIDC Client Registration** with your identity provider:
   - Client ID (e.g., `ood.yourcluster.edu`)
   - Client Secret
   - Redirect URIs: `https://your-ood-domain/oidc`
   - Required scopes: `openid profile email`
-- **SSSD (System Security Services Daemon)** installed and running
-  - User authentication against your identity provider
-  - Home directory mapping
+  - Response Type: `code`
 
-### Cluster Integration
+### SSSD Integration
+- **SSSD (System Security Services Daemon)** installed and running
+- **User authentication** against your identity provider
+- **Home directory mapping** for user accounts
+- **Group membership** synchronization
+
+## Cluster Integration
+
+### SLURM Requirements
 - **SLURM job scheduler** installed and configured
-  - SLURM commands available on OOD host (`squeue`, `sinfo`, `scontrol`)
-  - SLURM configuration file (`/etc/slurm/slurm.conf`) must be available
-  - **MUNGE** authentication service (required for SLURM)
+- **SLURM commands** available on OOD host (`squeue`, `sinfo`, `scontrol`)
+- **SLURM configuration file** (`/etc/slurm/slurm.conf`) must be accessible
+- **MUNGE authentication service** (required for SLURM)
+
+### File System Access
 - **User home directories** mounted and accessible on OOD host
+- **Shared file systems** accessible from all nodes
 - **Compute node access** from OOD host (SSH key-based authentication)
 
-### Optional Components
-- **Redis** for session management (recommended for multiple OOD deployments)
+## Node Requirements
 
-## Compute Node Requirements
-
-### System Requirements
-- **Linux distribution** compatible with your cluster
-- **SSH access** from OOD server
-- **User home directories** accessible
+### All Systems (OOD Server, Login Nodes, Compute Nodes)
+Each system must have:
+- **Home directories** (shared across all nodes)
+- **SLURM tools** and client commands
+- **SLURM controller/database access** (slurmctld, slurmdbd)
+- **SSSD** for authentication and user management
 - **CVMFS** for application distribution
+- **SSH** access configured
+
+### OOD Server Specific
+- **Public DNS domain** (e.g., `ood.yourcluster.edu`)
+- **SSL certificates** for your domain
+- **Apache/Nginx** web server
+- **Ruby** runtime environment
+
+### Compute Node Specific
 - **VirtualGL** installed for GPU applications
+- **XDG runtime setup** script (`/usr/local/bin/create-ice.sh`)
+- **Sudoers configuration** for XDG runtime creation
 
-### XDG Runtime Setup
-- **`/usr/local/bin/create-ice.sh`** script installed
-  - Creates `/tmp/.ICE-unix` directory for X11 forwarding
-  - Sets up XDG runtime symlinks (`/run/user/$UID` → `/tmp/xdg-runtime-$UID`)
-  - Called by OOD applications during job startup
-- **Sudoers configuration** (`/etc/sudoers.d/create-ice-xdg`)
-  - Allows all users to run `create-ice.sh` without password
-  - Required for interactive applications on compute nodes
-  - Entry: `ALL ALL=(ALL) NOPASSWD: /usr/local/bin/create-ice.sh`
+## Optional Components
 
-### Network
-- **Direct Network Access** from OOD server
-- **Network access** to shared file systems
-- **DNS resolution** for compute node hostnames 
+### Session Management
+- **Redis** for session management (recommended for multiple OOD deployments)
+- **Kubernetes** for containerized session management
+
+### Additional Features
+- **Globus** for file transfer integration
+- **Monitoring** and logging systems
+- **Backup** and recovery solutions 

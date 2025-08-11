@@ -2,29 +2,91 @@
 
 This document outlines the key configuration files and settings for deploying Open OnDemand (OOD) on the Vulcan HPC cluster.
 
-## Configuration File Structure
+## Repository File Structure
 
 ```
-/etc/
-├── motd                                    # System-wide Message of the Day
-├── sudoers.d/
-│   └── create-ice-xdg                     # XDG runtime setup permissions
-└── ood/
-    └── config/
-        ├── ood_portal.yml                  # Main OOD portal configuration
-        ├── nginx_stage.yml                 # PUN environment variables
-        ├── ood_portal.sha256sum           # Apache config checksum
-        ├── clusters.d/
-        │   └── vulcan.yml                 # Vulcan cluster definition
-        ├── ondemand.d/
-        │   └── ondemand.yml               # Dashboard customization
-        ├── locales/
-        │   ├── en-CA.yml                  # English (Canada) translations
-        │   └── fr-CA.yml                  # French (Canada) translations
-        └── apps/
-            ├── dashboard/                  # Dashboard customizations
-            └── shell/
-                └── env                     # Shell app security settings
+vulcan-ood/                                 # Repository root
+├── .git/                                  # Git version control
+├── LICENSE                                # MIT License
+├── README.md                              # Project overview
+├── CONFIGURATION.md                       # This configuration guide
+├── REQUIREMENTS.md                        # System requirements
+├── REPOSITORY_STRUCTURE.md                # Detailed structure documentation
+│
+├── etc/                                   # System configuration files
+│   ├── motd                               # System-wide Message of the Day
+│   ├── sudoers.d/
+│   │   └── create-ice-xdg                 # XDG runtime setup permissions
+│   └── ood/                               # Open OnDemand configuration
+│       └── config/
+│           ├── ood_portal.yml             # Main OOD portal configuration
+│           ├── nginx_stage.yml            # PUN environment variables
+│           ├── ood_portal.sha256sum      # Apache config checksum
+│           ├── clusters.d/
+│           │   └── vulcan.yml            # Vulcan cluster definition
+│           ├── ondemand.d/
+│           │   └── ondemand.yml          # Dashboard customization
+│           ├── locales/                   # Internationalization
+│           │   ├── en-CA.yml             # English (Canada) translations
+│           │   └── fr-CA.yml             # French (Canada) translations
+│           └── apps/                      # Application configurations
+│               ├── dashboard/             # Dashboard customizations
+│               │   └── initializers/      # Auto-generated Ruby modules
+│               │       ├── paice_cluster_info.rb    # SLURM partition info
+│               │       ├── paice_gpu_info.rb        # GPU configuration
+│               │       └── paice_app_versions.rb    # Software versions
+│               └── shell/
+│                   └── env                # Shell app security settings
+│
+├── opt/                                   # Optional software and scripts
+│   └── ood/
+│       ├── cron/                          # Automated configuration generators
+│       │   ├── gen_cluster_rb.sh         # Generate cluster info from SLURM
+│       │   ├── gen_gpu_rb.sh             # Discover GPU configuration
+│       │   └── gen_app_rb.sh             # Query environment modules
+│       └── scripts/                       # OOD integration scripts
+│           └── ood_pun_oidc_email.sh     # OIDC email claim handler
+│
+├── usr/                                   # User utilities
+│   └── local/
+│       └── bin/
+│           └── create-ice.sh             # XDG runtime setup script
+│
+├── var/                                   # Variable data
+│   └── www/                               # Web applications
+│       └── ood/
+│           ├── apps/                      # Interactive applications
+│           │   └── sys/                   # System applications
+│           │       ├── jupyter_app/       # JupyterLab server
+│           │       ├── rstudio_server_app/ # RStudio Server
+│           │       ├── vs_code_html_app/  # VS Code Server
+│           │       ├── matlab_app/        # MATLAB environment
+│           │       ├── paraview_app/      # Scientific visualization
+│           │       ├── blender_app/       # 3D modeling
+│           │       ├── qgis_app/          # Geographic information system
+│           │       ├── afni_app/          # fMRI data analysis
+│           │       ├── vmd_app/           # Molecular visualization
+│           │       ├── octave_app/        # GNU Octave
+│           │       ├── desktop_expert/    # Remote desktop
+│           │       ├── shell/             # Terminal access
+│           │       └── myjobs/            # Job management
+│           ├── templates/                 # Form parameter templates
+│           │   ├── form_params            # Common form parameters
+│           │   ├── form_params_cpu        # CPU-focused parameters
+│           │   ├── form_params_env        # Environment parameters
+│           │   └── job_params             # SLURM job parameters
+│           └── public/                    # Static assets
+│               ├── ualberta/              # University of Alberta branding
+│               │   ├── logo.png           # UofA logo
+│               │   ├── branding.css       # Custom styling
+│               │   └── favicon.ico        # Site favicon
+│               ├── amii/                  # AMII branding
+│               │   └── amii-logo.png     # AMII logo
+│               └── drac/                  # DRAC branding
+│                   └── drac_banner.png    # DRAC banner
+│
+└── kube/                                  # Kubernetes infrastructure (optional)
+    └── redis.yaml                         # Redis deployment for session management
 ```
 
 ## Core Configuration Files
@@ -45,6 +107,8 @@ This document outlines the key configuration files and settings for deploying Op
 - Configure OIDC provider metadata URL
 - Set OIDC client credentials
 - Point SSL certificates to your files
+
+**Note**: OIDC authentication requires SSSD (System Security Services Daemon) to be properly configured on all systems for user authentication and home directory mapping.
 
 ### 2. Cluster Configuration (`/etc/ood/config/clusters.d/vulcan.yml`)
 
@@ -174,25 +238,20 @@ Located in `/opt/ood/cron/`:
 0 4 * * 0 root /opt/ood/cron/gen_app_rb.sh
 ```
 
-## Deployment Checklist
+## Deployment Requirements
 
-### Required Changes
-- [ ] **Run cron scripts first** to populate auto-generated files
-- [ ] Rename cluster configuration file to match your cluster
-- [ ] Update all hostnames and domains
-- [ ] Configure OIDC identity provider
-- [ ] Generate SSL certificates
-- [ ] Set SLURM paths and host patterns
-- [ ] Customize branding and help menu
-- [ ] Configure file system paths
-- [ ] Set Globus endpoint UUIDs (not smart names)
+### Initial Setup
+- **Run cron scripts first** to populate auto-generated files before starting OOD
+- **Rename cluster configuration file** to match your cluster (e.g., `mycluster.yml`)
+- **Update all hostnames and domains** throughout configuration files
+- **Configure OIDC identity provider** with proper client credentials and metadata URLs
+- **Generate SSL certificates** valid for your domain
+- **Set SLURM paths and host patterns** for your cluster
+- **Customize branding and help menu** for your institution
+- **Configure file system paths** and Globus endpoint UUIDs (not smart names)
 
-### Optional Enhancements
-- [ ] Enable Redis session caching
-- [ ] Add custom applications
-- [ ] Configure additional Globus endpoints
-- [ ] Set up monitoring and logging
-- [ ] Enable backup and recovery
+### Additional Configuration Options
+Other configuration options are available for Redis session caching, custom applications, monitoring, and backup systems. Refer to the Open OnDemand documentation for advanced configuration options.
 
 ## Security Considerations
 
