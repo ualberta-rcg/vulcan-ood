@@ -68,6 +68,41 @@ Many Bothans died to bring us this information. This project is provided as-is, 
 
 Feel free to open an issue or email **[khoja1@ualberta.ca](mailto:khoja1@ualberta.ca)** or **[kali2@ualberta.ca](mailto:kali2@ualberta.ca)** for U of A related deployments.
 
+## 🙏 Contributors & Acknowledgments
+
+This project wouldn't have been possible without the generous help and support of many individuals and organizations. Special thanks to:
+
+### 🚀 Key Contributors
+
+- **[Bart Oldeman](https://github.com/bartoldeman)** - Open OnDemand expertise and guidance
+- **[Bruno Mundim](https://github.com/bcmundim)** - Technical contributions and support
+- **[James Willis](https://github.com/james-willis)** - SciNet repository access and collaboration
+- **[Karim Ali](https://github.com/karimali3)** - Development assistance and feedback
+- **[Tyson Whitehead](https://github.com/twhitehead)** - Technical support and contributions
+- **[Maxime Boissonneault](https://github.com/mboisson)** - JupyterHub expertise and SciNet collaboration
+
+### 🏛️ Institutional Support
+
+- **SciNet from University of Toronto** - Infrastructure and collaboration opportunities
+- **Digital Research Alliance of Canada** - Platform and community support
+- **University of Alberta Research Computing Group** - Local infrastructure and resources
+
+### 💬 Community Support
+
+- **Digital Research Alliance of Canada Slack Channel "openondemand"** - All members for their ongoing support and collaboration
+- **Darren Boss** - Extensive OIDC authentication help and expertise
+- **James Peltier** - GitLab collaboration and technical assistance
+
+### 🔍 Additional Contributors
+
+The following individuals have also contributed to this project through various channels:
+- David Magda  
+- Grigory Shamov
+
+*Note: Some contributors may have profiles on institutional GitLab instances (e.g., git.computecanada.ca, gitlab.rcg.sfu.ca) rather than public GitHub profiles.*
+
+---
+
 ## 📜 License
 
 This project is released under the **MIT License** - one of the most permissive open-source licenses available.
