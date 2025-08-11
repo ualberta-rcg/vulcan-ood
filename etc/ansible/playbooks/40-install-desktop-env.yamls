@@ -1,3 +1,4 @@
+---
 - name: Install Desktop Environments
   hosts: localhost
   become: yes
