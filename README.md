@@ -56,9 +56,10 @@ To deploy this OOD configuration on your cluster:
 ## References
 
 * [Open OnDemand Documentation](https://osc.github.io/ood-documentation/latest/)
-* [Digital Research Alliance of Canada](https://alliancecan.ca/en)
-* [Vulcan Cluster Documentation](https://docs.alliancecan.ca/wiki/Vulcan)
+* [Digital Research Alliance of Canada](https://alliancecanada.ca/en)
+* [Vulcan Cluster Documentation](https://docs.alliancecanada.ca/wiki/Vulcan)
 * [PAICE Platform](https://www.ualberta.ca/information-services-and-technology/research-computing/paice)
+* [CHPC OnDemand Apps v4](https://github.com/chpc-uofu/ood-ge-apps-v4) - Used as reference for application development and configuration
 
 ---
 
