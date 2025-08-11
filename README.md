@@ -2,7 +2,7 @@
 
 # Vulcan Open OnDemand Deployment
 
-![Ubuntu Version](https://img.shields.io/badge/Ubuntu-22.04+-green?style=flat-square)
+![Ubuntu Version](https://img.shields.io/badge/Ubuntu-24.04+-green?style=flat-square)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
 **Maintained by:** Rahim Khoja ([khoja1@ualberta.ca](mailto:khoja1@ualberta.ca))
@@ -13,7 +13,7 @@
 
 This repository contains the complete configuration files, scripts, and application definitions for **Open OnDemand (OOD) deployment on the Vulcan HPC cluster** - a Digital Research Alliance of Canada compute resource operated by the University of Alberta as part of the PAICE (Platform for Advanced Infrastructure and Computing Excellence) initiative.
 
-The goal is to provide a reproducible setup for OOD using Apache, OIDC authentication (Shibboleth/Keycloak/AzureAD/etc), and Let's Encrypt SSL. This repository serves as a template that can be adapted for other HPC clusters.
+The goal is to provide a reproducible setup for OOD using Apache, OIDC authentication, and Let's Encrypt SSL. This repository serves as a template that can be adapted for other HPC clusters.
 
 **Key Features:**
 - **Production-ready OOD deployment** with OIDC authentication
