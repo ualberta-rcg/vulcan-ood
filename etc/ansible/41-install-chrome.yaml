@@ -1,0 +1,13 @@
+---
+- name: Install Google Chrome from internal APT repository
+  hosts: localhost
+  become: yes
+  environment:
+    DEBIAN_FRONTEND: "noninteractive"
+
+  tasks:
+    - name: Install Google Chrome
+      apt:
+        name: google-chrome-stable
+        state: present
+
