@@ -75,7 +75,24 @@ git clone https://github.com/your-org/vulcan-ood.git
 cd vulcan-ood
 ```
 
-### 2. Deploy Configuration Files
+### 2. Set Executable Permissions Before Copying
+
+**Important**: Set executable permissions on all shell scripts before copying to avoid chmodding the root filesystem:
+
+```bash
+# Make all .sh files executable recursively
+find . -name "*.sh" -type f -exec chmod +x {} \;
+
+# Make all .sh.erb files executable recursively  
+find . -name "*.sh.erb" -type f -exec chmod +x {} \;
+
+# Verify permissions were set correctly
+find . -name "*.sh" -o -name "*.sh.erb" | xargs ls -la
+
+# Note: Other .erb files (form.yml.erb, submit.yml.erb, etc.) are templates and don't need executable permissions
+```
+
+### 3. Deploy Configuration Files
 
 ```bash
 # Copy system configuration files
@@ -90,8 +107,7 @@ sudo cp -r opt/ood/* /opt/ood/
 # Copy user utilities
 sudo cp -r usr/local/bin/* /usr/local/bin/
 
-# Set proper permissions
-sudo chmod 755 /usr/local/bin/create-ice.sh
+
 ```
 
 ### 2. Deploy Cron Scripts
@@ -140,12 +156,18 @@ sudo /opt/ood/cron/gen_app_rb.sh
 
 ### 2. Update Configuration Files
 
-Edit the following files to match your cluster:
+Edit the following files to match your cluster. **See `CONFIGURATION.md` for detailed examples and comments**:
 
 - **`/etc/ood/config/clusters.d/vulcan.yml`** - Rename to match your cluster
+  - Contains SLURM integration settings and host allowlist patterns
 - **`/etc/ood/config/ood_portal.yml`** - Update domain and OIDC settings
+  - Contains Apache virtual host configuration with OIDC authentication
 - **`/etc/ood/config/ondemand.d/ondemand.yml`** - Customize branding and help menu
+  - Contains web interface branding, layout, and application management
 - **`/etc/ood/config/apps/shell/env`** - Update host allowlist patterns
+  - Contains SSH host access control for shell application
+- **`/etc/ood/config/nginx_stage.yml`** - Per-User Nginx environment variables
+- **`/etc/ood/config/locales/`** - Multi-language interface support
 
 ### 3. Generate SSL Certificates
 
@@ -178,7 +200,7 @@ sudo apt install virtualgl
 ```bash
 # Copy the create-ice script
 sudo cp /path/to/repo/usr/local/bin/create-ice.sh /usr/local/bin/
-sudo chmod 755 /usr/local/bin/create-ice.sh
+# Note: Permissions are already set from the repository
 
 # Deploy sudoers configuration
 sudo cp /path/to/repo/etc/sudoers.d/create-ice-xdg /etc/sudoers.d/
@@ -349,4 +371,4 @@ After successful installation:
 4. **Configure backup** and recovery procedures
 5. **Document** your specific configuration
 
-Refer to `CONFIGURATION.md` for detailed configuration options and `REQUIREMENTS.md` for system requirements.
+Refer to `CONFIGURATION.md` for detailed configuration options with examples and comments, and `REQUIREMENTS.md` for system requirements.
