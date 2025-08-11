@@ -57,6 +57,7 @@ This document outlines the key configuration files and settings for deploying Op
 - **Environment**: No shell environment copying
 
 **Required Changes for Deployment**:
+- **Rename file**: Change `vulcan.yml` to match your cluster name (e.g., `mycluster.yml`)
 - Update cluster title and login hostname
 - Modify host allowlist patterns for your nodes
 - Verify SLURM binary and config paths
@@ -76,6 +77,7 @@ This document outlines the key configuration files and settings for deploying Op
 - Configure help menu links for your institution
 - Select appropriate pinned applications
 - Set Globus endpoints for your file systems
+- **Globus Endpoints**: Use UUIDs, not smart names (e.g., `97bda3da-a723-4dc0-ba7e-728f35183b43`)
 
 ### 4. Nginx Stage Configuration (`/etc/ood/config/nginx_stage.yml`)
 
@@ -152,4 +154,34 @@ Located in `/opt/ood/cron/`:
 - `gen_cluster_rb.sh`: Updates cluster information from SLURM
 - `gen_gpu_rb.sh`: Discovers GPU configuration
 - `gen_app_rb.sh`: Queries environment modules for versions
+
+**Important**: Run these cron scripts **before** starting OOD to populate the initial configuration files. The auto-generated files contain essential cluster information that OOD needs to function properly.
+
+## Deployment Checklist
+
+### Required Changes
+- [ ] **Run cron scripts first** to populate auto-generated files
+- [ ] Rename cluster configuration file to match your cluster
+- [ ] Update all hostnames and domains
+- [ ] Configure OIDC identity provider
+- [ ] Generate SSL certificates
+- [ ] Set SLURM paths and host patterns
+- [ ] Customize branding and help menu
+- [ ] Configure file system paths
+- [ ] Set Globus endpoint UUIDs (not smart names)
+
+### Optional Enhancements
+- [ ] Enable Redis session caching
+- [ ] Add custom applications
+- [ ] Configure additional Globus endpoints
+- [ ] Set up monitoring and logging
+- [ ] Enable backup and recovery
+
+## Security Considerations
+
+- **SSL Certificates**: Must be valid for your domain
+- **OIDC Secrets**: Store securely, not in plain text
+- **Host Allowlists**: Restrict access to authorized nodes only
+- **File Permissions**: Private keys should be 600, configs 644
+- **Network Access**: Limit to required ports (80, 443, SSH)
 
