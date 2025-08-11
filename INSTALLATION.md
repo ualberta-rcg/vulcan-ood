@@ -169,7 +169,24 @@ Edit the following files to match your cluster. **See `CONFIGURATION.md` for det
 - **`/etc/ood/config/nginx_stage.yml`** - Per-User Nginx environment variables
 - **`/etc/ood/config/locales/`** - Multi-language interface support
 
-### 3. Generate SSL Certificates
+### 3. Customize Dashboard Views
+
+**Important**: Customize dashboard appearance for your institution:
+
+```bash
+# Edit footer template for institutional branding
+sudo nano /etc/ood/config/apps/dashboard/views/layouts/_footer.html.erb
+
+# Edit navigation logo template
+sudo nano /etc/ood/config/apps/dashboard/views/layouts/nav/_logo.html.erb
+```
+
+**Customization Options**:
+- **Footer**: Update support contact information and institutional branding
+- **Logo**: Replace with your institution's logo and branding
+- **See `CONFIGURATION.md`** for detailed customization examples
+
+### 4. Generate SSL Certificates
 
 ```bash
 # Create SSL directory
@@ -295,7 +312,13 @@ sudo tail -f /var/log/cron
 - Launch a simple interactive application
 - Verify SLURM job submission
 
-### 3. Monitor Logs
+### 3. Verify Dashboard Customization
+
+- Check that custom logo appears in navigation
+- Verify footer displays correct institutional branding
+- Test that dashboard reflects your customizations
+
+### 4. Monitor Logs
 
 ```bash
 # OOD logs

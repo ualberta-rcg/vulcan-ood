@@ -43,6 +43,23 @@ This document outlines the key configuration files and settings for deploying Op
 
 **Purpose**: Web interface branding, layout, and application management
 
+### 4. Dashboard View Customizations (`/etc/ood/config/apps/dashboard/views/`)
+
+**Purpose**: Custom dashboard appearance and navigation elements
+
+**Key Files**:
+- **`layouts/_footer.html.erb`** - Custom footer template
+  - Contains branding and support information
+  - Can be customized for institutional branding
+- **`layouts/nav/_logo.html.erb`** - Custom navigation logo
+  - Replaces default OOD logo in navigation bar
+  - Supports custom branding and institutional identity
+
+**Required Changes for Deployment**:
+- Customize footer content for your institution
+- Replace logo with your institutional branding
+- Update support contact information
+
 **Key Settings**:
 - **Branding**: University of Alberta green theme with AMII logo
 - **Help Menu**: Alliance documentation and support links
