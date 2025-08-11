@@ -2,6 +2,93 @@
 
 This repository contains the complete Open OnDemand (OOD) deployment configuration for the Vulcan HPC cluster. The structure mirrors the filesystem layout of a deployed OOD installation.
 
+## Repository File Structure
+
+```
+vulcan-ood/                                 # Repository root
+├── .git/                                  # Git version control
+├── LICENSE                                # MIT License
+├── README.md                              # Project overview
+├── CONFIGURATION.md                       # This configuration guide
+├── REQUIREMENTS.md                        # System requirements
+├── REPOSITORY_STRUCTURE.md                # Detailed structure documentation
+│
+├── etc/                                   # System configuration files
+│   ├── motd                               # System-wide Message of the Day
+│   ├── sudoers.d/
+│   │   └── create-ice-xdg                 # XDG runtime setup permissions
+│   └── ood/                               # Open OnDemand configuration
+│       └── config/
+│           ├── ood_portal.yml             # Main OOD portal configuration
+│           ├── nginx_stage.yml            # PUN environment variables
+│           ├── ood_portal.sha256sum      # Apache config checksum
+│           ├── clusters.d/
+│           │   └── vulcan.yml            # Vulcan cluster definition
+│           ├── ondemand.d/
+│           │   └── ondemand.yml          # Dashboard customization
+│           ├── locales/                   # Internationalization
+│           │   ├── en-CA.yml             # English (Canada) translations
+│           │   └── fr-CA.yml             # French (Canada) translations
+│           └── apps/                      # Application configurations
+│               ├── dashboard/             # Dashboard customizations
+│               │   └── initializers/      # Auto-generated Ruby modules
+│               │       ├── paice_cluster_info.rb    # SLURM partition info
+│               │       ├── paice_gpu_info.rb        # GPU configuration
+│               │       └── paice_app_versions.rb    # Software versions
+│               └── shell/
+│                   └── env                # Shell app security settings
+│
+├── opt/                                   # Optional software and scripts
+│   └── ood/
+│       ├── cron/                          # Automated configuration generators
+│       │   ├── gen_cluster_rb.sh         # Generate cluster info from SLURM
+│       │   ├── gen_gpu_rb.sh             # Discover GPU configuration
+│       │   └── gen_app_rb.sh             # Query environment modules
+│       └── scripts/                       # OOD integration scripts
+│           └── ood_pun_oidc_email.sh     # OIDC email claim handler
+│
+├── usr/                                   # User utilities
+│   └── local/
+│       └── bin/
+│           └── create-ice.sh             # XDG runtime setup script
+│
+├── var/                                   # Variable data
+│   └── www/                               # Web applications
+│       └── ood/
+│           ├── apps/                      # Interactive applications
+│           │   └── sys/                   # System applications
+│           │       ├── jupyter_app/       # JupyterLab server
+│           │       ├── rstudio_server_app/ # RStudio Server
+│           │       ├── vs_code_html_app/  # VS Code Server
+│           │       ├── matlab_app/        # MATLAB environment
+│           │       ├── paraview_app/      # Scientific visualization
+│           │       ├── blender_app/       # 3D modeling
+│           │       ├── qgis_app/          # Geographic information system
+│           │       ├── afni_app/          # fMRI data analysis
+│           │       ├── vmd_app/           # Molecular visualization
+│           │       ├── octave_app/        # GNU Octave
+│           │       ├── desktop_expert/    # Remote desktop
+│           │       ├── shell/             # Terminal access
+│           │       └── myjobs/            # Job management
+│           ├── templates/                 # Form parameter templates
+│           │   ├── form_params            # Common form parameters
+│           │   ├── form_params_cpu        # CPU-focused parameters
+│           │   ├── form_params_env        # Environment parameters
+│           │   └── job_params             # SLURM job parameters
+│           └── public/                    # Static assets
+│               ├── ualberta/              # University of Alberta branding
+│               │   ├── logo.png           # UofA logo
+│               │   ├── branding.css       # Custom styling
+│               │   └── favicon.ico        # Site favicon
+│               ├── amii/                  # AMII branding
+│               │   └── amii-logo.png     # AMII logo
+│               └── drac/                  # DRAC branding
+│                   └── drac_banner.png    # DRAC banner
+│
+└── kube/                                  # Kubernetes infrastructure (optional)
+    └── redis.yaml                         # Redis deployment for session management
+```
+
 ## Infrastructure Components
 
 ### OOD Portal Server (`/etc/ood/`, `/var/www/ood/`, `/opt/ood/`)
