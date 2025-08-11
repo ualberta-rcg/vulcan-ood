@@ -15,43 +15,39 @@ This repository contains the complete configuration files, scripts, and applicat
 
 The goal is to provide a reproducible setup for OOD using Apache, OIDC authentication (Shibboleth/Keycloak/AzureAD/etc), and Let's Encrypt SSL. This repository serves as a template that can be adapted for other HPC clusters.
 
-For detailed information about the repository structure and configuration files, see [REPOSITORY_STRUCTURE.md](./REPOSITORY_STRUCTURE.md).
+**Key Features:**
+- **Production-ready OOD deployment** with OIDC authentication
+- **Pre-configured applications** (Jupyter, RStudio, VS Code, MATLAB, ParaView, etc.)
+- **Automated configuration** via cron scripts for cluster discovery
+- **Multi-language support** (English-Canadian and French-Canadian)
+- **University of Alberta branding** with AMII partnership integration
+- **Globus file transfer** integration for high-speed data movement
 
 ---
 
 ## Documentation
 
-- **[REQUIREMENTS.md](./REQUIREMENTS.md)** - System requirements for OOD Server and Compute Node deployments
-- **[CONFIGURATION.md](./CONFIGURATION.md)** - Configuration files and settings
-- **[REPOSITORY_STRUCTURE.md](./REPOSITORY_STRUCTURE.md)** - Detailed repository structure
+- **[INSTALLATION.md](./INSTALLATION.md)** - Step-by-step installation guide for Ubuntu 24.04
+- **[REQUIREMENTS.md](./REQUIREMENTS.md)** - System requirements and prerequisites
+- **[CONFIGURATION.md](./CONFIGURATION.md)** - Configuration files and deployment settings
+- **[REPOSITORY_STRUCTURE.md](./REPOSITORY_STRUCTURE.md)** - Complete repository structure and components
 
 ---
 
-## Customization for Other Clusters
+## Quick Start
 
-To adapt this configuration for your own cluster:
+To deploy this OOD configuration on your cluster:
 
-1. **Update cluster configuration:**
-   - Modify `etc/ood/config/clusters.d/vulcan.yml`
-   - Change hostnames, scheduler settings, and partition names
+1. **Review requirements** - Ensure your system meets the prerequisites in [REQUIREMENTS.md](./REQUIREMENTS.md)
+2. **Follow installation** - Use the step-by-step guide in [INSTALLATION.md](./INSTALLATION.md)
+3. **Customize configuration** - Update settings for your cluster as documented in [CONFIGURATION.md](./CONFIGURATION.md)
+4. **Deploy applications** - Copy the pre-configured applications and templates to your OOD installation
 
-2. **Customize applications:**
-   - Edit app manifests in `var/www/ood/apps/sys/`
-   - Update resource limits and partition names
-   - Modify application descriptions and branding
-
-3. **Update cluster information:**
-   - Modify `etc/ood/config/apps/dashboard/initializers/paice_cluster_info.rb`
-   - Update partition names, CPU/memory limits
-   - Run `gen_gpu_rb.sh` to auto-generate GPU information
-
-4. **Configure authentication:**
-   - Update OIDC settings in `ood_portal.yml`
-   - Configure your identity provider (Shibboleth, Keycloak, etc.)
-
-5. **Update branding:**
-   - Replace University of Alberta logos and references
-   - Update application descriptions and help text
+**Key Customization Points:**
+- **Cluster configuration** - Update hostnames, SLURM settings, and partition names
+- **Authentication** - Configure OIDC provider and SSSD integration
+- **Branding** - Replace University of Alberta references with your institution
+- **Applications** - Modify resource limits and add/remove applications as needed
 
 ---
 
