@@ -91,7 +91,6 @@ sudo cp -r opt/ood/* /opt/ood/
 sudo cp -r usr/local/bin/* /usr/local/bin/
 
 # Set proper permissions
-sudo chown -R www-data:www-data /var/www/ood
 sudo chmod 755 /usr/local/bin/create-ice.sh
 ```
 
