@@ -195,7 +195,17 @@ sudo /opt/ood/ood-portal-generator/sbin/update_ood_portal -f
 sudo /opt/ood/nginx_stage/sbin/nginx_stage nginx_clean --force
 ```
 
-### 3. Verify Installation
+### 3. Apply Common Fixes
+
+```bash
+# Fix XTERM color issue that causes programs like 'top' to fail in shell sessions
+sudo sed -i 's/xterm-16color/xterm-256color/g' /var/www/ood/apps/sys/shell/app.js
+
+# Fix remote desktop compression to prevent Zlib errors (minimum value 1 instead of 0)
+sudo sed -i '/:compression/ s/min: 0/min: 1/; /:compression/ s/0 (low) to 9/1 (low) to 9/' /var/www/ood/apps/sys/dashboard/app/views/batch_connect/sessions/connections/_novnc.html.erb
+```
+
+### 4. Verify Installation
 
 ```bash
 # Check Apache status
