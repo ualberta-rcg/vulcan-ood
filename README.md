@@ -62,12 +62,6 @@ To deploy this OOD configuration on your cluster:
 
 ---
 
-## 🤝 Support
-
-Many Bothans died to bring us this information. This project is provided as-is, but reasonable questions may be answered based on my coffee intake or mood. ;)
-
-Feel free to open an issue or email **[khoja1@ualberta.ca](mailto:khoja1@ualberta.ca)** or **[kali2@ualberta.ca](mailto:kali2@ualberta.ca)** for U of A related deployments.
-
 ## 🙏 Contributors & Acknowledgments
 
 This project wouldn't have been possible without the generous help and support of many individuals and organizations. Special thanks to:
@@ -100,6 +94,14 @@ The following individuals have also contributed to this project through various 
 - Grigory Shamov
 
 *Note: Some contributors may have profiles on institutional GitLab instances (e.g., git.computecanada.ca, gitlab.rcg.sfu.ca) rather than public GitHub profiles.*
+
+---
+
+## 🤝 Support
+
+Many Bothans died to bring us this information. This project is provided as-is, but reasonable questions may be answered based on my coffee intake or mood. ;)
+
+Feel free to open an issue or email **[khoja1@ualberta.ca](mailto:khoja1@ualberta.ca)** or **[kali2@ualberta.ca](mailto:kali2@ualberta.ca)** for U of A related deployments.
 
 ---
 
