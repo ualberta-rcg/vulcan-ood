@@ -17,26 +17,30 @@ vulcan-ood/                                 # Repository root
 │   ├── motd                               # System-wide Message of the Day
 │   ├── sudoers.d/
 │   │   └── create-ice-xdg                 # XDG runtime setup permissions
-│   └── ood/                               # Open OnDemand configuration
-│       └── config/
-│           ├── ood_portal.yml             # Main OOD portal configuration
-│           ├── nginx_stage.yml            # PUN environment variables
-│           ├── ood_portal.sha256sum      # Apache config checksum
-│           ├── clusters.d/
-│           │   └── vulcan.yml            # Vulcan cluster definition
-│           ├── ondemand.d/
-│           │   └── ondemand.yml          # Dashboard customization
-│           ├── locales/                   # Internationalization
-│           │   ├── en-CA.yml             # English (Canada) translations
-│           │   └── fr-CA.yml             # French (Canada) translations
-│           └── apps/                      # Application configurations
-│               ├── dashboard/             # Dashboard customizations
-│               │   └── initializers/      # Auto-generated Ruby modules
-│               │       ├── paice_cluster_info.rb    # SLURM partition info
-│               │       ├── paice_gpu_info.rb        # GPU configuration
-│               │       └── paice_app_versions.rb    # Software versions
-│               └── shell/
-│                   └── env                # Shell app security settings
+│   ├── ood/                               # Open OnDemand configuration
+│   │   └── config/
+│   │       ├── ood_portal.yml             # Main OOD portal configuration
+│   │       ├── nginx_stage.yml            # PUN environment variables
+│   │       ├── ood_portal.sha256sum      # Apache config checksum
+│   │       ├── clusters.d/
+│   │       │   └── vulcan.yml            # Vulcan cluster definition
+│   │       ├── ondemand.d/
+│   │       │   └── ondemand.yml          # Dashboard customization
+│   │       ├── locales/                   # Internationalization
+│   │       │   ├── en-CA.yml             # English (Canada) translations
+│   │       │   └── fr-CA.yml             # French (Canada) translations
+│   │       └── apps/                      # Application configurations
+│   │           ├── dashboard/             # Dashboard customizations
+│   │           │   └── initializers/      # Auto-generated Ruby modules
+│   │           │       ├── paice_cluster_info.rb    # SLURM partition info
+│   │           │       ├── paice_gpu_info.rb        # GPU configuration
+│   │           │       └── paice_app_versions.rb    # Software versions
+│   │           └── shell/
+│   │               └── env                # Shell app security settings
+│   └── ansible/                           # Ansible automation for compute hosts
+│       └── playbooks/                     # Self-configuring compute node playbooks
+│           ├── 40-install-desktop-env.yamls # Desktop environment setup
+│           └── 41-install-chrome.yaml     # Google Chrome installation
 │
 ├── opt/                                   # Optional software and scripts
 │   └── ood/
@@ -133,6 +137,21 @@ vulcan-ood/                                 # Repository root
 - **`ondemand.d/motd`** - Message of the Day for dashboard
   - Welcome message for Vulcan platform
   - Support contact information
+
+### Compute Node Automation (`/etc/ansible/`)
+
+#### Self-Configuring Playbooks (`/etc/ansible/playbooks/`)
+- **`40-install-desktop-env.yamls`** - Desktop Environment Setup
+  - Installs multiple desktop environments (GNOME, XFCE, MATE, LXQt)
+  - Configures VirtualGL for GPU acceleration
+  - Sets up X11 utilities and desktop applications
+  - Includes file managers, terminals, and system tools
+  - Runs `vglserver_config` to finalize VirtualGL setup
+
+- **`41-install-chrome.yaml`** - Google Chrome Installation
+  - Installs Google Chrome from internal APT repository
+  - Provides web browser access for remote desktop sessions
+  - Enables web-based applications and tools
 
 #### Web Applications (`/var/www/ood/apps/sys/`)
 Pre-configured interactive applications:

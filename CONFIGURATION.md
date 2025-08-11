@@ -115,6 +115,54 @@ This document outlines the key configuration files and settings for deploying Op
 - Ensure `create-ice.sh` script exists on compute nodes
 - Verify script creates proper XDG runtime directories
 
+## Compute Node Automation
+
+### 9. Ansible Playbooks (`/etc/ansible/playbooks/`)
+
+**Purpose**: Self-configuring automation for compute hosts
+
+#### Desktop Environment Setup (`40-install-desktop-env.yamls`)
+
+**Purpose**: Installs and configures desktop environments for remote desktop applications
+
+**Key Features**:
+- **Multiple Desktop Environments**: GNOME, XFCE, MATE, LXQt
+- **VirtualGL Integration**: GPU acceleration for remote desktop sessions
+- **X11 Utilities**: Complete X11 forwarding and desktop application support
+- **File Management**: Dolphin, Nautilus, Thunar file managers
+- **Terminal Applications**: GNOME Terminal, Konsole, XFCE Terminal
+- **System Tools**: Control panels, system monitors, and utilities
+
+**Required Changes for Deployment**:
+- Verify package availability in your APT repositories
+- Ensure VirtualGL is available for GPU acceleration
+- Test desktop environment compatibility with your applications
+
+#### Chrome Installation (`41-install-chrome.yaml`)
+
+**Purpose**: Installs Google Chrome for web-based applications
+
+**Key Features**:
+- **Web Browser Access**: Enables web applications in remote desktop sessions
+- **Internal Repository**: Uses institutional APT repository for security
+- **Desktop Integration**: Seamless integration with desktop environments
+
+**Required Changes for Deployment**:
+- Ensure Google Chrome package is available in your APT repositories
+- Verify internal repository configuration
+- Test Chrome compatibility with your desktop environments
+
+**Usage**:
+```bash
+# Run desktop environment setup
+ansible-playbook /etc/ansible/playbooks/40-install-desktop-env.yamls
+
+# Install Chrome
+ansible-playbook /etc/ansible/playbooks/41-install-chrome.yaml
+```
+
+**Note**: These playbooks are designed to run on compute nodes to prepare them for remote desktop applications. They should be executed after the base system is configured and before users start accessing desktop applications.
+
 ## Automated Configuration
 
 ### Auto-Generated Files

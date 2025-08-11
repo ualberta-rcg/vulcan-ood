@@ -94,7 +94,7 @@ sudo cp -r usr/local/bin/* /usr/local/bin/
 sudo chmod 755 /usr/local/bin/create-ice.sh
 ```
 
-### 3. Deploy Cron Scripts
+### 2. Deploy Cron Scripts
 
 ```bash
 # Copy cron scripts to system cron directory
@@ -104,6 +104,26 @@ sudo cp opt/ood/cron/* /etc/cron.d/
 sudo chmod 644 /etc/cron.d/*
 sudo chown root:root /etc/cron.d/*
 ```
+
+### 3. Deploy Ansible Playbooks
+
+Deploy the Ansible playbooks for compute node automation:
+
+```bash
+# Create Ansible directory structure
+sudo mkdir -p /etc/ansible/playbooks
+
+# Copy Ansible playbooks
+sudo cp etc/ansible/playbooks/* /etc/ansible/playbooks/
+
+# Set proper permissions
+sudo chmod 644 /etc/ansible/playbooks/*.yaml*
+sudo chown root:root /etc/ansible/playbooks/*
+```
+
+**Note**: These playbooks are designed to run on compute nodes to prepare them for remote desktop applications. They should be executed after the base system is configured and before users start accessing desktop applications.
+
+
 
 ## Initial Configuration
 
@@ -165,7 +185,21 @@ sudo cp /path/to/repo/etc/sudoers.d/create-ice-xdg /etc/sudoers.d/
 sudo chmod 440 /etc/sudoers.d/create-ice-xdg
 ```
 
-### 3. Verify File System Access
+### 3. Run Ansible Playbooks
+
+Execute the Ansible playbooks to configure desktop environments and applications:
+
+```bash
+# Install desktop environments and VirtualGL
+ansible-playbook /etc/ansible/playbooks/40-install-desktop-env.yaml
+
+# Install Google Chrome
+ansible-playbook /etc/ansible/playbooks/41-install-chrome.yaml
+```
+
+**Note**: These playbooks install multiple desktop environments (GNOME, XFCE, MATE, LXQt), configure VirtualGL for GPU acceleration, and install Chrome for web applications. Run them after the base system is configured.
+
+### 4. Verify File System Access
 
 Ensure each compute node has access to:
 - **Home directories** (mounted)
