@@ -69,12 +69,10 @@ This project wouldn't have been possible without the generous help and support o
 
 ### 🚀 Key Contributors
 
-- **[Bart Oldeman](https://github.com/bartoldeman)** - Open OnDemand expertise and guidance
-- **[Bruno Mundim](https://github.com/bcmundim)** - Technical contributions and support
-- **[James Willis](https://github.com/james-willis)** - SciNet repository access and collaboration
 - **[Karim Ali](https://github.com/karimali3)** - Development assistance and feedback
-- **[Tyson Whitehead](https://github.com/twhitehead)** - Technical support and contributions
 - **[Maxime Boissonneault](https://github.com/mboisson)** - JupyterHub and CVMFS expertise
+- **[James Willis](https://github.com/james-willis)** - SciNet repository access and collaboration
+- **Darren Boss** - Extensive OIDC authentication help and expertise
 
 ### 🏛️ Institutional Support
 
@@ -85,16 +83,18 @@ This project wouldn't have been possible without the generous help and support o
 ### 💬 Community Support
 
 - **Digital Research Alliance of Canada Slack Channel "openondemand"** - All members for their ongoing support and collaboration
-- **Darren Boss** - Extensive OIDC authentication help and expertise
+
+### 🔍 Additional Support
+
+The following individuals have provided technical support and feedback to this project:
+- **Bart Oldeman** - Open OnDemand expertise and guidance
+- **Bruno Mundim** - Technical contributions and support
+- **Tyson Whitehead** - Technical support and contributions
 - **James Peltier** - GitLab collaboration and technical assistance
-
-### 🔍 Additional Contributors
-
-The following individuals have also contributed to this project through various channels:
-- David Magda  
-- Grigory Shamov
-- Olexa Bilaniuk
-- Many Others
+- **David Magda** - Technical support and feedback
+- **Grigory Shamov** - Technical support and feedback
+- **Olexa Bilaniuk** - Technical support and feedback
+- **Many Others** - Technical support and feedback
 
 *Note: Some contributors may have profiles on institutional GitLab instances (e.g., git.computecanada.ca, gitlab.rcg.sfu.ca) rather than public GitHub profiles.*
 
