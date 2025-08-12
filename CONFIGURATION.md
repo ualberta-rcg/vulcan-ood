@@ -78,13 +78,15 @@ This document outlines the key configuration files and settings for deploying Op
 **Purpose**: Per-User Nginx (PUN) environment variables
 
 **Key Settings**:
-- **MOTD**: Message of the Day integration
+- **MOTD**: Message of the Day integration with markdown support
 - **Locale**: English-Canadian (`en-CA`) default
-- **Format**: Text-based MOTD display
+- **Format**: Markdown-based or Text-based MOTD display for dashboard
+
 
 **Required Changes for Deployment**:
 - Set appropriate locale for your region
 - Configure MOTD path if different
+- Choose MOTD format: `txt`, `markdown`, `markdown_erb`, `txt_erb`, or `rss`
 
 ### 5. Shell Application Security (`/etc/ood/config/apps/shell/env`)
 
@@ -112,15 +114,29 @@ This document outlines the key configuration files and settings for deploying Op
 
 ## System Integration Files
 
-### 7. Message of the Day (`/etc/motd`)
+### 7. Message of the Day (MOTD)
 
-**Purpose**: Welcome message and support information
+**Purpose**: Welcome messages for different interfaces
 
-**Content**: Vulcan cluster welcome with Alliance Canada support contacts
+**Dual MOTD Setup**:
+- **`/etc/motd`** - System-wide MOTD displayed in terminal sessions
+  - ASCII art welcome message for Vulcan cluster
+  - Support contact information and portal links
+- **`/etc/ood/config/ondemand.d/motd`** - OOD dashboard MOTD
+  - Markdown-formatted welcome message
+  - Rich formatting with links and sections
+  - Displayed in the web dashboard interface
+
+**Current Configuration**:
+- OOD dashboard uses `/etc/ood/config/ondemand.d/motd` with `markdown` format
+- System terminals continue to use `/etc/motd`
+- Both MOTDs can be maintained independently
 
 **Required Changes for Deployment**:
-- Update welcome message for your cluster
+- Update welcome messages for your cluster
 - Modify support contact information
+- Customize dashboard MOTD with markdown formatting
+- Ensure MOTD_PATH in nginx_stage.yml points to your preferred file
 
 ### 8. XDG Runtime Setup (`/etc/sudoers.d/create-ice-xdg`)
 
