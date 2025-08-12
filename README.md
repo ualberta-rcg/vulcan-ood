@@ -23,6 +23,16 @@ The project provides a production-ready, reproducible setup for OOD using Apache
 - **University of Alberta branding** with AMII partnership integration
 - **Globus file transfer** integration for high-speed data movement
 
+## Dashboard Screenshot
+
+<div align="center">
+
+![Vulcan Open OnDemand Dashboard](ood_screen.png)
+
+*The Vulcan Open OnDemand dashboard showing the available applications and cluster resources.*
+
+</div>
+
 ---
 
 ## Documentation
@@ -87,12 +97,11 @@ This project wouldn't have been possible without the generous help and support o
 ### 🔍 Additional Support
 
 The following individuals have provided technical support and feedback to this project:
-- **Bart Oldeman** - Open OnDemand expertise and guidance
-- **Bruno Mundim** - Technical contributions and support
+- **Bart Oldeman** - Technical support and contributions
 - **Tyson Whitehead** - Technical support and contributions
-- **James Peltier** - GitLab collaboration and technical assistance
+- **James Peltier** - Technical support and feedback
 - **David Magda** - Technical support and feedback
-- **Grigory Shamov** - Technical support and feedback
+- **Grigory Shamov** - Technical support and contributions
 - **Olexa Bilaniuk** - Technical support and feedback
 - **Many Others** - Technical support and feedback
 
