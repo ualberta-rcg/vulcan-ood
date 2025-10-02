@@ -81,7 +81,7 @@ This project wouldn't have been possible without the generous help and support o
 
 - **[Karim Ali](https://github.com/karimali3)** - Development assistance and feedback
 - **[Maxime Boissonneault](https://github.com/mboisson)** - JupyterHub and CVMFS expertise
-- **[James Willis](https://github.com/james-willis)** - SciNet repository access and collaboration
+- **[James S. Willis](https://github.com/james-s-willis)** - SciNet repository access and collaboration
 - **Darren Boss** - Extensive OIDC authentication help and expertise
 
 ### 🏛️ Institutional Support
