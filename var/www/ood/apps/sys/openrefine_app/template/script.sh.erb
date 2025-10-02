@@ -53,9 +53,10 @@ echo "[script.sh.erb] Logging to ${OPENREFINE_LOG_FILE}"
 
 # Start OpenRefine in background and capture PID
 nohup "${OPENREFINE_CMD}" \
-  --port="${port}" \
-  --data-dir="${OPENREFINE_WORKDIR}" \
-  --headless \
+  -p "${port}" \
+  -d "${OPENREFINE_WORKDIR}" \
+  -x refine.headless=true \
+  -i 0.0.0.0 \
   > "${OPENREFINE_LOG_FILE}" 2>&1 &
 
 OPENREFINE_PID=$!
