@@ -29,9 +29,11 @@ export CC_CLUSTER=vulcan
 # OpenRefine working directory
 export OPENREFINE_WORKDIR="${PWD}/openrefine-data"
 export OPENREFINE_LOG_FILE="${PWD}/openrefine.log"
+export OPENREFINE_INSTALL_DIR="${PWD}/openrefine-install"
 
 echo "[before.sh.erb] OPENREFINE_WORKDIR: $OPENREFINE_WORKDIR"
 echo "[before.sh.erb] OPENREFINE_LOG_FILE: $OPENREFINE_LOG_FILE"
+echo "[before.sh.erb] OPENREFINE_INSTALL_DIR: $OPENREFINE_INSTALL_DIR"
 
 # Create OpenRefine working directory
 mkdir -p "$OPENREFINE_WORKDIR"
@@ -41,6 +43,92 @@ if [[ $? -ne 0 ]]; then
 else
   echo "[before.sh.erb] Successfully created OpenRefine working directory."
 fi
+
+# Create OpenRefine installation directory
+mkdir -p "$OPENREFINE_INSTALL_DIR"
+if [[ $? -ne 0 ]]; then
+  echo "[before.sh.erb] ERROR: Failed to create directory ${OPENREFINE_INSTALL_DIR}"
+  exit 1
+else
+  echo "[before.sh.erb] Successfully created OpenRefine installation directory."
+fi
+
+# Download and install OpenRefine if not already present
+OPENREFINE_VERSION="3.9.5"
+OPENREFINE_TARBALL="openrefine-linux-${OPENREFINE_VERSION}.tar.gz"
+OPENREFINE_URL="https://github.com/OpenRefine/OpenRefine/releases/download/${OPENREFINE_VERSION}/${OPENREFINE_TARBALL}"
+OPENREFINE_EXTRACTED_DIR="${OPENREFINE_INSTALL_DIR}/openrefine-${OPENREFINE_VERSION}"
+
+echo "[before.sh.erb] Checking for OpenRefine installation..."
+
+if [[ -f "${OPENREFINE_EXTRACTED_DIR}/refine" ]]; then
+  echo "[before.sh.erb] OpenRefine already installed at ${OPENREFINE_EXTRACTED_DIR}"
+else
+  echo "[before.sh.erb] OpenRefine not found. Downloading and installing..."
+  
+  # Change to installation directory
+  cd "${OPENREFINE_INSTALL_DIR}"
+  
+  # Download OpenRefine tarball
+  echo "[before.sh.erb] Downloading OpenRefine ${OPENREFINE_VERSION} from ${OPENREFINE_URL}"
+  if command -v wget >/dev/null 2>&1; then
+    wget -O "${OPENREFINE_TARBALL}" "${OPENREFINE_URL}"
+  elif command -v curl >/dev/null 2>&1; then
+    curl -L -o "${OPENREFINE_TARBALL}" "${OPENREFINE_URL}"
+  else
+    echo "[before.sh.erb] ERROR: Neither wget nor curl available for downloading OpenRefine"
+    exit 1
+  fi
+  
+  if [[ $? -ne 0 ]]; then
+    echo "[before.sh.erb] ERROR: Failed to download OpenRefine tarball"
+    exit 1
+  fi
+  
+  # Verify download
+  if [[ ! -f "${OPENREFINE_TARBALL}" ]]; then
+    echo "[before.sh.erb] ERROR: Downloaded tarball not found"
+    exit 1
+  fi
+  
+  echo "[before.sh.erb] Successfully downloaded OpenRefine tarball"
+  
+  # Extract the tarball
+  echo "[before.sh.erb] Extracting OpenRefine tarball..."
+  tar -xzf "${OPENREFINE_TARBALL}"
+  
+  if [[ $? -ne 0 ]]; then
+    echo "[before.sh.erb] ERROR: Failed to extract OpenRefine tarball"
+    exit 1
+  fi
+  
+  # Verify extraction
+  if [[ ! -f "${OPENREFINE_EXTRACTED_DIR}/refine" ]]; then
+    echo "[before.sh.erb] ERROR: OpenRefine refine executable not found after extraction"
+    exit 1
+  fi
+  
+  # Make refine executable
+  chmod +x "${OPENREFINE_EXTRACTED_DIR}/refine"
+  
+  echo "[before.sh.erb] Successfully installed OpenRefine ${OPENREFINE_VERSION}"
+  
+  # Clean up tarball to save space
+  rm -f "${OPENREFINE_TARBALL}"
+  echo "[before.sh.erb] Cleaned up downloaded tarball"
+fi
+
+# Export the OpenRefine executable path
+export OPENREFINE_EXECUTABLE="${OPENREFINE_EXTRACTED_DIR}/refine"
+echo "[before.sh.erb] OpenRefine executable: $OPENREFINE_EXECUTABLE"
+
+# Verify the executable
+if [[ ! -x "${OPENREFINE_EXECUTABLE}" ]]; then
+  echo "[before.sh.erb] ERROR: OpenRefine executable not found or not executable"
+  exit 1
+fi
+
+echo "[before.sh.erb] OpenRefine installation verification complete"
 
 # Set Java options for OpenRefine
 export JAVA_OPTS="-Xmx4g -Xms1g -Drefine.headless=true -Drefine.port=${port} -Drefine.data_dir=${OPENREFINE_WORKDIR}"

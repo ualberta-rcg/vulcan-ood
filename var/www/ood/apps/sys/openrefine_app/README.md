@@ -19,31 +19,27 @@ OpenRefine is a powerful tool for working with messy data: cleaning it; transfor
 Before using this app, ensure that:
 
 1. **Java Runtime Environment**: Java 8 or higher is available on the compute nodes
-2. **OpenRefine Installation**: OpenRefine is installed and accessible via:
-   - System-wide installation at `/opt/openrefine/refine`
-   - User installation at `${HOME}/openrefine/refine`
-   - Available in the system PATH as `openrefine`
+2. **Network Access**: The compute nodes must have internet access to download OpenRefine
+3. **Download Tools**: Either `wget` or `curl` must be available for downloading OpenRefine
 
-## Installation
+## Automatic Installation
 
-1. **Download OpenRefine** (if not already installed):
-   ```bash
-   # Download the latest version from https://openrefine.org/download.html
-   wget https://github.com/OpenRefine/OpenRefine/releases/download/3.7.7/openrefine-linux-3.7.7.tar.gz
-   tar -xzf openrefine-linux-3.7.7.tar.gz
-   mv openrefine-3.7.7 ~/openrefine
-   ```
+**No manual installation required!** This app automatically downloads and installs OpenRefine version 3.9.5 during the first run. The installation process:
 
-2. **Make OpenRefine executable**:
-   ```bash
-   chmod +x ~/openrefine/refine
-   ```
+1. **Automatic Download**: Downloads OpenRefine 3.9.5 from the official GitHub releases
+2. **Automatic Extraction**: Extracts the tarball to a job-specific directory
+3. **Automatic Setup**: Makes the executable and sets up the environment
+4. **Caching**: Subsequent runs reuse the downloaded installation (no re-download needed)
 
-3. **Verify Java is available**:
-   ```bash
-   module load java/17.0.6
-   java -version
-   ```
+The installation happens in the `before.sh.erb` script and is transparent to the user.
+
+## Manual Verification (Optional)
+
+If you want to verify Java is available before running the app:
+```bash
+module load java/17.0.6
+java -version
+```
 
 ## Usage
 
@@ -89,19 +85,26 @@ Before using this app, ensure that:
 ### Common Issues
 
 1. **"OpenRefine not found" error**:
-   - Ensure OpenRefine is installed and accessible
-   - Check that the `refine` executable has proper permissions
-   - Verify the installation path
+   - This should not occur with automatic installation
+   - Check that the compute node has internet access
+   - Verify that `wget` or `curl` is available
+   - Check the job logs for download/extraction errors
 
-2. **Port allocation failures**:
+2. **Download failures**:
+   - Ensure compute nodes have internet access
+   - Check if GitHub releases are accessible
+   - Verify available disk space for download/extraction
+   - Try increasing job memory if extraction fails
+
+3. **Port allocation failures**:
    - Usually indicates system resource constraints
    - Try reducing requested resources or waiting for other jobs to complete
 
-3. **Java errors**:
+4. **Java errors**:
    - Ensure Java module is loaded: `module load java/17.0.6`
    - Check Java version compatibility with OpenRefine
 
-4. **Memory issues**:
+5. **Memory issues**:
    - Increase requested memory in the job form
    - Consider processing smaller datasets
    - Monitor system memory usage
@@ -139,6 +142,7 @@ For issues related to:
 
 ## Version Information
 
-- **OpenRefine Version**: 3.7.7+ (configurable)
+- **OpenRefine Version**: 3.9.5 (automatically downloaded)
 - **Java Requirement**: 8+ (tested with Java 17)
 - **Open On Demand**: Compatible with OOD 2.0+
+- **Installation**: Automatic (no manual setup required)

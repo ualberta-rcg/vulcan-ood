@@ -18,19 +18,14 @@ else
   exit 1
 fi
 
-# Check if OpenRefine is available
-if command -v openrefine >/dev/null 2>&1; then
-  echo "[script.sh.erb] OpenRefine command found"
-  OPENREFINE_CMD="openrefine"
-elif [ -f "/opt/openrefine/refine" ]; then
-  echo "[script.sh.erb] OpenRefine found at /opt/openrefine/refine"
-  OPENREFINE_CMD="/opt/openrefine/refine"
-elif [ -f "${HOME}/openrefine/refine" ]; then
-  echo "[script.sh.erb] OpenRefine found at ${HOME}/openrefine/refine"
-  OPENREFINE_CMD="${HOME}/openrefine/refine"
+# Use the OpenRefine executable from the installation directory
+if [[ -n "${OPENREFINE_EXECUTABLE}" && -x "${OPENREFINE_EXECUTABLE}" ]]; then
+  echo "[script.sh.erb] Using downloaded OpenRefine: $OPENREFINE_EXECUTABLE"
+  OPENREFINE_CMD="${OPENREFINE_EXECUTABLE}"
 else
-  echo "[script.sh.erb] ERROR: OpenRefine not found. Please install OpenRefine first."
-  echo "[script.sh.erb] You can download it from https://openrefine.org/download.html"
+  echo "[script.sh.erb] ERROR: OpenRefine executable not found or not executable"
+  echo "[script.sh.erb] Expected path: ${OPENREFINE_EXECUTABLE}"
+  echo "[script.sh.erb] This should have been set up in before.sh.erb"
   exit 1
 fi
 
