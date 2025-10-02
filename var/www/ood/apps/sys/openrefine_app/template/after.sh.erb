@@ -2,76 +2,12 @@
 
 echo "[after.sh.erb] Waiting for OpenRefine Server to start on ${host}:${port}..."
 
-# Debug: Show path, tools, shell details
-echo "[after.sh.erb] Using shell: $SHELL"
-echo "[after.sh.erb] PATH: $PATH"
-echo "[after.sh.erb] Checking available tools for port check..."
-
-for tool in nc lsof python python3 bash curl wget; do
-  which $tool >/dev/null 2>&1 && echo " - Found: $tool at $(which $tool)" || echo " - Missing: $tool"
-done
-
-# Try standard wait
-echo "[after.sh.erb] Invoking wait_until_port_used..."
-if wait_until_port_used "${host}:${port}" 120; then
-  echo "[after.sh.erb] ✅ OpenRefine Server is now accessible on port ${port}."
+if wait_until_port_used "${host}:${port}" 600; then
+  echo "Discovered OpenRefine Server listening on port ${port}!"
 else
-  echo "[after.sh.erb] ❌ wait_until_port_used failed! Trying fallback method..."
-
-  # Fallback: bash TCP check
-  function wait_for_port_bash() {
-    local host=$1
-    local port=$2
-    local timeout=${3:-60}
-    local waited=0
-
-    while (( waited < timeout )); do
-      if (echo > /dev/tcp/$host/$port) >/dev/null 2>&1; then
-        return 0
-      fi
-      echo "[after.sh.erb] [waited ${waited}s] Still waiting for $host:$port..."
-      sleep 2
-      ((waited+=2))
-    done
-    return 1
-  }
-
-  if wait_for_port_bash "${host}" "${port}" 60; then
-    echo "[after.sh.erb] ✅ Port became available using bash fallback."
-  else
-    echo "[after.sh.erb] ❌ ERROR: Port never became available after fallback."
-    echo "[after.sh.erb] Final netstat (if available):"
-    which netstat && netstat -tulpn | grep "$port" || echo " - netstat not available"
-    echo "[after.sh.erb] Final ss (if available):"
-    which ss && ss -tulpn | grep "$port" || echo " - ss not available"
-    echo "[after.sh.erb] OpenRefine log contents:"
-    if [ -f "${OPENREFINE_LOG_FILE}" ]; then
-      cat "${OPENREFINE_LOG_FILE}"
-    else
-      echo " - Log file not found: ${OPENREFINE_LOG_FILE}"
-    fi
-    clean_up 1
-  fi
+  echo "Timed out waiting for OpenRefine server to open port ${port}!"
+  clean_up 1
 fi
-
-# Additional verification: try to connect to OpenRefine's web interface
-echo "[after.sh.erb] Verifying OpenRefine web interface..."
-if command -v curl >/dev/null 2>&1; then
-  if curl -s -o /dev/null -w "%{http_code}" "http://${host}:${port}" | grep -q "200\|302"; then
-    echo "[after.sh.erb] ✅ OpenRefine web interface is responding."
-  else
-    echo "[after.sh.erb] ⚠️  OpenRefine web interface may not be fully ready yet."
-  fi
-elif command -v wget >/dev/null 2>&1; then
-  if wget -q --spider "http://${host}:${port}"; then
-    echo "[after.sh.erb] ✅ OpenRefine web interface is responding."
-  else
-    echo "[after.sh.erb] ⚠️  OpenRefine web interface may not be fully ready yet."
-  fi
-else
-  echo "[after.sh.erb] ⚠️  No HTTP client available for web interface verification."
-fi
-
 sleep 2
 
-echo "[after.sh.erb] OpenRefine Server verification complete."
+echo "[after.sh.erb] OpenRefine Server exited."
