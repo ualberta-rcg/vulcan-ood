@@ -1,0 +1,84 @@
+#!/bin/bash
+
+echo "[script.sh.erb] Starting OpenRefine Server"
+
+# Change to user's home directory
+cd "${HOME}"
+echo "[script.sh.erb] Changed working directory to ${HOME}"
+
+# Load required modules
+echo "[script.sh.erb] Loading Java and OpenRefine modules..."
+module purge
+
+# Load Java module (required for OpenRefine)
+if module load java/17.0.6; then
+  echo "[script.sh.erb] Successfully loaded Java 17"
+else
+  echo "[script.sh.erb] Failed to load Java module"
+  exit 1
+fi
+
+# Check if OpenRefine is available
+if command -v openrefine >/dev/null 2>&1; then
+  echo "[script.sh.erb] OpenRefine command found"
+  OPENREFINE_CMD="openrefine"
+elif [ -f "/opt/openrefine/refine" ]; then
+  echo "[script.sh.erb] OpenRefine found at /opt/openrefine/refine"
+  OPENREFINE_CMD="/opt/openrefine/refine"
+elif [ -f "${HOME}/openrefine/refine" ]; then
+  echo "[script.sh.erb] OpenRefine found at ${HOME}/openrefine/refine"
+  OPENREFINE_CMD="${HOME}/openrefine/refine"
+else
+  echo "[script.sh.erb] ERROR: OpenRefine not found. Please install OpenRefine first."
+  echo "[script.sh.erb] You can download it from https://openrefine.org/download.html"
+  exit 1
+fi
+
+echo "[script.sh.erb] Using OpenRefine command: $OPENREFINE_CMD"
+
+# Set up OpenRefine environment
+export REFINE_PORT="${port}"
+export REFINE_DATA_DIR="${OPENREFINE_WORKDIR}"
+export REFINE_HEADLESS="true"
+
+# Create OpenRefine configuration
+OPENREFINE_CONFIG="${OPENREFINE_WORKDIR}/refine.ini"
+cat > "${OPENREFINE_CONFIG}" << EOF
+# OpenRefine Configuration for Open On Demand
+port=${port}
+data-dir=${OPENREFINE_WORKDIR}
+headless=true
+EOF
+
+echo "[script.sh.erb] OpenRefine configuration written to ${OPENREFINE_CONFIG}"
+
+# Launch OpenRefine Server
+echo "[script.sh.erb] Launching OpenRefine server on port ${port}..."
+echo "[script.sh.erb] Logging to ${OPENREFINE_LOG_FILE}"
+
+# Start OpenRefine in background and capture PID
+nohup "${OPENREFINE_CMD}" \
+  --port="${port}" \
+  --data-dir="${OPENREFINE_WORKDIR}" \
+  --headless \
+  > "${OPENREFINE_LOG_FILE}" 2>&1 &
+
+OPENREFINE_PID=$!
+echo "[script.sh.erb] OpenRefine started with PID: $OPENREFINE_PID"
+
+# Wait for OpenRefine to start
+echo "[script.sh.erb] Waiting for OpenRefine to initialize..."
+sleep 10
+
+# Check if OpenRefine is still running
+if ! kill -0 $OPENREFINE_PID 2>/dev/null; then
+  echo "[script.sh.erb] ERROR: OpenRefine process died. Check logs:"
+  cat "${OPENREFINE_LOG_FILE}"
+  exit 1
+fi
+
+echo "[script.sh.erb] OpenRefine Server Started successfully on port ${port}"
+
+# Keep the script running to maintain the OpenRefine process
+wait $OPENREFINE_PID
+echo "[script.sh.erb] OpenRefine Server exited."

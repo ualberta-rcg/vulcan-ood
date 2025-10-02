@@ -1,0 +1,17 @@
+---
+name: OpenRefine
+category: Development & Data Science
+role: batch_connect
+description: |
+  Launch [OpenRefine] on the [Vulcan] high-performance computing (HPC) cluster, powered by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].
+
+  OpenRefine is a powerful tool for working with messy data: cleaning it; transforming it from one format into another; extending it with web services; and linking it to databases.
+
+  Jobs are scheduled with [SLURM], and you can request CPU and memory resources for your OpenRefine environment.
+
+  [OpenRefine]: https://openrefine.org/
+  [AMII]: https://www.amii.ca/
+  [University of Alberta]: https://www.ualberta.ca/
+  [Digital Research Alliance of Canada]: https://alliancecan.ca/en
+  [SLURM]: https://slurm.schedmd.com/documentation.html
+  [Vulcan]: https://docs.alliancecan.ca/wiki/Vulcan

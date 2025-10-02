@@ -1,0 +1,50 @@
+#!/bin/bash
+
+echo "[before.sh.erb] Starting OpenRefine Setup..."
+
+# Export the module function if available
+if [[ $(type -t module) == "function" ]]; then
+  echo "[before.sh.erb] 'module' function is available."
+  export -f module
+else
+  echo "[before.sh.erb] WARNING: 'module' function not available."
+fi
+
+# Find available port to run server on
+export port=$(find_port ${host})
+if [[ -z "$port" ]]; then
+  echo "[before.sh.erb] ERROR: Failed to allocate a port."
+  exit 1
+else
+  echo "[before.sh.erb] Selected available port: $port"
+fi
+
+# Generate secure password for OpenRefine
+export password="$(create_passwd 16)"
+echo "[before.sh.erb] Generated OpenRefine password: $password"
+
+# Needed for Alliance Clusters
+export CC_CLUSTER=vulcan
+
+# OpenRefine working directory
+export OPENREFINE_WORKDIR="${PWD}/openrefine-data"
+export OPENREFINE_LOG_FILE="${PWD}/openrefine.log"
+
+echo "[before.sh.erb] OPENREFINE_WORKDIR: $OPENREFINE_WORKDIR"
+echo "[before.sh.erb] OPENREFINE_LOG_FILE: $OPENREFINE_LOG_FILE"
+
+# Create OpenRefine working directory
+mkdir -p "$OPENREFINE_WORKDIR"
+if [[ $? -ne 0 ]]; then
+  echo "[before.sh.erb] ERROR: Failed to create directory ${OPENREFINE_WORKDIR}"
+  exit 1
+else
+  echo "[before.sh.erb] Successfully created OpenRefine working directory."
+fi
+
+# Set Java options for OpenRefine
+export JAVA_OPTS="-Xmx4g -Xms1g -Drefine.headless=true -Drefine.port=${port} -Drefine.data_dir=${OPENREFINE_WORKDIR}"
+
+echo "[before.sh.erb] JAVA_OPTS: $JAVA_OPTS"
+
+echo "[before.sh.erb] Setup complete."
