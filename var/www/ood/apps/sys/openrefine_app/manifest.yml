@@ -1,6 +1,7 @@
 ---
 name: OpenRefine
-category: Development & Data Science
+category: Interactive Apps
+subcategory: Servers
 role: batch_connect
 description: |
   Launch [OpenRefine] on the [Vulcan] high-performance computing (HPC) cluster, powered by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].
