@@ -124,6 +124,7 @@ rserver \
   --secure-cookie-key-file "${COOKIE_KEY}" \
   --database-config-file "${DB_CONFIG}" \
   --rsession-path "${RSESSION_WRAPPER_FILE}" \
-  --server-app-armor-enabled=0
+  --server-app-armor-enabled=0 \
+  --auth-timeout-minutes=0
 
 echo "[script.sh.erb] RStudio Server Started."
