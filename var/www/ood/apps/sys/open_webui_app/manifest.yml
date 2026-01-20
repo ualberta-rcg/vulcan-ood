@@ -1,7 +1,7 @@
 ---
 name: Open WebUI
-icon: logo.png
-category: Development & Data Science
+category: Interactive Apps
+subcategory: Servers
 role: batch_connect
 description: |
   Launch [Open WebUI] on the [Vulcan] high-performance computing (HPC) cluster, powered by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].

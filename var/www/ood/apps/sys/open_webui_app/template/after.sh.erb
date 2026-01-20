@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Ensure script is executable
+chmod +x "$0" 2>/dev/null || true
+
 echo "[after.sh.erb] Waiting for Open WebUI Server to start on ${host}:${port}..."
 
 if wait_until_port_used "${host}:${port}" 120; then

@@ -1,16 +1,70 @@
 #!/bin/bash
 
+# Ensure script is executable
+chmod +x "$0" 2>/dev/null || true
+
 echo "[script.sh.erb] Starting Open WebUI Server"
 
 # Change to user's home directory
 cd "${HOME}"
 echo "[script.sh.erb] Changed working directory to ${HOME}"
 
-# Activate the virtual environment (should already be activated, but ensure it)
+# Load required modules (ensure they're loaded)
+echo "[script.sh.erb] Loading required modules..."
+module purge
+
+# Load Python module (required for Open WebUI)
+if module load python/3.12.4; then
+  echo "[script.sh.erb] Successfully loaded Python 3.12.4"
+else
+  echo "[script.sh.erb] Failed to load Python module"
+  exit 1
+fi
+
+# Load other required modules
+if module load rust/1.91.0; then
+  echo "[script.sh.erb] Successfully loaded Rust 1.91.0"
+else
+  echo "[script.sh.erb] WARNING: Failed to load Rust module (may not be critical)"
+fi
+
+if module load arrow; then
+  echo "[script.sh.erb] Successfully loaded Arrow"
+else
+  echo "[script.sh.erb] WARNING: Failed to load Arrow module (may not be critical)"
+fi
+
+if module load opencv; then
+  echo "[script.sh.erb] Successfully loaded OpenCV"
+else
+  echo "[script.sh.erb] WARNING: Failed to load OpenCV module (may not be critical)"
+fi
+
+# Activate the virtual environment
 if [[ -z "$VIRTUAL_ENV" ]]; then
   echo "[script.sh.erb] Activating virtual environment..."
-  source "${WEBUI_VENV_DIR}/bin/activate"
+  if [[ -f "${WEBUI_VENV_DIR}/bin/activate" ]]; then
+    source "${WEBUI_VENV_DIR}/bin/activate"
+    echo "[script.sh.erb] Virtual environment activated: $VIRTUAL_ENV"
+  else
+    echo "[script.sh.erb] ERROR: Virtual environment not found at ${WEBUI_VENV_DIR}"
+    exit 1
+  fi
+else
+  echo "[script.sh.erb] Virtual environment already active: $VIRTUAL_ENV"
 fi
+
+# Verify open-webui command is available
+if ! command -v open-webui >/dev/null 2>&1; then
+  echo "[script.sh.erb] ERROR: open-webui command not found in PATH"
+  echo "[script.sh.erb] PATH: $PATH"
+  echo "[script.sh.erb] VIRTUAL_ENV: $VIRTUAL_ENV"
+  echo "[script.sh.erb] Checking if open-webui is installed..."
+  pip show open-webui || echo "[script.sh.erb] open-webui package not found"
+  exit 1
+fi
+
+echo "[script.sh.erb] Found open-webui command: $(which open-webui)"
 
 # Set Open WebUI environment variables
 export WEBUI_PORT="${port}"
@@ -32,14 +86,34 @@ echo "[script.sh.erb] WEBUI_DATA_DIR=${WEBUI_DATA_DIR}"
 echo "[script.sh.erb] WEBUI_AUTH=${WEBUI_AUTH}"
 
 # Launch Open WebUI Server
-echo "[script.sh.erb] Launching Open WebUI server on port ${port}..."
+echo "[script.sh.erb] Launching Open WebUI server on 0.0.0.0:${port}..."
 echo "[script.sh.erb] Logging to ${WEBUI_LOG_FILE}"
 
-# Run open-webui serve (this will block until the server exits)
-open-webui serve \
-  --host "${WEBUI_HOST}" \
-  --port "${WEBUI_PORT}" \
+# Start Open WebUI in background and capture PID
+nohup open-webui serve \
+  --host "0.0.0.0" \
+  --port "${port}" \
   --data-dir "${WEBUI_DATA_DIR}" \
-  > "${WEBUI_LOG_FILE}" 2>&1
+  > "${WEBUI_LOG_FILE}" 2>&1 &
 
+WEBUI_PID=$!
+echo "[script.sh.erb] Open WebUI started with PID: $WEBUI_PID"
+
+# Wait for Open WebUI to start
+echo "[script.sh.erb] Waiting for Open WebUI to initialize..."
+sleep 10
+
+# Check if Open WebUI is still running
+if ! kill -0 $WEBUI_PID 2>/dev/null; then
+  echo "[script.sh.erb] ERROR: Open WebUI process died. Check logs:"
+  echo "[script.sh.erb] =========================================="
+  cat "${WEBUI_LOG_FILE}" || echo "[script.sh.erb] Could not read log file"
+  echo "[script.sh.erb] =========================================="
+  exit 1
+fi
+
+echo "[script.sh.erb] Open WebUI Server started successfully on port ${port}"
+
+# Keep the script running to maintain the Open WebUI process
+wait $WEBUI_PID
 echo "[script.sh.erb] Open WebUI Server exited."
