@@ -1,0 +1,116 @@
+#!/bin/bash
+
+echo "[before.sh.erb] Starting Open WebUI Setup..."
+
+# Export the module function if available
+if [[ $(type -t module) == "function" ]]; then
+  echo "[before.sh.erb] 'module' function is available."
+  export -f module
+else
+  echo "[before.sh.erb] WARNING: 'module' function not available."
+fi
+
+# Find available port to run server on
+export port=$(find_port ${host})
+if [[ -z "$port" ]]; then
+  echo "[before.sh.erb] ERROR: Failed to allocate a port."
+  exit 1
+else
+  echo "[before.sh.erb] Selected available port: $port"
+fi
+
+# Needed for Alliance Clusters
+export CC_CLUSTER=vulcan
+
+# Open WebUI working directory (in job directory, which is in tmp)
+export WEBUI_WORKDIR="${PWD}/webui-data"
+export WEBUI_LOG_FILE="${PWD}/webui.log"
+# Venv in /tmp as requested
+export WEBUI_VENV_DIR="/tmp/${USER}_webui_env"
+
+echo "[before.sh.erb] WEBUI_WORKDIR: $WEBUI_WORKDIR"
+echo "[before.sh.erb] WEBUI_LOG_FILE: $WEBUI_LOG_FILE"
+echo "[before.sh.erb] WEBUI_VENV_DIR: $WEBUI_VENV_DIR"
+
+# Create working directory
+mkdir -p "$WEBUI_WORKDIR"
+if [[ $? -ne 0 ]]; then
+  echo "[before.sh.erb] ERROR: Failed to create directory ${WEBUI_WORKDIR}"
+  exit 1
+else
+  echo "[before.sh.erb] Successfully created Open WebUI working directory."
+fi
+
+# Load required modules BEFORE creating venv (critical!)
+echo "[before.sh.erb] Loading required modules..."
+module purge
+
+if ! module load python/3.12.4; then
+  echo "[before.sh.erb] ERROR: Failed to load python/3.12.4"
+  exit 1
+fi
+echo "[before.sh.erb] Successfully loaded python/3.12.4"
+
+if ! module load rust/1.91.0; then
+  echo "[before.sh.erb] ERROR: Failed to load rust/1.91.0"
+  exit 1
+fi
+echo "[before.sh.erb] Successfully loaded rust/1.91.0"
+
+if ! module load arrow; then
+  echo "[before.sh.erb] ERROR: Failed to load arrow"
+  exit 1
+fi
+echo "[before.sh.erb] Successfully loaded arrow"
+
+if ! module load opencv; then
+  echo "[before.sh.erb] ERROR: Failed to load opencv"
+  exit 1
+fi
+echo "[before.sh.erb] Successfully loaded opencv"
+
+# Check if we're in a virtual environment (shouldn't be, but check anyway)
+if [[ -n "$VIRTUAL_ENV" ]]; then
+  echo "[before.sh.erb] WARNING: Virtual environment already active: $VIRTUAL_ENV"
+  echo "[before.sh.erb] Deactivating..."
+  deactivate
+fi
+
+# Create virtual environment in /tmp if it doesn't exist
+if [ ! -d "$WEBUI_VENV_DIR" ]; then
+  echo "[before.sh.erb] Creating virtual environment at $WEBUI_VENV_DIR..."
+  python -m venv "$WEBUI_VENV_DIR"
+  if [[ $? -ne 0 ]]; then
+    echo "[before.sh.erb] ERROR: Failed to create virtual environment"
+    exit 1
+  fi
+else
+  echo "[before.sh.erb] Virtual environment already exists at $WEBUI_VENV_DIR"
+fi
+
+# Activate environment
+echo "[before.sh.erb] Activating virtual environment..."
+source "$WEBUI_VENV_DIR/bin/activate"
+
+# Upgrade pip
+echo "[before.sh.erb] Upgrading pip..."
+pip install --upgrade pip
+
+# Install pytz explicitly first (in case it's needed)
+echo "[before.sh.erb] Installing pytz..."
+pip install pytz
+
+# Install open-webui (only if not already installed)
+if ! python -c "import open_webui" 2>/dev/null; then
+  echo "[before.sh.erb] Installing open-webui..."
+  pip install open-webui
+  if [[ $? -ne 0 ]]; then
+    echo "[before.sh.erb] ERROR: Failed to install open-webui"
+    exit 1
+  fi
+  echo "[before.sh.erb] Successfully installed open-webui"
+else
+  echo "[before.sh.erb] open-webui already installed"
+fi
+
+echo "[before.sh.erb] Setup complete."

@@ -1,0 +1,45 @@
+#!/bin/bash
+
+echo "[script.sh.erb] Starting Open WebUI Server"
+
+# Change to user's home directory
+cd "${HOME}"
+echo "[script.sh.erb] Changed working directory to ${HOME}"
+
+# Activate the virtual environment (should already be activated, but ensure it)
+if [[ -z "$VIRTUAL_ENV" ]]; then
+  echo "[script.sh.erb] Activating virtual environment..."
+  source "${WEBUI_VENV_DIR}/bin/activate"
+fi
+
+# Set Open WebUI environment variables
+export WEBUI_PORT="${port}"
+export WEBUI_HOST="0.0.0.0"
+export WEBUI_DATA_DIR="${WEBUI_WORKDIR}"
+
+# Disable authentication (since we're behind OOD's auth)
+export WEBUI_AUTH="false"
+export ENABLE_SIGNUP="false"
+export WEBUI_SECRET_KEY="$(openssl rand -hex 32)"
+
+# Optional: Set other Open WebUI config
+export WEBUI_NAME="Open WebUI"
+export WEBUI_URL="http://${host}:${port}"
+
+echo "[script.sh.erb] WEBUI_PORT=${WEBUI_PORT}"
+echo "[script.sh.erb] WEBUI_HOST=${WEBUI_HOST}"
+echo "[script.sh.erb] WEBUI_DATA_DIR=${WEBUI_DATA_DIR}"
+echo "[script.sh.erb] WEBUI_AUTH=${WEBUI_AUTH}"
+
+# Launch Open WebUI Server
+echo "[script.sh.erb] Launching Open WebUI server on port ${port}..."
+echo "[script.sh.erb] Logging to ${WEBUI_LOG_FILE}"
+
+# Run open-webui serve (this will block until the server exits)
+open-webui serve \
+  --host "${WEBUI_HOST}" \
+  --port "${WEBUI_PORT}" \
+  --data-dir "${WEBUI_DATA_DIR}" \
+  > "${WEBUI_LOG_FILE}" 2>&1
+
+echo "[script.sh.erb] Open WebUI Server exited."
