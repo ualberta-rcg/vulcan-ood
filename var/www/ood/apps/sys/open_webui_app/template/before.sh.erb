@@ -103,6 +103,15 @@ else
   echo "[before.sh.erb] open-webui already installed"
 fi
 
+# Install httpx (required for uvicorn proxy)
+if ! python -c "import httpx" 2>/dev/null; then
+  echo "[before.sh.erb] Installing httpx for proxy..."
+  pip install httpx
+  echo "[before.sh.erb] Successfully installed httpx"
+else
+  echo "[before.sh.erb] httpx already installed"
+fi
+
 echo ""
 echo "[before.sh.erb] =========================================="
 echo "[before.sh.erb] Setup complete!"
