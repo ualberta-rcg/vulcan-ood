@@ -90,10 +90,10 @@ echo "[script.sh.erb] Launching Open WebUI server on 0.0.0.0:${port}..."
 echo "[script.sh.erb] Logging to ${WEBUI_LOG_FILE}"
 
 # Start Open WebUI in background and capture PID
+# Note: data-dir is passed via WEBUI_DATA_DIR environment variable, not CLI
 nohup open-webui serve \
   --host "0.0.0.0" \
   --port "${port}" \
-  --data-dir "${WEBUI_DATA_DIR}" \
   > "${WEBUI_LOG_FILE}" 2>&1 &
 
 WEBUI_PID=$!
