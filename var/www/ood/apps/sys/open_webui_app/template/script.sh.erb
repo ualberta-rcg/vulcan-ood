@@ -111,11 +111,9 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import StreamingResponse
 
 UPSTREAM = "http://127.0.0.1:WEBUI_INTERNAL_PORT_PLACEHOLDER"
-PREFIX = "/rnode/HOST_PLACEHOLDER/PORT_PLACEHOLDER"
 
-app = FastAPI(root_path=PREFIX)
+app = FastAPI()
 
-@app.api_route(f"{PREFIX}{{path:path}}", methods=["GET","POST","PUT","DELETE","PATCH","OPTIONS"])
 @app.api_route("/{path:path}", methods=["GET","POST","PUT","DELETE","PATCH","OPTIONS"])
 async def proxy(request: Request, path: str = ""):
     # Build upstream URL
@@ -128,8 +126,10 @@ async def proxy(request: Request, path: str = ""):
     if request.query_params:
         url += "?" + str(request.query_params)
     
-    # Prepare headers (exclude host)
-    headers = {k: v for k, v in request.headers.items() if k.lower() != "host"}
+    # Prepare headers (exclude host, accept-encoding to get uncompressed)
+    headers = {k: v for k, v in request.headers.items() if k.lower() not in ["host", "accept-encoding"]}
+    # Request uncompressed content so we can modify it
+    headers["accept-encoding"] = "identity"
     
     # Get request body
     body = await request.body()
@@ -151,27 +151,53 @@ async def proxy(request: Request, path: str = ""):
     # Process response headers
     response_headers = dict(resp.headers)
     
-    # Fix redirects to include prefix
+    # Fix redirects to use relative paths
     if "location" in response_headers:
         location = response_headers["location"]
-        if location.startswith("/") and not location.startswith(PREFIX):
-            response_headers["location"] = PREFIX + location
+        if location.startswith("/"):
+            # Convert absolute redirect to relative
+            response_headers["location"] = "." + location
     
-    # Get content
+    # Get content and handle encoding
+    content_encoding = response_headers.get("content-encoding", "").lower()
     content = resp.content
     
-    # Rewrite absolute paths in HTML/CSS/JS
+    # If content is compressed, we need to decompress it before modifying
+    import gzip
+    import zlib
+    
+    if content_encoding == "gzip" and content:
+        try:
+            content = gzip.decompress(content)
+            # Remove encoding headers since we're sending uncompressed
+            response_headers.pop("content-encoding", None)
+            response_headers.pop("content-length", None)
+        except:
+            pass  # If decompression fails, try to work with original content
+    elif content_encoding == "deflate" and content:
+        try:
+            content = zlib.decompress(content)
+            response_headers.pop("content-encoding", None)
+            response_headers.pop("content-length", None)
+        except:
+            pass
+    
+    # Rewrite absolute paths to relative paths in HTML/CSS/JS
     content_type = response_headers.get("content-type", "").lower()
     if any(ct in content_type for ct in ["text/html", "text/css", "application/javascript", "text/javascript"]):
-        # Rewrite various absolute path patterns
-        content = content.replace(b'href="/', f'href="{PREFIX}/'.encode())
-        content = content.replace(b'src="/', f'src="{PREFIX}/'.encode())
-        content = content.replace(b'action="/', f'action="{PREFIX}/'.encode())
-        content = content.replace(b'"/static/', f'"{PREFIX}/static/'.encode())
-        content = content.replace(b'"/_app/', f'"{PREFIX}/_app/'.encode())
-        # Update content-length if present
-        if "content-length" in response_headers:
-            response_headers["content-length"] = str(len(content))
+        # Rewrite absolute paths (starting with /) to relative paths (starting with ./)
+        # Common HTML attributes
+        content = content.replace(b'href="/', b'href="./')
+        content = content.replace(b'src="/', b'src="./')
+        content = content.replace(b'action="/', b'action="./')
+        # JSON/JS string patterns
+        content = content.replace(b'"/static/', b'"./static/')
+        content = content.replace(b'"/_app/', b'"./_app/')
+        # CSS url() patterns
+        content = content.replace(b'url("/', b'url("./')
+        content = content.replace(b"url('/", b"url('./")
+        # Update content-length
+        response_headers["content-length"] = str(len(content))
     
     return Response(
         content=content,
@@ -181,10 +207,8 @@ async def proxy(request: Request, path: str = ""):
     )
 PROXY_EOF
 
-# Replace placeholders in proxy.py (using temp file for portability)
+# Replace placeholder in proxy.py (only need the internal port now)
 sed "s|WEBUI_INTERNAL_PORT_PLACEHOLDER|${WEBUI_INTERNAL_PORT}|g" "${WEBUI_WORKDIR}/proxy.py" > "${WEBUI_WORKDIR}/proxy.py.tmp" && mv "${WEBUI_WORKDIR}/proxy.py.tmp" "${WEBUI_WORKDIR}/proxy.py"
-sed "s|HOST_PLACEHOLDER|${host}|g" "${WEBUI_WORKDIR}/proxy.py" > "${WEBUI_WORKDIR}/proxy.py.tmp" && mv "${WEBUI_WORKDIR}/proxy.py.tmp" "${WEBUI_WORKDIR}/proxy.py"
-sed "s|PORT_PLACEHOLDER|${PROXY_PORT}|g" "${WEBUI_WORKDIR}/proxy.py" > "${WEBUI_WORKDIR}/proxy.py.tmp" && mv "${WEBUI_WORKDIR}/proxy.py.tmp" "${WEBUI_WORKDIR}/proxy.py"
 
 echo "[script.sh.erb] Proxy app created at ${WEBUI_WORKDIR}/proxy.py"
 
@@ -223,6 +247,7 @@ nohup uvicorn proxy:app \
   --host "${PROXY_HOST}" \
   --port "${PROXY_PORT}" \
   --log-level info \
+  --access-log \
   > "${WEBUI_WORKDIR}/proxy.log" 2>&1 &
 
 PROXY_PID=$!
