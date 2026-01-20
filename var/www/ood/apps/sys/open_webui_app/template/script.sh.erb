@@ -78,7 +78,11 @@ export WEBUI_SECRET_KEY="$(openssl rand -hex 32)"
 
 # Optional: Set other Open WebUI config
 export WEBUI_NAME="Open WebUI"
-export WEBUI_URL="http://${host}:${port}"
+# Set the full URL including the OOD reverse proxy path
+# This tells Open WebUI it's being served from a subpath
+export WEBUI_URL="https://vulcan.alliancecan.ca/rnode/${host}/${port}"
+# Alternative: Try ROOT_PATH if WEBUI_URL doesn't work
+export ROOT_PATH="/rnode/${host}/${port}"
 
 echo "[script.sh.erb] WEBUI_PORT=${WEBUI_PORT}"
 echo "[script.sh.erb] WEBUI_HOST=${WEBUI_HOST}"
@@ -88,9 +92,12 @@ echo "[script.sh.erb] WEBUI_AUTH=${WEBUI_AUTH}"
 # Launch Open WebUI Server
 echo "[script.sh.erb] Launching Open WebUI server on 0.0.0.0:${port}..."
 echo "[script.sh.erb] Logging to ${WEBUI_LOG_FILE}"
+echo "[script.sh.erb] WEBUI_URL=${WEBUI_URL}"
+echo "[script.sh.erb] ROOT_PATH=${ROOT_PATH}"
 
 # Start Open WebUI in background and capture PID
 # Note: data-dir is passed via WEBUI_DATA_DIR environment variable, not CLI
+# Open WebUI should use WEBUI_URL to generate correct paths for reverse proxy
 nohup open-webui serve \
   --host "0.0.0.0" \
   --port "${port}" \
