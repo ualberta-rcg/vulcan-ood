@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e  # Exit on error
+
 echo "[before.sh.erb] Starting Open WebUI Setup..."
 
 # Export the module function if available
@@ -34,69 +36,58 @@ echo "[before.sh.erb] WEBUI_VENV_DIR: $WEBUI_VENV_DIR"
 
 # Create working directory
 mkdir -p "$WEBUI_WORKDIR"
-if [[ $? -ne 0 ]]; then
-  echo "[before.sh.erb] ERROR: Failed to create directory ${WEBUI_WORKDIR}"
-  exit 1
-else
-  echo "[before.sh.erb] Successfully created Open WebUI working directory."
-fi
+echo "[before.sh.erb] Successfully created Open WebUI working directory."
 
-# Load required modules BEFORE creating venv (critical!)
+# ============================================================================
+# CRITICAL: Load required modules BEFORE creating venv or running pip
+# ============================================================================
 echo "[before.sh.erb] Loading required modules..."
 module purge
 
-if ! module load python/3.12.4; then
-  echo "[before.sh.erb] ERROR: Failed to load python/3.12.4"
-  exit 1
-fi
-echo "[before.sh.erb] Successfully loaded python/3.12.4"
+echo "[before.sh.erb] Loading python/3.12.4..."
+module load python/3.12.4
 
-if ! module load rust/1.91.0; then
-  echo "[before.sh.erb] ERROR: Failed to load rust/1.91.0"
-  exit 1
-fi
-echo "[before.sh.erb] Successfully loaded rust/1.91.0"
+echo "[before.sh.erb] Loading rust/1.91.0..."
+module load rust/1.91.0
 
-if ! module load arrow; then
-  echo "[before.sh.erb] ERROR: Failed to load arrow"
-  exit 1
-fi
-echo "[before.sh.erb] Successfully loaded arrow"
+echo "[before.sh.erb] Loading arrow..."
+module load arrow
 
-if ! module load opencv; then
-  echo "[before.sh.erb] ERROR: Failed to load opencv"
-  exit 1
-fi
-echo "[before.sh.erb] Successfully loaded opencv"
+echo "[before.sh.erb] Loading opencv..."
+module load opencv
+
+echo ""
+echo "[before.sh.erb] IMPORTANT: Modules loaded. If you have an active virtual environment,"
+echo "[before.sh.erb] you must deactivate it first."
+echo ""
 
 # Check if we're in a virtual environment (shouldn't be, but check anyway)
 if [[ -n "$VIRTUAL_ENV" ]]; then
-  echo "[before.sh.erb] WARNING: Virtual environment already active: $VIRTUAL_ENV"
-  echo "[before.sh.erb] Deactivating..."
-  deactivate
+  echo "[before.sh.erb] ERROR: You are currently in a virtual environment: $VIRTUAL_ENV"
+  echo "[before.sh.erb] Please deactivate it first, then re-run this script."
+  exit 1
 fi
 
 # Create virtual environment in /tmp if it doesn't exist
+# NOTE: Modules are already loaded above, so venv will use the correct Python
 if [ ! -d "$WEBUI_VENV_DIR" ]; then
   echo "[before.sh.erb] Creating virtual environment at $WEBUI_VENV_DIR..."
   python -m venv "$WEBUI_VENV_DIR"
-  if [[ $? -ne 0 ]]; then
-    echo "[before.sh.erb] ERROR: Failed to create virtual environment"
-    exit 1
-  fi
 else
   echo "[before.sh.erb] Virtual environment already exists at $WEBUI_VENV_DIR"
 fi
 
 # Activate environment
+# NOTE: Modules remain loaded after venv activation
 echo "[before.sh.erb] Activating virtual environment..."
 source "$WEBUI_VENV_DIR/bin/activate"
 
-# Upgrade pip
+# Upgrade pip (modules are still loaded from above)
 echo "[before.sh.erb] Upgrading pip..."
 pip install --upgrade pip
 
 # Install pytz explicitly first (in case it's needed)
+# NOTE: Modules must be loaded before this runs
 echo "[before.sh.erb] Installing pytz..."
 pip install pytz
 
@@ -104,13 +95,16 @@ pip install pytz
 if ! python -c "import open_webui" 2>/dev/null; then
   echo "[before.sh.erb] Installing open-webui..."
   pip install open-webui
-  if [[ $? -ne 0 ]]; then
-    echo "[before.sh.erb] ERROR: Failed to install open-webui"
-    exit 1
-  fi
   echo "[before.sh.erb] Successfully installed open-webui"
 else
   echo "[before.sh.erb] open-webui already installed"
 fi
 
-echo "[before.sh.erb] Setup complete."
+echo ""
+echo "[before.sh.erb] =========================================="
+echo "[before.sh.erb] Setup complete!"
+echo "[before.sh.erb] =========================================="
+echo ""
+echo "[before.sh.erb] IMPORTANT: Modules (python, rust, arrow, opencv) are loaded"
+echo "[before.sh.erb] and will remain loaded for the session."
+echo "[before.sh.erb] =========================================="

@@ -1,5 +1,6 @@
 ---
 name: Open WebUI
+icon: logo.png
 category: Development & Data Science
 role: batch_connect
 description: |
