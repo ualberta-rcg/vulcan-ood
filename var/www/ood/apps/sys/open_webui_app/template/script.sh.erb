@@ -187,7 +187,7 @@ http {
     server {
         listen ${PROXY_PORT};
         server_name _;
-        
+        gzip_static off;
         
         # API endpoints - NO sub_filter (pass through unchanged)
         # This matches the GitHub discussion pattern - API should not be modified
@@ -211,8 +211,8 @@ http {
         # Main location with sub_filter for path rewriting
         location / {
             # Enable sub_filter for path rewriting
-            # Match the working pattern from GitHub discussion #1235
-            sub_filter_types text/plain text/html application/javascript;
+            sub_filter_once off;
+            sub_filter_types *;
             
             # Rewrite absolute paths to relative paths (with ./ prefix)
             # This matches the nginx pattern from GitHub discussion
