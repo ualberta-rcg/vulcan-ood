@@ -193,7 +193,7 @@ http {
             sub_filter '"/api/' '"./api/';
             sub_filter "'/api/" "'./api/";
             sub_filter '"/_app/' '"./_app/';
-            sub_filter "'/_app/" "'./_app/';
+            sub_filter "'/_app/" "'./_app/";
             
             # Replace ALL occurrences (critical!)
             sub_filter_once off;
