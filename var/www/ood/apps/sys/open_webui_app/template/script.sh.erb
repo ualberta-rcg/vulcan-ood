@@ -248,12 +248,22 @@ http {
             sub_filter 'href="/' 'href="${OOD_PATH_PREFIX}/';
             sub_filter 'src="/' 'src="${OOD_PATH_PREFIX}/';
             sub_filter 'action="/' 'action="${OOD_PATH_PREFIX}/';
+            # Module preload links (for ES6 modules)
+            sub_filter 'rel="modulepreload" href="/' 'rel="modulepreload" href="${OOD_PATH_PREFIX}/';
             
             # CSS url() functions
             sub_filter 'url("/' 'url("${OOD_PATH_PREFIX}/';
             sub_filter 'url(\'/' 'url(\'${OOD_PATH_PREFIX}/';
             
+            # JavaScript import() and fetch() calls - MUST come before path patterns
+            # These catch ES6 module imports like import("/_app/immutable/chunks/file.js")
+            sub_filter 'import("/' 'import("${OOD_PATH_PREFIX}/';
+            sub_filter 'import(\'/' 'import(\'${OOD_PATH_PREFIX}/';
+            sub_filter 'fetch("/' 'fetch("${OOD_PATH_PREFIX}/';
+            sub_filter 'fetch(\'/' 'fetch(\'${OOD_PATH_PREFIX}/';
+            
             # Specific paths WITH quotes (most specific first)
+            # These catch paths in strings and attributes
             sub_filter '"/_app/' '"${OOD_PATH_PREFIX}/_app/';
             sub_filter "'/_app/" "'${OOD_PATH_PREFIX}/_app/";
             sub_filter '"/_app' '"${OOD_PATH_PREFIX}/_app';
@@ -275,11 +285,13 @@ http {
             sub_filter '"/favicon.png' '"${OOD_PATH_PREFIX}/favicon.png';
             
             # Bare paths WITHOUT quotes (from working solution)
+            # These catch unquoted paths in JavaScript code
+            # Order matters - more specific first
             sub_filter '_app/' '${OOD_PATH_PREFIX}/_app/';
             sub_filter 'themes/' '${OOD_PATH_PREFIX}/themes/';
-            sub_filter 'themes' '${OOD_PATH_PREFIX}/themes';
             sub_filter 'api/' '${OOD_PATH_PREFIX}/api/';
             sub_filter 'ollama/' '${OOD_PATH_PREFIX}/ollama/';
+            # Note: 'themes' without trailing slash removed - too broad, could match variable names
             
             # General patterns (LAST - less specific)
             sub_filter '"/' '"${OOD_PATH_PREFIX}/';
