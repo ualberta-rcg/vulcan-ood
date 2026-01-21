@@ -293,9 +293,9 @@ http {
             sub_filter 'ollama/' '${OOD_PATH_PREFIX}/ollama/';
             # Note: 'themes' without trailing slash removed - too broad, could match variable names
             
-            # General patterns (LAST - less specific)
-            sub_filter '"/' '"${OOD_PATH_PREFIX}/';
-            sub_filter "'/" "'${OOD_PATH_PREFIX}/";
+            # REMOVED general patterns ('"/' and "'/") - they cause double-rewriting!
+            # All paths should be caught by the specific patterns above.
+            # If a path isn't caught, it probably shouldn't be rewritten anyway.
             
             # Replace ALL occurrences (critical!)
             sub_filter_once off;
