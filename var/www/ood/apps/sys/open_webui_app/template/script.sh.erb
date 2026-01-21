@@ -201,6 +201,16 @@ async def proxy(request: Request, path: str = ""):
             # Handle CSS url() patterns
             content = content.replace(b'url("/', b'url("./')
             content = content.replace(b"url('/", b"url('./")
+            # Handle JavaScript fetch/API calls - common patterns
+            content = content.replace(b"fetch('/", b"fetch('./")
+            content = content.replace(b'fetch("/', b'fetch("./')
+            content = content.replace(b".fetch('/", b".fetch('./")
+            content = content.replace(b'.fetch("/', b'.fetch("./')
+            # Handle common API path patterns in JavaScript
+            content = content.replace(b"'/api/", b"'./api/")
+            content = content.replace(b'"/api/', b'"./api/')
+            content = content.replace(b"'/_app/", b"'./_app/")
+            content = content.replace(b'"/_app/', b'"./_app/')
             # Update content-length
             response_headers["content-length"] = str(len(content))
     
