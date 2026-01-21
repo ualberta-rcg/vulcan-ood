@@ -66,26 +66,78 @@ fi
 
 echo "[script.sh.erb] Found open-webui command: $(which open-webui)"
 
-# Verify nginx binary exists
-if [ ! -f "${NGINX_BINARY_PATH}" ]; then
-  echo "[script.sh.erb] ERROR: Nginx binary not found at ${NGINX_BINARY_PATH}"
-  echo "[script.sh.erb] Nginx should have been built in before.sh.erb"
-  exit 1
+# Build nginx directly in job directory (avoids hardcoded path issues)
+NGINX_BUILD_DIR="${WEBUI_WORKDIR}/nginx-build"
+NGINX_LOCAL="${WEBUI_WORKDIR}/nginx"
+NGINX_VERSION="1.29.4"
+
+# Check if nginx binary already exists in job directory
+if [ -f "${NGINX_LOCAL}" ]; then
+  if "${NGINX_LOCAL}" -V 2>&1 | grep -q "http_sub_module"; then
+    echo "[script.sh.erb] Nginx binary already exists: ${NGINX_LOCAL}"
+  else
+    echo "[script.sh.erb] Existing nginx binary missing sub_filter module, rebuilding..."
+    rm -f "${NGINX_LOCAL}"
+    rm -rf "${NGINX_BUILD_DIR}"
+  fi
+fi
+
+# Build nginx if it doesn't exist
+if [ ! -f "${NGINX_LOCAL}" ]; then
+  echo "[script.sh.erb] Building nginx with sub_filter module in job directory..."
+  mkdir -p "${NGINX_BUILD_DIR}"
+  cd "${NGINX_BUILD_DIR}"
+  
+  # Download nginx source
+  if [ ! -f "nginx-${NGINX_VERSION}.tar.gz" ]; then
+    echo "[script.sh.erb] Downloading nginx ${NGINX_VERSION}..."
+    wget -q "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz"
+  fi
+  
+  # Extract
+  if [ ! -d "nginx-${NGINX_VERSION}" ]; then
+    echo "[script.sh.erb] Extracting nginx source..."
+    tar -xzf "nginx-${NGINX_VERSION}.tar.gz"
+  fi
+  
+  cd "nginx-${NGINX_VERSION}"
+  
+  # Configure with sub_filter module, prefix set to job directory
+  echo "[script.sh.erb] Configuring nginx..."
+  ./configure \
+    --prefix="${WEBUI_WORKDIR}" \
+    --with-http_sub_module \
+    --without-http_fastcgi_module \
+    --without-http_uwsgi_module \
+    --without-http_scgi_module \
+    > /dev/null 2>&1
+  
+  # Compile
+  echo "[script.sh.erb] Compiling nginx..."
+  make -j$(nproc 2>/dev/null || echo 4) > /dev/null 2>&1
+  
+  # Copy binary to job directory root
+  if [ -f "objs/nginx" ]; then
+    cp "objs/nginx" "${NGINX_LOCAL}"
+    chmod +x "${NGINX_LOCAL}"
+    echo "[script.sh.erb] ✓ Nginx compiled successfully with sub_filter module"
+  else
+    echo "[script.sh.erb] ✗ ERROR: Nginx compilation failed"
+    exit 1
+  fi
+  
+  # Clean up build directory (optional, but saves space)
+  cd "${WEBUI_WORKDIR}"
+  rm -rf "${NGINX_BUILD_DIR}"
 fi
 
 # Verify nginx has sub_filter module
-if ! "${NGINX_BINARY_PATH}" -V 2>&1 | grep -q "http_sub_module"; then
+if ! "${NGINX_LOCAL}" -V 2>&1 | grep -q "http_sub_module"; then
   echo "[script.sh.erb] ERROR: Nginx binary missing http_sub_module"
   exit 1
 fi
 
-echo "[script.sh.erb] Nginx binary verified: ${NGINX_BINARY_PATH}"
-
-# Copy nginx binary to job directory so we can run it from there
-NGINX_LOCAL="${WEBUI_WORKDIR}/nginx"
-cp "${NGINX_BINARY_PATH}" "${NGINX_LOCAL}"
-chmod +x "${NGINX_LOCAL}"
-echo "[script.sh.erb] Copied nginx binary to ${NGINX_LOCAL}"
+echo "[script.sh.erb] Nginx binary ready: ${NGINX_LOCAL}"
 
 # Port configuration
 # PROXY_PORT is the OOD-assigned port (what OOD connects to)
