@@ -81,6 +81,12 @@ fi
 
 echo "[script.sh.erb] Nginx binary verified: ${NGINX_BINARY_PATH}"
 
+# Copy nginx binary to job directory so we can run it from there
+NGINX_LOCAL="${WEBUI_WORKDIR}/nginx"
+cp "${NGINX_BINARY_PATH}" "${NGINX_LOCAL}"
+chmod +x "${NGINX_LOCAL}"
+echo "[script.sh.erb] Copied nginx binary to ${NGINX_LOCAL}"
+
 # Port configuration
 # PROXY_PORT is the OOD-assigned port (what OOD connects to)
 # WEBUI_INTERNAL_PORT is for Open WebUI (internal, not exposed)
@@ -109,10 +115,6 @@ echo "[script.sh.erb] WEBUI_DATA_DIR=${WEBUI_DATA_DIR}"
 echo "[script.sh.erb] WEBUI_AUTH=${WEBUI_AUTH}"
 
 # Create nginx configuration file
-# Create temp directories for nginx (in job directory)
-mkdir -p "${WEBUI_WORKDIR}/client_body_temp"
-mkdir -p "${WEBUI_WORKDIR}/proxy_temp"
-
 echo "[script.sh.erb] Creating nginx configuration..."
 cat > "${WEBUI_WORKDIR}/nginx.conf" <<NGINX_CONF
 worker_processes 1;
@@ -125,11 +127,6 @@ events {
 
 http {
     access_log ./nginx_access.log;
-    
-    # Set temp directories (relative to config file location)
-    # Only include modules that were compiled (fastcgi/uwsgi/scgi were excluded)
-    #client_body_temp_path client_body_temp;
-    #proxy_temp_path proxy_temp;
     
     upstream webui_backend {
         server ${WEBUI_INTERNAL_HOST}:${WEBUI_INTERNAL_PORT};
@@ -253,9 +250,10 @@ echo "[script.sh.erb] Open WebUI Server started successfully on port ${WEBUI_INT
 echo "[script.sh.erb] Starting nginx reverse proxy on ${PROXY_HOST}:${PROXY_PORT}..."
 cd "${WEBUI_WORKDIR}"
 
-# Start nginx with our config (pid and error_log are set in config file)
+# Start nginx with our config
+# Use -p to set prefix (where temp dirs will be created) to job directory
 # Use -e to suppress the default error log warning
-"${NGINX_BINARY_PATH}" -c "${WEBUI_WORKDIR}/nginx.conf" -e "${WEBUI_WORKDIR}/nginx_error.log" &
+"${NGINX_LOCAL}" -p "${WEBUI_WORKDIR}" -c "${WEBUI_WORKDIR}/nginx.conf" -e "${WEBUI_WORKDIR}/nginx_error.log" &
 
 NGINX_PID=$!
 echo "[script.sh.erb] Nginx started with PID: $NGINX_PID"
@@ -280,5 +278,5 @@ wait $WEBUI_PID
 echo "[script.sh.erb] Open WebUI Server exited, stopping nginx..."
 kill $NGINX_PID 2>/dev/null || true
 # Also try to stop nginx gracefully
-"${NGINX_BINARY_PATH}" -s quit -c "${WEBUI_WORKDIR}/nginx.conf" 2>/dev/null || true
+"${NGINX_LOCAL}" -p "${WEBUI_WORKDIR}" -s quit -c "${WEBUI_WORKDIR}/nginx.conf" 2>/dev/null || true
 echo "[script.sh.erb] Nginx stopped."
