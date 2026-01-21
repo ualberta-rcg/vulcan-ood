@@ -188,22 +188,6 @@ http {
         listen ${PROXY_PORT};
         server_name _;
         
-        # API endpoints - NO sub_filter (pass through unchanged)
-        # This matches the nginx pattern from GitHub discussion
-        sub_filter '"/' '"./';
-        sub_filter "'/" "'./";
-        sub_filter 'href="/' 'href="./';
-        sub_filter 'src="/' 'src="./';
-        sub_filter 'action="/' 'action="./';
-        sub_filter 'url("/' 'url("./';
-        sub_filter 'url(\'/' 'url(\'./';
-        sub_filter '"/api/' '"./api/';
-        sub_filter "'/api/" "'./api/";
-        sub_filter '"/_app/' '"./_app/';
-        sub_filter "'/_app/" "'./_app/";
-        
-        # Replace ALL occurrences (critical!)
-        sub_filter_once off;
         
         # API endpoints - NO sub_filter (pass through unchanged)
         # This matches the GitHub discussion pattern - API should not be modified
@@ -227,22 +211,24 @@ http {
         # Main location with sub_filter for path rewriting
         location / {
             # Enable sub_filter for path rewriting
-            # Note: text/html is default, so we don't need to include it
-            sub_filter_types text/css application/javascript text/javascript;
+            # Match the working pattern from GitHub discussion #1235
+            sub_filter_types text/plain text/html application/javascript;
             
             # Rewrite absolute paths to relative paths (with ./ prefix)
             # This matches the nginx pattern from GitHub discussion
-            sub_filter '"/' '"./';
-            sub_filter "'/" "'./";
             sub_filter 'href="/' 'href="./';
             sub_filter 'src="/' 'src="./';
-            sub_filter 'action="/' 'action="./';
-            sub_filter 'url("/' 'url("./';
-            sub_filter 'url(\'/' 'url(\'./';
-            sub_filter '"/api/' '"./api/';
-            sub_filter "'/api/" "'./api/";
+            sub_filter '"/' '"./';
+            sub_filter "'/" "'./";
             sub_filter '"/_app/' '"./_app/';
-            sub_filter "'/_app/" "'./_app/";
+            sub_filter '_app/' './_app/';
+            sub_filter '"/_app' '"./_app';
+            sub_filter '"/themes/' '"./themes/';
+            sub_filter '"/themes' '"./themes';
+            sub_filter 'themes/' './themes/';
+            sub_filter '"/openai/' '"./openai/';
+            sub_filter 'api/' './api/';
+            sub_filter 'ollama/' './ollama/';
             
             # Replace ALL occurrences (critical!)
             sub_filter_once off;
