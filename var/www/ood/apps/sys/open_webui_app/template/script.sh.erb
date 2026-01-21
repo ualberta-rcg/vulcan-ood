@@ -3,7 +3,7 @@
 # Ensure script is executable
 chmod +x "$0" 2>/dev/null || true
 
-echo "[script.sh.erb] Starting Open WebUI Server with uvicorn proxy"
+echo "[script.sh.erb] Starting Open WebUI Server with nginx proxy"
 
 # Change to user's home directory
 cd "${HOME}"
@@ -64,17 +64,22 @@ if ! command -v open-webui >/dev/null 2>&1; then
   exit 1
 fi
 
-# Verify httpx is available (needed for proxy)
-if ! python -c "import httpx" 2>/dev/null; then
-  echo "[script.sh.erb] ERROR: httpx not found. Installing..."
-  pip install httpx
-  if ! python -c "import httpx" 2>/dev/null; then
-    echo "[script.sh.erb] ERROR: Failed to install httpx"
-    exit 1
-  fi
+echo "[script.sh.erb] Found open-webui command: $(which open-webui)"
+
+# Verify nginx binary exists
+if [ ! -f "${NGINX_BINARY_PATH}" ]; then
+  echo "[script.sh.erb] ERROR: Nginx binary not found at ${NGINX_BINARY_PATH}"
+  echo "[script.sh.erb] Nginx should have been built in before.sh.erb"
+  exit 1
 fi
 
-echo "[script.sh.erb] Found open-webui command: $(which open-webui)"
+# Verify nginx has sub_filter module
+if ! "${NGINX_BINARY_PATH}" -V 2>&1 | grep -q "http_sub_module"; then
+  echo "[script.sh.erb] ERROR: Nginx binary missing http_sub_module"
+  exit 1
+fi
+
+echo "[script.sh.erb] Nginx binary verified: ${NGINX_BINARY_PATH}"
 
 # Port configuration
 # PROXY_PORT is the OOD-assigned port (what OOD connects to)
@@ -103,191 +108,72 @@ echo "[script.sh.erb] WEBUI_INTERNAL_PORT=${WEBUI_INTERNAL_PORT} (internal)"
 echo "[script.sh.erb] WEBUI_DATA_DIR=${WEBUI_DATA_DIR}"
 echo "[script.sh.erb] WEBUI_AUTH=${WEBUI_AUTH}"
 
-# Create the proxy app
-echo "[script.sh.erb] Creating uvicorn proxy app..."
-cat > "${WEBUI_WORKDIR}/proxy.py" <<'PROXY_EOF'
-import httpx
-from fastapi import FastAPI, Request, Response
-from fastapi.responses import StreamingResponse
+# Create nginx configuration file
+echo "[script.sh.erb] Creating nginx configuration..."
+cat > "${WEBUI_WORKDIR}/nginx.conf" <<NGINX_CONF
+worker_processes 1;
+error_log ${WEBUI_WORKDIR}/nginx_error.log;
+pid ${WEBUI_WORKDIR}/nginx.pid;
 
-UPSTREAM = "http://127.0.0.1:WEBUI_INTERNAL_PORT_PLACEHOLDER"
+events {
+    worker_connections 1024;
+}
 
-app = FastAPI()
-
-@app.api_route("/{path:path}", methods=["GET","POST","PUT","DELETE","PATCH","OPTIONS"])
-async def proxy(request: Request, path: str = ""):
-    # Build upstream URL
-    if path:
-        url = f"{UPSTREAM}/{path}"
-    else:
-        url = UPSTREAM
+http {
+    access_log ${WEBUI_WORKDIR}/nginx_access.log;
     
-    # Add query string if present
-    if request.query_params:
-        url += "?" + str(request.query_params)
+    upstream webui_backend {
+        server ${WEBUI_INTERNAL_HOST}:${WEBUI_INTERNAL_PORT};
+    }
     
-    # Prepare headers (exclude host, accept-encoding to get uncompressed)
-    headers = {k: v for k, v in request.headers.items() if k.lower() not in ["host", "accept-encoding"]}
-    # Request uncompressed content so we can modify it
-    headers["accept-encoding"] = "identity"
-    
-    # Get request body
-    body = await request.body()
-    
-    try:
-        async with httpx.AsyncClient(follow_redirects=False, timeout=300.0) as client:
-            resp = await client.request(
-                request.method,
-                url,
-                headers=headers,
-                content=body,
-            )
-    except Exception as e:
-        return Response(
-            content=f"Proxy error: {str(e)}".encode(),
-            status_code=502,
-        )
-    
-    # Process response headers
-    response_headers = dict(resp.headers)
-    
-    # Fix redirects to use relative paths
-    if "location" in response_headers:
-        location = response_headers["location"]
-        if location.startswith("/"):
-            # Convert absolute redirect to relative
-            response_headers["location"] = "." + location
-    
-    # Get content and handle encoding
-    content_encoding = response_headers.get("content-encoding", "").lower()
-    content = resp.content
-    
-    # If content is compressed, we need to decompress it before modifying
-    import gzip
-    import zlib
-    
-    if content_encoding == "gzip" and content:
-        try:
-            content = gzip.decompress(content)
-            # Remove encoding headers since we're sending uncompressed
-            response_headers.pop("content-encoding", None)
-            response_headers.pop("content-length", None)
-        except:
-            pass  # If decompression fails, try to work with original content
-    elif content_encoding == "deflate" and content:
-        try:
-            content = zlib.decompress(content)
-            response_headers.pop("content-encoding", None)
-            response_headers.pop("content-length", None)
-        except:
-            pass
-    
-    # Only rewrite paths in HTML/CSS/JS, NOT in JSON/API responses
-    content_type = response_headers.get("content-type", "").lower()
-    
-    # Skip rewriting for API responses and JSON - these need to pass through unchanged
-    if not any(ct in content_type for ct in ["application/json", "application/xml", "text/xml", "application/octet-stream"]):
-        if "text/html" in content_type:
-            # Inject <base href="./"> tag into HTML to make all relative URLs work correctly
-            import re
-            # Find <head> tag and inject <base> tag right after it
-            head_pattern = rb'<head[^>]*>'
-            base_tag = b'<base href="./">'
-            if re.search(head_pattern, content, re.IGNORECASE):
-                # Check if base tag already exists
-                if not re.search(rb'<base[^>]*>', content, re.IGNORECASE):
-                    # Inject base tag after <head>
-                    content = re.sub(head_pattern, rb'\g<0>\n\t\t' + base_tag, content, flags=re.IGNORECASE)
-            # Inject comprehensive URL rewriting that works immediately and catches all cases
-            script_inject = (
-                b'<script>'
-                b'(function(){'
-                b'const basePath=window.location.pathname.replace(/\\/[^\\/]*$/,"")||"./";'
-                b'function rewriteUrl(url){'
-                b'if(typeof url==="string"&&url.startsWith("/")&&!url.startsWith("//")){'
-                b'return basePath+url.substring(1);'
-                b'}'
-                b'return url;'
-                b'}'
-                b'const originalFetch=window.fetch;'
-                b'window.fetch=function(...args){'
-                b'if(args[0]&&typeof args[0]==="string"){args[0]=rewriteUrl(args[0]);}'
-                b'else if(args[0]&&args[0] instanceof Request){'
-                b'const url=rewriteUrl(args[0].url);args[0]=new Request(url,args[0]);'
-                b'}'
-                b'return originalFetch.apply(this,args);'
-                b'};'
-                b'const originalOpen=XMLHttpRequest.prototype.open;'
-                b'XMLHttpRequest.prototype.open=function(method,url,...rest){'
-                b'return originalOpen.call(this,method,rewriteUrl(url),...rest);'
-                b'};'
-                b'try{Object.defineProperty(window.location,"origin",{get:function(){return"";},configurable:true});}catch(e){}'
-                b'})();'
-                b'</script>'
-            )
-            # Inject before closing </head> or before </body>
-            if b'</head>' in content:
-                content = content.replace(b'</head>', script_inject + b'\n\t</head>', 1)
-            elif b'</body>' in content:
-                content = content.replace(b'</body>', script_inject + b'\n\t</body>', 1)
+    server {
+        listen ${PROXY_PORT};
+        server_name _;
         
-        if any(ct in content_type for ct in ["text/html", "text/css", "application/javascript", "text/javascript"]):
-            # Replace '"/' with '"./' to make paths relative with ./ prefix
-            # This converts "/static/..." to "./static/..." and "/_app/..." to "./_app/..."
-            # ES6 modules require ./ prefix for relative imports
-            content = content.replace(b'"/', b'"./')
-            # Also handle single quotes
-            content = content.replace(b"'/", b"'./")
-            # Handle href, src, action attributes (they also need ./ for relative paths)
-            content = content.replace(b'href="/', b'href="./')
-            content = content.replace(b'src="/', b'src="./')
-            content = content.replace(b'action="/', b'action="./')
-            # Handle CSS url() patterns
-            content = content.replace(b'url("/', b'url("./')
-            content = content.replace(b"url('/", b"url('./")
-            # Handle JavaScript fetch/API calls - common patterns
-            content = content.replace(b"fetch('/", b"fetch('./")
-            content = content.replace(b'fetch("/', b'fetch("./')
-            content = content.replace(b".fetch('/", b".fetch('./")
-            content = content.replace(b'.fetch("/', b'.fetch("./')
-            # Handle template literals (backticks)
-            content = content.replace(b'`/', b'`./')
-            # Handle common API path patterns in JavaScript (more aggressive)
-            content = content.replace(b"'/api/", b"'./api/")
-            content = content.replace(b'"/api/', b'"./api/')
-            content = content.replace(b"'/_app/", b"'./_app/")
-            content = content.replace(b'"/_app/', b'"./_app/')
-            # Handle URL construction patterns (location.origin + '/api/')
-            content = content.replace(b"+ '/api/", b"+ './api/")
-            content = content.replace(b'+ "/api/', b'+ "./api/')
-            content = content.replace(b"+ '/_app/", b"+ './_app/")
-            content = content.replace(b'+ "/_app/', b'+ "./_app/')
-            # Handle window.location.origin and location.origin patterns
-            # Replace absolute URL construction with relative paths
-            import re
-            # Replace patterns like: location.origin + '/api/' with './api/'
-            # This removes the origin part and keeps the relative path
-            # Match the quote type and preserve it
-            content = re.sub(rb'(window\.)?location\.origin\s*\+\s*(["\'])/', rb'\2./', content)
-            # Handle any remaining absolute paths starting with /api/ or /_app/
-            # Replace /api/ and /_app/ that appear after quotes, operators, or equals
-            content = re.sub(rb'(["\'\`\+\=])\s*/api/', rb'\1./api/', content)
-            content = re.sub(rb'(["\'\`\+\=])\s*/_app/', rb'\1./_app/', content)
-            # Update content-length
-            response_headers["content-length"] = str(len(content))
-    
-    return Response(
-        content=content,
-        status_code=resp.status_code,
-        headers=response_headers,
-        media_type=response_headers.get("content-type"),
-    )
-PROXY_EOF
+        # Enable sub_filter for path rewriting
+        sub_filter_types text/html text/css application/javascript text/javascript;
+        
+        # Rewrite absolute paths to relative paths (with ./ prefix)
+        # This matches the nginx pattern from GitHub discussion
+        sub_filter '"/' '"./';
+        sub_filter "'/" "'./";
+        sub_filter 'href="/' 'href="./';
+        sub_filter 'src="/' 'src="./';
+        sub_filter 'action="/' 'action="./';
+        sub_filter 'url("/' 'url("./';
+        sub_filter "url('/" "url('./";
+        sub_filter '"/api/' '"./api/';
+        sub_filter "'/api/" "'./api/";
+        sub_filter '"/_app/' '"./_app/';
+        sub_filter "'/_app/" "'./_app/";
+        
+        # Replace ALL occurrences (critical!)
+        sub_filter_once off;
+        
+        location / {
+            proxy_pass http://webui_backend;
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+            
+            # WebSocket support (critical for Open WebUI)
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+            
+            # Timeouts for long-running AI responses
+            proxy_read_timeout 300;
+            proxy_send_timeout 300;
+            
+            # Disable buffering for streaming
+            proxy_buffering off;
+        }
+    }
+}
+NGINX_CONF
 
-# Replace placeholders in proxy.py
-sed "s|WEBUI_INTERNAL_PORT_PLACEHOLDER|${WEBUI_INTERNAL_PORT}|g" "${WEBUI_WORKDIR}/proxy.py" > "${WEBUI_WORKDIR}/proxy.py.tmp" && mv "${WEBUI_WORKDIR}/proxy.py.tmp" "${WEBUI_WORKDIR}/proxy.py"
-
-echo "[script.sh.erb] Proxy app created at ${WEBUI_WORKDIR}/proxy.py"
+echo "[script.sh.erb] Nginx configuration created at ${WEBUI_WORKDIR}/nginx.conf"
 
 # Start Open WebUI on localhost (internal)
 echo "[script.sh.erb] Starting Open WebUI on ${WEBUI_INTERNAL_HOST}:${WEBUI_INTERNAL_PORT}..."
@@ -316,37 +202,35 @@ fi
 
 echo "[script.sh.erb] Open WebUI Server started successfully on port ${WEBUI_INTERNAL_PORT}"
 
-# Start uvicorn proxy
-echo "[script.sh.erb] Starting uvicorn reverse proxy on ${PROXY_HOST}:${PROXY_PORT}..."
+# Start nginx proxy
+echo "[script.sh.erb] Starting nginx reverse proxy on ${PROXY_HOST}:${PROXY_PORT}..."
 cd "${WEBUI_WORKDIR}"
 
-nohup uvicorn proxy:app \
-  --host "${PROXY_HOST}" \
-  --port "${PROXY_PORT}" \
-  --log-level info \
-  --access-log \
-  > "${WEBUI_WORKDIR}/proxy.log" 2>&1 &
+# Start nginx with our config
+"${NGINX_BINARY_PATH}" -c "${WEBUI_WORKDIR}/nginx.conf" -g "pid ${WEBUI_WORKDIR}/nginx.pid;" &
 
-PROXY_PID=$!
-echo "[script.sh.erb] Proxy started with PID: $PROXY_PID"
+NGINX_PID=$!
+echo "[script.sh.erb] Nginx started with PID: $NGINX_PID"
 
-# Wait for proxy to start
-sleep 5
+# Wait for nginx to start
+sleep 2
 
-# Check if proxy is still running
-if ! kill -0 $PROXY_PID 2>/dev/null; then
-  echo "[script.sh.erb] ERROR: Proxy process died. Check logs:"
+# Check if nginx is still running
+if ! kill -0 $NGINX_PID 2>/dev/null; then
+  echo "[script.sh.erb] ERROR: Nginx process died. Check logs:"
   echo "[script.sh.erb] =========================================="
-  cat "${WEBUI_WORKDIR}/proxy.log" || echo "[script.sh.erb] Could not read proxy log"
+  cat "${WEBUI_WORKDIR}/nginx_error.log" 2>/dev/null || echo "[script.sh.erb] Could not read nginx error log"
   echo "[script.sh.erb] =========================================="
   exit 1
 fi
 
-echo "[script.sh.erb] Uvicorn proxy started successfully on port ${PROXY_PORT}"
+echo "[script.sh.erb] Nginx proxy started successfully on port ${PROXY_PORT}"
 echo "[script.sh.erb] OOD should connect to port ${PROXY_PORT}"
 
 # Keep the script running to maintain both processes
 wait $WEBUI_PID
-echo "[script.sh.erb] Open WebUI Server exited, stopping proxy..."
-kill $PROXY_PID 2>/dev/null || true
-echo "[script.sh.erb] Proxy stopped."
+echo "[script.sh.erb] Open WebUI Server exited, stopping nginx..."
+kill $NGINX_PID 2>/dev/null || true
+# Also try to stop nginx gracefully
+"${NGINX_BINARY_PATH}" -s quit -c "${WEBUI_WORKDIR}/nginx.conf" 2>/dev/null || true
+echo "[script.sh.erb] Nginx stopped."
