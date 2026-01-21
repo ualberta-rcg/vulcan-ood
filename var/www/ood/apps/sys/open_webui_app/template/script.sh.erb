@@ -166,11 +166,13 @@ echo "[script.sh.erb] WEBUI_INTERNAL_PORT=${WEBUI_INTERNAL_PORT} (internal)"
 echo "[script.sh.erb] WEBUI_DATA_DIR=${WEBUI_DATA_DIR}"
 echo "[script.sh.erb] WEBUI_AUTH=${WEBUI_AUTH}"
 
+# Create logging directory for nginx
+mkdir -p "${WEBUI_WORKDIR}/logs"
+
 # Create nginx configuration file
 echo "[script.sh.erb] Creating nginx configuration..."
 cat > "${WEBUI_WORKDIR}/nginx.conf" <<NGINX_CONF
 worker_processes 1;
-error_log ./nginx_error.log;
 pid ./nginx.pid;
 
 events {
@@ -178,7 +180,6 @@ events {
 }
 
 http {
-    access_log ./nginx_access.log;
     
     upstream webui_backend {
         server ${WEBUI_INTERNAL_HOST}:${WEBUI_INTERNAL_PORT};
@@ -303,9 +304,8 @@ echo "[script.sh.erb] Starting nginx reverse proxy on ${PROXY_HOST}:${PROXY_PORT
 cd "${WEBUI_WORKDIR}"
 
 # Start nginx with our config
-# Use -p to set prefix (where temp dirs will be created) to job directory
-# Use -e to suppress the default error log warning
-"${NGINX_LOCAL}" -p "${WEBUI_WORKDIR}" -c "${WEBUI_WORKDIR}/nginx.conf" -e "${WEBUI_WORKDIR}/nginx_error.log" &
+# Use -p to set prefix (where temp dirs and logs will be created) to job directory
+"${NGINX_LOCAL}" -p "${WEBUI_WORKDIR}" -c "${WEBUI_WORKDIR}/nginx.conf" &
 
 NGINX_PID=$!
 echo "[script.sh.erb] Nginx started with PID: $NGINX_PID"
