@@ -217,23 +217,36 @@ http {
             proxy_set_header Accept-Encoding "";
             
             # Rewrite absolute paths to relative paths (with ./ prefix)
-            # Comprehensive patterns matching the working GitHub example
-            sub_filter '"/' '"./';
-            sub_filter "'/" "'./";
+            # Order: Most specific patterns first to avoid corrupting WebSocket/API URLs
+            # HTML attributes
             sub_filter 'href="/' 'href="./';
             sub_filter 'src="/' 'src="./';
             sub_filter 'action="/' 'action="./';
-            sub_filter 'url("/' 'url="./';
+            
+            # CSS url() functions
+            sub_filter 'url("/' 'url("./';
             sub_filter 'url(\'/' 'url(\'./';
-            sub_filter '"/api/' '"./api/';
-            sub_filter "'/api/" "'./api/";
+            
+            # JavaScript import() and fetch() calls
+            sub_filter 'import("/' 'import("./';
+            sub_filter 'import(\'/' 'import(\'./';
+            sub_filter 'fetch("/' 'fetch("./';
+            sub_filter 'fetch(\'/' 'fetch(\'./';
+            
+            # Specific path patterns (most specific first)
             sub_filter '"/_app/' '"./_app/';
             sub_filter "'/_app/" "'./_app/";
+            sub_filter '"/_app' '"./_app';
+            sub_filter '"/api/' '"./api/';
+            sub_filter "'/api/" "'./api/";
             sub_filter '"/themes/' '"./themes/';
             sub_filter '"/themes' '"./themes';
             sub_filter '"/openai/' '"./openai/';
-            sub_filter '/api/' './api/';
-            sub_filter '/ollama/' './ollama/';
+            sub_filter '"/static/' '"./static/';
+            
+            # General patterns (less specific, applied last)
+            sub_filter '"/' '"./';
+            sub_filter "'/" "'./";
             
             # Replace ALL occurrences (critical!)
             sub_filter_once off;
