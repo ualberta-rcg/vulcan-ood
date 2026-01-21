@@ -188,6 +188,27 @@ http {
         listen ${PROXY_PORT};
         server_name _;
         
+        # Binary assets (fonts, images) - NO sub_filter to avoid corruption
+        # Match by path prefix AND file extension to be more specific
+        location ~* ^/(assets|static)/.*\.(ttf|woff|woff2|eot|otf|png|jpg|jpeg|gif|ico|svg|webp)$ {
+            proxy_pass http://webui_backend;
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+            proxy_buffering off;
+        }
+        
+        # Also match binary files by extension anywhere (fallback)
+        location ~* \.(ttf|woff|woff2|eot|otf)$ {
+            proxy_pass http://webui_backend;
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+            proxy_buffering off;
+        }
+        
         # API endpoints - NO sub_filter (pass through unchanged)
         # This matches the GitHub discussion pattern - API should not be modified
         location /api {
@@ -234,15 +255,20 @@ http {
             sub_filter 'fetch(\'/' 'fetch(\'./';
             
             # Specific path patterns (most specific first)
+            # These must come before general patterns to catch specific paths
             sub_filter '"/_app/' '"./_app/';
             sub_filter "'/_app/" "'./_app/";
             sub_filter '"/_app' '"./_app';
+            sub_filter "'/_app" "'./_app";
             sub_filter '"/api/' '"./api/';
             sub_filter "'/api/" "'./api/";
+            sub_filter '"/api' '"./api';
+            sub_filter "'/api" "'./api";
             sub_filter '"/themes/' '"./themes/';
             sub_filter '"/themes' '"./themes';
             sub_filter '"/openai/' '"./openai/';
             sub_filter '"/static/' '"./static/';
+            sub_filter '"/assets/' '"./assets/';
             
             # General patterns (less specific, applied last)
             sub_filter '"/' '"./';
