@@ -188,18 +188,19 @@ async def proxy(request: Request, path: str = ""):
     # Skip rewriting for API responses and JSON - these need to pass through unchanged
     if not any(ct in content_type for ct in ["application/json", "application/xml", "text/xml", "application/octet-stream"]):
         if any(ct in content_type for ct in ["text/html", "text/css", "application/javascript", "text/javascript"]):
-            # Simple approach: replace '"/' with '"' to make paths relative
-            # This converts "/static/..." to "static/..." (removes leading slash)
-            content = content.replace(b'"/', b'"')
+            # Replace '"/' with '"./' to make paths relative with ./ prefix
+            # This converts "/static/..." to "./static/..." and "/_app/..." to "./_app/..."
+            # ES6 modules require ./ prefix for relative imports
+            content = content.replace(b'"/', b'"./')
             # Also handle single quotes
-            content = content.replace(b"'/", b"'")
-            # Handle href, src, action attributes
-            content = content.replace(b'href="/', b'href="')
-            content = content.replace(b'src="/', b'src="')
-            content = content.replace(b'action="/', b'action="')
+            content = content.replace(b"'/", b"'./")
+            # Handle href, src, action attributes (they also need ./ for relative paths)
+            content = content.replace(b'href="/', b'href="./')
+            content = content.replace(b'src="/', b'src="./')
+            content = content.replace(b'action="/', b'action="./')
             # Handle CSS url() patterns
-            content = content.replace(b'url("/', b'url("')
-            content = content.replace(b"url('/", b"url('")
+            content = content.replace(b'url("/', b'url("./')
+            content = content.replace(b"url('/", b"url('./")
             # Update content-length
             response_headers["content-length"] = str(len(content))
     
