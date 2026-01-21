@@ -198,8 +198,33 @@ async def proxy(request: Request, path: str = ""):
                 if not re.search(rb'<base[^>]*>', content, re.IGNORECASE):
                     # Inject base tag after <head>
                     content = re.sub(head_pattern, rb'\g<0>\n\t\t' + base_tag, content, flags=re.IGNORECASE)
-            # Also inject JavaScript to intercept fetch calls and rewrite absolute URLs to relative
-            script_inject = b'<script>(function(){const originalFetch=window.fetch;window.fetch=function(...args){if(typeof args[0]==="string"&&args[0].startsWith("/")){args[0]="./"+args[0].substring(1);}return originalFetch.apply(this,args);};})();</script>'
+            # Inject comprehensive URL rewriting that works immediately and catches all cases
+            script_inject = (
+                b'<script>'
+                b'(function(){'
+                b'const basePath=window.location.pathname.replace(/\\/[^\\/]*$/,"")||"./";'
+                b'function rewriteUrl(url){'
+                b'if(typeof url==="string"&&url.startsWith("/")&&!url.startsWith("//")){'
+                b'return basePath+url.substring(1);'
+                b'}'
+                b'return url;'
+                b'}'
+                b'const originalFetch=window.fetch;'
+                b'window.fetch=function(...args){'
+                b'if(args[0]&&typeof args[0]==="string"){args[0]=rewriteUrl(args[0]);}'
+                b'else if(args[0]&&args[0] instanceof Request){'
+                b'const url=rewriteUrl(args[0].url);args[0]=new Request(url,args[0]);'
+                b'}'
+                b'return originalFetch.apply(this,args);'
+                b'};'
+                b'const originalOpen=XMLHttpRequest.prototype.open;'
+                b'XMLHttpRequest.prototype.open=function(method,url,...rest){'
+                b'return originalOpen.call(this,method,rewriteUrl(url),...rest);'
+                b'};'
+                b'try{Object.defineProperty(window.location,"origin",{get:function(){return"";},configurable:true});}catch(e){}'
+                b'})();'
+                b'</script>'
+            )
             # Inject before closing </head> or before </body>
             if b'</head>' in content:
                 content = content.replace(b'</head>', script_inject + b'\n\t</head>', 1)
