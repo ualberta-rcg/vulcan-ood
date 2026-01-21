@@ -228,12 +228,12 @@ http {
             sub_filter '"/api/' '"./api/';
             sub_filter "'/api/" "'./api/";
             sub_filter '"/_app/' '"./_app/';
-            sub_filter "'/_app/" "'./_app/"
+            sub_filter "'/_app/" "'./_app/";
             sub_filter '"/themes/' '"./themes/';
             sub_filter '"/themes' '"./themes';
             sub_filter '"/openai/' '"./openai/';
-            sub_filter 'api/' './api/';
-            sub_filter 'ollama/' './ollama/';
+            sub_filter '/api/' './api/';
+            sub_filter '/ollama/' './ollama/';
             
             # Replace ALL occurrences (critical!)
             sub_filter_once off;
