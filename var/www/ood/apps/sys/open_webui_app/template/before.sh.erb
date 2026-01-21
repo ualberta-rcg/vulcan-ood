@@ -104,63 +104,10 @@ else
 fi
 
 # ============================================================================
-# Build nginx with sub_filter module (for reverse proxy path rewriting)
+# Nginx will be built in script.sh.erb in the job directory (WEBUI_WORKDIR)
+# This avoids hardcoded path issues and ensures temp directories are created
+# in the correct location relative to where nginx runs.
 # ============================================================================
-export NGINX_BUILD_DIR="/tmp/${USER}_nginx_build"
-export NGINX_BINARY="${NGINX_BUILD_DIR}/nginx-1.29.4/objs/nginx"
-NGINX_VERSION="1.29.4"
-
-# Check if nginx binary already exists and has sub_filter module
-if [ -f "$NGINX_BINARY" ]; then
-  if "$NGINX_BINARY" -V 2>&1 | grep -q "http_sub_module"; then
-    echo "[before.sh.erb] Nginx binary already exists with sub_filter module: $NGINX_BINARY"
-  else
-    echo "[before.sh.erb] Existing nginx binary missing sub_filter module, rebuilding..."
-    rm -rf "$NGINX_BUILD_DIR"
-  fi
-else
-  echo "[before.sh.erb] Building nginx with sub_filter module..."
-  mkdir -p "$NGINX_BUILD_DIR"
-  cd "$NGINX_BUILD_DIR"
-  
-  # Download nginx source
-  if [ ! -f "nginx-${NGINX_VERSION}.tar.gz" ]; then
-    echo "[before.sh.erb] Downloading nginx ${NGINX_VERSION}..."
-    wget -q "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz"
-  fi
-  
-  # Extract
-  if [ ! -d "nginx-${NGINX_VERSION}" ]; then
-    echo "[before.sh.erb] Extracting nginx source..."
-    tar -xzf "nginx-${NGINX_VERSION}.tar.gz"
-  fi
-  
-  cd "nginx-${NGINX_VERSION}"
-  
-  # Configure with sub_filter module
-  echo "[before.sh.erb] Configuring nginx..."
-  ./configure \
-    --prefix="${NGINX_BUILD_DIR}/nginx-install" \
-    --with-http_sub_module \
-    --without-http_fastcgi_module \
-    --without-http_uwsgi_module \
-    --without-http_scgi_module \
-    > /dev/null 2>&1
-  
-  # Compile
-  echo "[before.sh.erb] Compiling nginx..."
-  make -j$(nproc 2>/dev/null || echo 4) > /dev/null 2>&1
-  
-  if [ -f "objs/nginx" ]; then
-    echo "[before.sh.erb] ✓ Nginx compiled successfully with sub_filter module"
-  else
-    echo "[before.sh.erb] ✗ ERROR: Nginx compilation failed"
-    exit 1
-  fi
-fi
-
-export NGINX_BINARY_PATH="$NGINX_BINARY"
-echo "[before.sh.erb] Nginx binary ready: $NGINX_BINARY_PATH"
 
 echo ""
 echo "[before.sh.erb] =========================================="
