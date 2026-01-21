@@ -187,7 +187,6 @@ http {
     server {
         listen ${PROXY_PORT};
         server_name _;
-        gzip_static off;
         
         # API endpoints - NO sub_filter (pass through unchanged)
         # This matches the GitHub discussion pattern - API should not be modified
