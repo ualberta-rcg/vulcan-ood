@@ -206,8 +206,9 @@ echo "[script.sh.erb] Open WebUI Server started successfully on port ${WEBUI_INT
 echo "[script.sh.erb] Starting nginx reverse proxy on ${PROXY_HOST}:${PROXY_PORT}..."
 cd "${WEBUI_WORKDIR}"
 
-# Start nginx with our config
-"${NGINX_BINARY_PATH}" -c "${WEBUI_WORKDIR}/nginx.conf" -g "pid ${WEBUI_WORKDIR}/nginx.pid;" &
+# Start nginx with our config (pid and error_log are set in config file)
+# Use -e to suppress the default error log warning
+"${NGINX_BINARY_PATH}" -c "${WEBUI_WORKDIR}/nginx.conf" -e "${WEBUI_WORKDIR}/nginx_error.log" &
 
 NGINX_PID=$!
 echo "[script.sh.erb] Nginx started with PID: $NGINX_PID"
