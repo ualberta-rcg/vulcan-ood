@@ -210,16 +210,25 @@ http {
         # Main location with sub_filter for path rewriting
         location / {
             # Enable sub_filter for path rewriting
-            sub_filter_once off;
+            # Use * to process all MIME types (HTML, CSS, JS, etc.)
             sub_filter_types *;
             
+            # CRITICAL: Disable compression so sub_filter can modify content
+            proxy_set_header Accept-Encoding "";
+            
             # Rewrite absolute paths to relative paths (with ./ prefix)
-            # This matches the nginx pattern from GitHub discussion
-            sub_filter 'href="/' 'href="./';
-            sub_filter 'src="/' 'src="./';
+            # Comprehensive patterns matching the working GitHub example
             sub_filter '"/' '"./';
             sub_filter "'/" "'./";
+            sub_filter 'href="/' 'href="./';
+            sub_filter 'src="/' 'src="./';
+            sub_filter 'action="/' 'action="./';
+            sub_filter 'url("/' 'url="./';
+            sub_filter 'url(\'/' 'url(\'./';
+            sub_filter '"/api/' '"./api/';
+            sub_filter "'/api/" "'./api/";
             sub_filter '"/_app/' '"./_app/';
+            sub_filter "'/_app/" "'./_app/';
             sub_filter '_app/' './_app/';
             sub_filter '"/_app' '"./_app';
             sub_filter '"/themes/' '"./themes/';
@@ -229,6 +238,8 @@ http {
             sub_filter 'api/' './api/';
             sub_filter 'ollama/' './ollama/';
             
+            # Replace ALL occurrences (critical!)
+            sub_filter_once off;
             
             proxy_pass http://webui_backend;
             proxy_set_header Host \$host;
