@@ -253,29 +253,35 @@ http {
             sub_filter 'url("/' 'url("${OOD_PATH_PREFIX}/';
             sub_filter 'url(\'/' 'url(\'${OOD_PATH_PREFIX}/';
             
-            # JavaScript import() and fetch() calls
-            sub_filter 'import("/' 'import("${OOD_PATH_PREFIX}/';
-            sub_filter 'import(\'/' 'import(\'${OOD_PATH_PREFIX}/';
-            sub_filter 'fetch("/' 'fetch("${OOD_PATH_PREFIX}/';
-            sub_filter 'fetch(\'/' 'fetch(\'${OOD_PATH_PREFIX}/';
-            
-            # Specific path patterns (most specific first)
-            # These must come before general patterns to catch specific paths
+            # Specific paths WITH quotes (most specific first)
             sub_filter '"/_app/' '"${OOD_PATH_PREFIX}/_app/';
             sub_filter "'/_app/" "'${OOD_PATH_PREFIX}/_app/";
             sub_filter '"/_app' '"${OOD_PATH_PREFIX}/_app';
             sub_filter "'/_app" "'${OOD_PATH_PREFIX}/_app";
-            sub_filter '"/api/' '"${OOD_PATH_PREFIX}/api/';
-            sub_filter "'/api/" "'${OOD_PATH_PREFIX}/api/";
-            sub_filter '"/api' '"${OOD_PATH_PREFIX}/api';
-            sub_filter "'/api" "'${OOD_PATH_PREFIX}/api";
+            
             sub_filter '"/themes/' '"${OOD_PATH_PREFIX}/themes/';
             sub_filter '"/themes' '"${OOD_PATH_PREFIX}/themes';
+            
             sub_filter '"/openai/' '"${OOD_PATH_PREFIX}/openai/';
+            
+            sub_filter '"/api/' '"${OOD_PATH_PREFIX}/api/';
+            sub_filter "'/api/" "'${OOD_PATH_PREFIX}/api/";
+            
             sub_filter '"/static/' '"${OOD_PATH_PREFIX}/static/';
             sub_filter '"/assets/' '"${OOD_PATH_PREFIX}/assets/';
             
-            # General patterns (less specific, applied last)
+            # Specific files
+            sub_filter 'user.png' '${OOD_PATH_PREFIX}/user.png';
+            sub_filter '"/favicon.png' '"${OOD_PATH_PREFIX}/favicon.png';
+            
+            # Bare paths WITHOUT quotes (from working solution)
+            sub_filter '_app/' '${OOD_PATH_PREFIX}/_app/';
+            sub_filter 'themes/' '${OOD_PATH_PREFIX}/themes/';
+            sub_filter 'themes' '${OOD_PATH_PREFIX}/themes';
+            sub_filter 'api/' '${OOD_PATH_PREFIX}/api/';
+            sub_filter 'ollama/' '${OOD_PATH_PREFIX}/ollama/';
+            
+            # General patterns (LAST - less specific)
             sub_filter '"/' '"${OOD_PATH_PREFIX}/';
             sub_filter "'/" "'${OOD_PATH_PREFIX}/";
             
