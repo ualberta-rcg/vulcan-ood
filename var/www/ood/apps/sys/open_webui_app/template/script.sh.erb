@@ -229,8 +229,6 @@ http {
             sub_filter 'api/' './api/';
             sub_filter 'ollama/' './ollama/';
             
-            # Replace ALL occurrences (critical!)
-            sub_filter_once off;
             
             proxy_pass http://webui_backend;
             proxy_set_header Host \$host;
