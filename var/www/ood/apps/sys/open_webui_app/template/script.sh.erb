@@ -109,6 +109,13 @@ echo "[script.sh.erb] WEBUI_DATA_DIR=${WEBUI_DATA_DIR}"
 echo "[script.sh.erb] WEBUI_AUTH=${WEBUI_AUTH}"
 
 # Create nginx configuration file
+# Create temp directories for nginx (in job directory)
+mkdir -p "${WEBUI_WORKDIR}/client_body_temp"
+mkdir -p "${WEBUI_WORKDIR}/proxy_temp"
+mkdir -p "${WEBUI_WORKDIR}/fastcgi_temp"
+mkdir -p "${WEBUI_WORKDIR}/uwsgi_temp"
+mkdir -p "${WEBUI_WORKDIR}/scgi_temp"
+
 echo "[script.sh.erb] Creating nginx configuration..."
 cat > "${WEBUI_WORKDIR}/nginx.conf" <<NGINX_CONF
 worker_processes 1;
@@ -122,7 +129,7 @@ events {
 http {
     access_log ${WEBUI_WORKDIR}/nginx_access.log;
     
-    # Set temp directories to locations that exist
+    # Set temp directories to job directory (override compiled prefix)
     client_body_temp_path ${WEBUI_WORKDIR}/client_body_temp;
     proxy_temp_path ${WEBUI_WORKDIR}/proxy_temp;
     fastcgi_temp_path ${WEBUI_WORKDIR}/fastcgi_temp;
@@ -137,11 +144,7 @@ http {
         listen ${PROXY_PORT};
         server_name _;
         
-        # Enable sub_filter for path rewriting
-        # Note: text/html is default, but explicitly listing it is fine
-        sub_filter_types text/css application/javascript text/javascript;
-        
-        # Rewrite absolute paths to relative paths (with ./ prefix)
+        # API endpoints - NO sub_filter (pass through unchanged)
         # This matches the nginx pattern from GitHub discussion
         sub_filter '"/' '"./';
         sub_filter "'/" "'./";
@@ -158,7 +161,48 @@ http {
         # Replace ALL occurrences (critical!)
         sub_filter_once off;
         
+        # API endpoints - NO sub_filter (pass through unchanged)
+        # This matches the GitHub discussion pattern - API should not be modified
+        location /api {
+            proxy_pass http://webui_backend;
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+            
+            # WebSocket support
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+            
+            proxy_read_timeout 300;
+            proxy_send_timeout 300;
+            proxy_buffering off;
+        }
+        
+        # Main location with sub_filter for path rewriting
         location / {
+            # Enable sub_filter for path rewriting
+            # Note: text/html is default, so we don't need to include it
+            sub_filter_types text/css application/javascript text/javascript;
+            
+            # Rewrite absolute paths to relative paths (with ./ prefix)
+            # This matches the nginx pattern from GitHub discussion
+            sub_filter '"/' '"./';
+            sub_filter "'/" "'./";
+            sub_filter 'href="/' 'href="./';
+            sub_filter 'src="/' 'src="./';
+            sub_filter 'action="/' 'action="./';
+            sub_filter 'url("/' 'url("./';
+            sub_filter "url('/" "url('./";
+            sub_filter '"/api/' '"./api/';
+            sub_filter "'/api/" "'./api/";
+            sub_filter '"/_app/' '"./_app/';
+            sub_filter "'/_app/" "'./_app/';
+            
+            # Replace ALL occurrences (critical!)
+            sub_filter_once off;
+            
             proxy_pass http://webui_backend;
             proxy_set_header Host \$host;
             proxy_set_header X-Real-IP \$remote_addr;
