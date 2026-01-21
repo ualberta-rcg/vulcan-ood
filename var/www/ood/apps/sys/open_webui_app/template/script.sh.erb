@@ -173,7 +173,6 @@ mkdir -p "${WEBUI_WORKDIR}/logs"
 echo "[script.sh.erb] Creating nginx configuration..."
 cat > "${WEBUI_WORKDIR}/nginx.conf" <<NGINX_CONF
 worker_processes 1;
-pid ./nginx.pid;
 
 events {
     worker_connections 1024;
@@ -306,29 +305,24 @@ cd "${WEBUI_WORKDIR}"
 # Start nginx from job directory (config and logs will be relative to current directory)
 ./nginx -c ./nginx.conf &
 
-NGINX_PID=$!
-echo "[script.sh.erb] Nginx started with PID: $NGINX_PID"
-
 # Wait for nginx to start
 sleep 2
 
-# Check if nginx is still running
-if ! kill -0 $NGINX_PID 2>/dev/null; then
-  echo "[script.sh.erb] ERROR: Nginx process died. Check logs:"
+# Check if nginx is running by checking if port is listening
+if netstat -ln 2>/dev/null | grep -q ":${PROXY_PORT} " || ss -ln 2>/dev/null | grep -q ":${PROXY_PORT} "; then
+  echo "[script.sh.erb] Nginx proxy started successfully on port ${PROXY_PORT}"
+  echo "[script.sh.erb] OOD should connect to port ${PROXY_PORT}"
+else
+  echo "[script.sh.erb] ERROR: Nginx failed to start. Check logs:"
   echo "[script.sh.erb] =========================================="
-  cat "${WEBUI_WORKDIR}/nginx_error.log" 2>/dev/null || echo "[script.sh.erb] Could not read nginx error log"
+  cat ./logs/error.log 2>/dev/null || echo "[script.sh.erb] Could not read nginx error log"
   echo "[script.sh.erb] =========================================="
   exit 1
 fi
 
-echo "[script.sh.erb] Nginx proxy started successfully on port ${PROXY_PORT}"
-echo "[script.sh.erb] OOD should connect to port ${PROXY_PORT}"
-
 # Keep the script running to maintain both processes
 wait $WEBUI_PID
 echo "[script.sh.erb] Open WebUI Server exited, stopping nginx..."
-kill $NGINX_PID 2>/dev/null || true
-# Also try to stop nginx gracefully (from job directory)
-cd "${WEBUI_WORKDIR}"
+# Stop nginx gracefully
 ./nginx -s quit -c ./nginx.conf 2>/dev/null || true
 echo "[script.sh.erb] Nginx stopped."
