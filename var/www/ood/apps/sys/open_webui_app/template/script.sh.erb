@@ -303,9 +303,8 @@ echo "[script.sh.erb] Open WebUI Server started successfully on port ${WEBUI_INT
 echo "[script.sh.erb] Starting nginx reverse proxy on ${PROXY_HOST}:${PROXY_PORT}..."
 cd "${WEBUI_WORKDIR}"
 
-# Start nginx with our config
-# Use -p to set prefix (where temp dirs and logs will be created) to job directory
-"${NGINX_LOCAL}" -p "${WEBUI_WORKDIR}" -c "${WEBUI_WORKDIR}/nginx.conf" &
+# Start nginx from job directory (config and logs will be relative to current directory)
+./nginx -c ./nginx.conf &
 
 NGINX_PID=$!
 echo "[script.sh.erb] Nginx started with PID: $NGINX_PID"
@@ -329,6 +328,7 @@ echo "[script.sh.erb] OOD should connect to port ${PROXY_PORT}"
 wait $WEBUI_PID
 echo "[script.sh.erb] Open WebUI Server exited, stopping nginx..."
 kill $NGINX_PID 2>/dev/null || true
-# Also try to stop nginx gracefully
-"${NGINX_LOCAL}" -p "${WEBUI_WORKDIR}" -s quit -c "${WEBUI_WORKDIR}/nginx.conf" 2>/dev/null || true
+# Also try to stop nginx gracefully (from job directory)
+cd "${WEBUI_WORKDIR}"
+./nginx -s quit -c ./nginx.conf 2>/dev/null || true
 echo "[script.sh.erb] Nginx stopped."
