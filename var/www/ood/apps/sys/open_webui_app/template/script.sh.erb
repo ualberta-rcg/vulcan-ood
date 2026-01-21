@@ -147,7 +147,7 @@ http {
         sub_filter 'src="/' 'src="./';
         sub_filter 'action="/' 'action="./';
         sub_filter 'url("/' 'url("./';
-        sub_filter "url('/" "url('./";
+        sub_filter 'url(\'/' 'url(\'./';
         sub_filter '"/api/' '"./api/';
         sub_filter "'/api/" "'./api/";
         sub_filter '"/_app/' '"./_app/';
@@ -189,7 +189,7 @@ http {
             sub_filter 'src="/' 'src="./';
             sub_filter 'action="/' 'action="./';
             sub_filter 'url("/' 'url("./';
-            sub_filter "url('/" "url('./";
+            sub_filter 'url(\'/' 'url(\'./';
             sub_filter '"/api/' '"./api/';
             sub_filter "'/api/" "'./api/";
             sub_filter '"/_app/' '"./_app/';
