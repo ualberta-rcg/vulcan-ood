@@ -187,6 +187,25 @@ async def proxy(request: Request, path: str = ""):
     
     # Skip rewriting for API responses and JSON - these need to pass through unchanged
     if not any(ct in content_type for ct in ["application/json", "application/xml", "text/xml", "application/octet-stream"]):
+        if "text/html" in content_type:
+            # Inject <base href="./"> tag into HTML to make all relative URLs work correctly
+            import re
+            # Find <head> tag and inject <base> tag right after it
+            head_pattern = rb'<head[^>]*>'
+            base_tag = b'<base href="./">'
+            if re.search(head_pattern, content, re.IGNORECASE):
+                # Check if base tag already exists
+                if not re.search(rb'<base[^>]*>', content, re.IGNORECASE):
+                    # Inject base tag after <head>
+                    content = re.sub(head_pattern, rb'\g<0>\n\t\t' + base_tag, content, flags=re.IGNORECASE)
+            # Also inject JavaScript to intercept fetch calls and rewrite absolute URLs to relative
+            script_inject = b'<script>(function(){const originalFetch=window.fetch;window.fetch=function(...args){if(typeof args[0]==="string"&&args[0].startsWith("/")){args[0]="./"+args[0].substring(1);}return originalFetch.apply(this,args);};})();</script>'
+            # Inject before closing </head> or before </body>
+            if b'</head>' in content:
+                content = content.replace(b'</head>', script_inject + b'\n\t</head>', 1)
+            elif b'</body>' in content:
+                content = content.replace(b'</body>', script_inject + b'\n\t</body>', 1)
+        
         if any(ct in content_type for ct in ["text/html", "text/css", "application/javascript", "text/javascript"]):
             # Replace '"/' with '"./' to make paths relative with ./ prefix
             # This converts "/static/..." to "./static/..." and "/_app/..." to "./_app/..."
