@@ -128,8 +128,8 @@ http {
     
     # Set temp directories (relative to config file location)
     # Only include modules that were compiled (fastcgi/uwsgi/scgi were excluded)
-    client_body_temp_path ./client_body_temp;
-    proxy_temp_path ./proxy_temp;
+    #client_body_temp_path client_body_temp;
+    #proxy_temp_path proxy_temp;
     
     upstream webui_backend {
         server ${WEBUI_INTERNAL_HOST}:${WEBUI_INTERNAL_PORT};
