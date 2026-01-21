@@ -112,29 +112,24 @@ echo "[script.sh.erb] WEBUI_AUTH=${WEBUI_AUTH}"
 # Create temp directories for nginx (in job directory)
 mkdir -p "${WEBUI_WORKDIR}/client_body_temp"
 mkdir -p "${WEBUI_WORKDIR}/proxy_temp"
-mkdir -p "${WEBUI_WORKDIR}/fastcgi_temp"
-mkdir -p "${WEBUI_WORKDIR}/uwsgi_temp"
-mkdir -p "${WEBUI_WORKDIR}/scgi_temp"
 
 echo "[script.sh.erb] Creating nginx configuration..."
 cat > "${WEBUI_WORKDIR}/nginx.conf" <<NGINX_CONF
 worker_processes 1;
-error_log ${WEBUI_WORKDIR}/nginx_error.log;
-pid ${WEBUI_WORKDIR}/nginx.pid;
+error_log ./nginx_error.log;
+pid ./nginx.pid;
 
 events {
     worker_connections 1024;
 }
 
 http {
-    access_log ${WEBUI_WORKDIR}/nginx_access.log;
+    access_log ./nginx_access.log;
     
-    # Set temp directories to job directory (override compiled prefix)
-    client_body_temp_path ${WEBUI_WORKDIR}/client_body_temp;
-    proxy_temp_path ${WEBUI_WORKDIR}/proxy_temp;
-    fastcgi_temp_path ${WEBUI_WORKDIR}/fastcgi_temp;
-    uwsgi_temp_path ${WEBUI_WORKDIR}/uwsgi_temp;
-    scgi_temp_path ${WEBUI_WORKDIR}/scgi_temp;
+    # Set temp directories (relative to config file location)
+    # Only include modules that were compiled (fastcgi/uwsgi/scgi were excluded)
+    client_body_temp_path ./client_body_temp;
+    proxy_temp_path ./proxy_temp;
     
     upstream webui_backend {
         server ${WEBUI_INTERNAL_HOST}:${WEBUI_INTERNAL_PORT};
