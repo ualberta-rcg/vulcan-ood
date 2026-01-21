@@ -206,11 +206,29 @@ async def proxy(request: Request, path: str = ""):
             content = content.replace(b'fetch("/', b'fetch("./')
             content = content.replace(b".fetch('/", b".fetch('./")
             content = content.replace(b'.fetch("/', b'.fetch("./')
-            # Handle common API path patterns in JavaScript
+            # Handle template literals (backticks)
+            content = content.replace(b'`/', b'`./')
+            # Handle common API path patterns in JavaScript (more aggressive)
             content = content.replace(b"'/api/", b"'./api/")
             content = content.replace(b'"/api/', b'"./api/')
             content = content.replace(b"'/_app/", b"'./_app/")
             content = content.replace(b'"/_app/', b'"./_app/')
+            # Handle URL construction patterns (location.origin + '/api/')
+            content = content.replace(b"+ '/api/", b"+ './api/")
+            content = content.replace(b'+ "/api/', b'+ "./api/')
+            content = content.replace(b"+ '/_app/", b"+ './_app/")
+            content = content.replace(b'+ "/_app/', b'+ "./_app/')
+            # Handle window.location.origin and location.origin patterns
+            # Replace absolute URL construction with relative paths
+            import re
+            # Replace patterns like: location.origin + '/api/' with './api/'
+            # This removes the origin part and keeps the relative path
+            # Match the quote type and preserve it
+            content = re.sub(rb'(window\.)?location\.origin\s*\+\s*(["\'])/', rb'\2./', content)
+            # Handle any remaining absolute paths starting with /api/ or /_app/
+            # Replace /api/ and /_app/ that appear after quotes, operators, or equals
+            content = re.sub(rb'(["\'\`\+\=])\s*/api/', rb'\1./api/', content)
+            content = re.sub(rb'(["\'\`\+\=])\s*/_app/', rb'\1./_app/', content)
             # Update content-length
             response_headers["content-length"] = str(len(content))
     
