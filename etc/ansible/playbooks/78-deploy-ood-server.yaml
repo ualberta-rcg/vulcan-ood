@@ -103,12 +103,6 @@
         dest: /etc/ood/
         remote_src: true
 
-    - name: Deploy Apache config
-      copy:
-        src: "{{ repo_dir }}/etc/apache2/"
-        dest: /etc/apache2/
-        remote_src: true
-
     - name: Deploy OOD web apps
       copy:
         src: "{{ repo_dir }}/var/www/ood/"
