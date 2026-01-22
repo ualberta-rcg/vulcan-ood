@@ -41,21 +41,18 @@ The following components must be installed and configured **before** OOD install
 ### 1. Install Open OnDemand
 
 ```bash
-# Add OOD repository
-curl -s https://osc.github.io/ondemand/repo/ondemand.repo | sudo tee /etc/apt/sources.list.d/ondemand.repo
+# Install required packages for repository access
+sudo apt install apt-transport-https ca-certificates
+
+# Download and install OOD repository package
+wget -O /tmp/ondemand-release-web_4.0.0-noble_all.deb https://apt.osc.edu/ondemand/4.0/ondemand-release-web_4.0.0-noble_all.deb
+sudo apt install /tmp/ondemand-release-web_4.0.0-noble_all.deb
 
 # Update package list
 sudo apt update
 
-# Install OOD
-sudo apt install ondemand
-```
-
-### 2. Install Apache and OIDC Module
-
-```bash
-# Install Apache and OIDC module with required dependencies
-sudo apt-get install apache2 libapache2-mod-auth-openidc python3-requests python3-requests-oauthlib
+# Install OOD, Apache, and OIDC module with required dependencies
+sudo apt install ondemand apache2 libapache2-mod-auth-openidc python3-requests python3-requests-oauthlib
 
 # Enable the OIDC module
 sudo a2enmod auth_openidc
