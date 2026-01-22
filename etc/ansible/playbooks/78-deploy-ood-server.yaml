@@ -11,12 +11,21 @@
     ssl_dir: /etc/ssl/ood
     ssl_cn: eureka.paice-ua.com
 
-    # Known directories to remove before overlay
+    # OOD cleanup
     ood_sys_app_dir: /var/www/ood/apps/sys
     ood_sys_dirs_to_remove:
       - bc_desktop
 
   tasks:
+
+    # --------------------------------------------------
+    # 0. Working directory FIRST (critical)
+    # --------------------------------------------------
+    - name: Ensure temporary working directory exists
+      file:
+        path: "{{ workdir }}"
+        state: directory
+        mode: '0755'
 
     # --------------------------------------------------
     # 1. Base packages
@@ -57,14 +66,8 @@
         update_cache: true
 
     # --------------------------------------------------
-    # 3. Prepare working directory (TMP-based)
+    # 3. Clone overlay repo
     # --------------------------------------------------
-    - name: Ensure working directory exists
-      file:
-        path: "{{ workdir }}"
-        state: directory
-        mode: '0755'
-
     - name: Clone vulcan-ood repository
       git:
         repo: "{{ repo_url }}"
@@ -83,19 +86,13 @@
         find {{ repo_dir }} -name "*.sh.erb" -type f -exec chmod +x {} \;
 
     # --------------------------------------------------
-    # 5. Remove conflicting OOD defaults (CRITICAL)
+    # 5. Remove conflicting OOD defaults
     # --------------------------------------------------
     - name: Remove known conflicting OOD sys apps
       file:
         path: "{{ ood_sys_app_dir }}/{{ item }}"
         state: absent
       loop: "{{ ood_sys_dirs_to_remove }}"
-
-    # Optional: wipe all shipped sys apps (uncomment if desired)
-    # - name: Remove all default OOD sys apps
-    #   file:
-    #     path: "{{ ood_sys_app_dir }}"
-    #     state: absent
 
     # --------------------------------------------------
     # 6. Deploy overlay files (SCOPED)
@@ -150,7 +147,39 @@
         creates: /etc/ood/config/apps
 
     # --------------------------------------------------
-    # 8. SSL (self-signed, internal)
+    # 8. Deploy XDG Runtime (create-ice)
+    # --------------------------------------------------
+    - name: Install create-ice script
+      copy:
+        src: "{{ repo_dir }}/usr/local/bin/create-ice.sh"
+        dest: /usr/local/bin/create-ice.sh
+        remote_src: true
+        mode: '0755'
+
+    - name: Install sudoers rule for create-ice
+      copy:
+        src: "{{ repo_dir }}/etc/sudoers.d/create-ice-xdg"
+        dest: /etc/sudoers.d/create-ice-xdg
+        remote_src: true
+        mode: '0440'
+
+    # --------------------------------------------------
+    # 9. Apply common OOD fixes
+    # --------------------------------------------------
+    - name: Fix xterm color issue
+      replace:
+        path: /var/www/ood/apps/sys/shell/app.js
+        regexp: xterm-16color
+        replace: xterm-256color
+
+    - name: Fix noVNC compression minimum
+      replace:
+        path: /var/www/ood/apps/sys/dashboard/app/views/batch_connect/sessions/connections/_novnc.html.erb
+        regexp: 'min:\s*0'
+        replace: 'min: 1'
+
+    # --------------------------------------------------
+    # 10. SSL (self-signed)
     # --------------------------------------------------
     - name: Ensure SSL directory exists
       file:
@@ -158,7 +187,7 @@
         state: directory
         mode: '0755'
 
-    - name: Generate self-signed SSL cert (if missing)
+    - name: Generate self-signed SSL cert
       command: >
         openssl req -x509 -nodes -days 365
         -newkey rsa:4096
@@ -169,7 +198,7 @@
         creates: "{{ ssl_dir }}/privkey.pem"
 
     # --------------------------------------------------
-    # 9. Apache enable + restart
+    # 11. Enable Apache + restart
     # --------------------------------------------------
     - name: Enable Apache modules
       command: a2enmod ssl headers proxy proxy_http rewrite
