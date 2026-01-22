@@ -1,0 +1,183 @@
+---
+- name: Bootstrap Open OnDemand (overlay-based)
+  hosts: localhost
+  become: true
+
+  vars:
+    workdir: /tmp/ondemand-bootstrap
+    repo_url: https://github.com/ualberta-rcg/vulcan-ood.git
+    repo_dir: /tmp/ondemand-bootstrap/vulcan-ood
+
+    ssl_dir: /etc/ssl/ood
+    ssl_cn: eureka.paice-ua.com
+
+    # Known directories to remove before overlay
+    ood_sys_app_dir: /var/www/ood/apps/sys
+    ood_sys_dirs_to_remove:
+      - bc_desktop
+
+  tasks:
+
+    # --------------------------------------------------
+    # 1. Base packages
+    # --------------------------------------------------
+    - name: Install base packages
+      apt:
+        name:
+          - curl
+          - wget
+          - git
+          - ca-certificates
+          - apt-transport-https
+          - apache2
+          - libapache2-mod-auth-openidc
+          - python3-requests
+          - python3-requests-oauthlib
+          - virtualgl
+        state: present
+        update_cache: true
+
+    # --------------------------------------------------
+    # 2. Install Open OnDemand
+    # --------------------------------------------------
+    - name: Download OOD repo package
+      get_url:
+        url: https://apt.osc.edu/ondemand/4.0/ondemand-release-web_4.0.0-noble_all.deb
+        dest: "{{ workdir }}/ondemand-release-web.deb"
+        mode: '0644'
+
+    - name: Install OOD repo
+      apt:
+        deb: "{{ workdir }}/ondemand-release-web.deb"
+
+    - name: Install ondemand
+      apt:
+        name: ondemand
+        state: present
+        update_cache: true
+
+    # --------------------------------------------------
+    # 3. Prepare working directory (TMP-based)
+    # --------------------------------------------------
+    - name: Ensure working directory exists
+      file:
+        path: "{{ workdir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Clone vulcan-ood repository
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ repo_dir }}"
+        update: yes
+
+    # --------------------------------------------------
+    # 4. Fix executable permissions BEFORE copy
+    # --------------------------------------------------
+    - name: Make shell scripts executable
+      command: >
+        find {{ repo_dir }} -name "*.sh" -type f -exec chmod +x {} \;
+
+    - name: Make sh.erb scripts executable
+      command: >
+        find {{ repo_dir }} -name "*.sh.erb" -type f -exec chmod +x {} \;
+
+    # --------------------------------------------------
+    # 5. Remove conflicting OOD defaults (CRITICAL)
+    # --------------------------------------------------
+    - name: Remove known conflicting OOD sys apps
+      file:
+        path: "{{ ood_sys_app_dir }}/{{ item }}"
+        state: absent
+      loop: "{{ ood_sys_dirs_to_remove }}"
+
+    # Optional: wipe all shipped sys apps (uncomment if desired)
+    # - name: Remove all default OOD sys apps
+    #   file:
+    #     path: "{{ ood_sys_app_dir }}"
+    #     state: absent
+
+    # --------------------------------------------------
+    # 6. Deploy overlay files (SCOPED)
+    # --------------------------------------------------
+    - name: Deploy OOD config
+      copy:
+        src: "{{ repo_dir }}/etc/ood/"
+        dest: /etc/ood/
+        remote_src: true
+
+    - name: Deploy Apache config
+      copy:
+        src: "{{ repo_dir }}/etc/apache2/"
+        dest: /etc/apache2/
+        remote_src: true
+
+    - name: Deploy OOD web apps
+      copy:
+        src: "{{ repo_dir }}/var/www/ood/"
+        dest: /var/www/ood/
+        remote_src: true
+
+    - name: Deploy OOD operational scripts
+      copy:
+        src: "{{ repo_dir }}/opt/ood/"
+        dest: /opt/ood/
+        remote_src: true
+
+    - name: Deploy cron scripts
+      copy:
+        src: "{{ repo_dir }}/opt/ood/cron/"
+        dest: /etc/cron.d/
+        remote_src: true
+        mode: '0644'
+
+    # --------------------------------------------------
+    # 7. Run cron generators ONCE
+    # --------------------------------------------------
+    - name: Generate cluster config
+      command: /opt/ood/cron/gen_cluster_rb.sh
+      args:
+        creates: /etc/ood/config/clusters.d
+
+    - name: Generate GPU config
+      command: /opt/ood/cron/gen_gpu_rb.sh
+      args:
+        creates: /etc/ood/config/gpus.rb
+
+    - name: Generate app config
+      command: /opt/ood/cron/gen_app_rb.sh
+      args:
+        creates: /etc/ood/config/apps
+
+    # --------------------------------------------------
+    # 8. SSL (self-signed, internal)
+    # --------------------------------------------------
+    - name: Ensure SSL directory exists
+      file:
+        path: "{{ ssl_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Generate self-signed SSL cert (if missing)
+      command: >
+        openssl req -x509 -nodes -days 365
+        -newkey rsa:4096
+        -keyout {{ ssl_dir }}/privkey.pem
+        -out {{ ssl_dir }}/fullchain.pem
+        -subj "/C=CA/ST=AB/O=University of Alberta/CN={{ ssl_cn }}"
+      args:
+        creates: "{{ ssl_dir }}/privkey.pem"
+
+    # --------------------------------------------------
+    # 9. Apache enable + restart
+    # --------------------------------------------------
+    - name: Enable Apache modules
+      command: a2enmod ssl headers proxy proxy_http rewrite
+
+    - name: Enable OOD site
+      command: a2ensite ood-portal.conf
+
+    - name: Restart Apache
+      systemd:
+        name: apache2
+        state: restarted
