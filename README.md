@@ -1,6 +1,4 @@
-<img src="https://www.ualberta.ca/en/toolkit/media-library/homepage-assets/ua_logo_green_rgb.png" alt="University of Alberta Logo" width="50%" />
-
-# Vulcan Open OnDemand Deployment
+# University of Alberta - Vulcan Open OnDemand Deployment  
 
 ![Ubuntu Version](https://img.shields.io/badge/Ubuntu-24.04+-green?style=flat-square)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
