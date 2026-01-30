@@ -2,17 +2,6 @@
 
 echo "[script.sh.erb] Starting RStudio Server"
 
-# Capture OOD job dir first (before cd/module load); all RStudio data and logs go here, never /tmp
-OOD_JOB_DIR="${PWD}"
-echo "[script.sh.erb] OOD job dir: ${OOD_JOB_DIR}"
-
-# Set squid proxy for the job (R package installs, etc.)
-export http_proxy="http://squid.vulcan.local:3128"
-export HTTP_PROXY="http://squid.vulcan.local:3128"
-export https_proxy="http://squid.vulcan.local:3128"
-export HTTPS_PROXY="http://squid.vulcan.local:3128"
-echo "[script.sh.erb] Set proxy: http://squid.vulcan.local:3128"
-
 # Change to user's home directory
 cd "${HOME}"
 echo "[script.sh.erb] Changed working directory to ${HOME}"
@@ -26,16 +15,6 @@ TARGET_MODULE="<%= context.rstudio_server_version %>"
 # Try initial load
 if module load "$TARGET_MODULE"; then
   echo "[script.sh.erb] Successfully loaded $TARGET_MODULE"
-  # Show detected versions at boot
-  echo "[script.sh.erb] Detected RStudio module: $TARGET_MODULE"
-  if command -v Rscript >/dev/null 2>&1; then
-    R_VER=$(Rscript --version 2>&1 | head -1)
-    echo "[script.sh.erb] Detected R: $R_VER"
-  fi
-  if command -v rserver >/dev/null 2>&1; then
-    RSERVER_VER=$(rserver --version 2>/dev/null | head -1 || true)
-    [[ -n "$RSERVER_VER" ]] && echo "[script.sh.erb] Detected rserver: $RSERVER_VER"
-  fi
 else
   echo "[script.sh.erb] Initial load failed, checking prerequisites..."
 
@@ -58,15 +37,6 @@ else
     echo "[script.sh.erb] Retrying load of $TARGET_MODULE..."
     if module load "$TARGET_MODULE"; then
       echo "[script.sh.erb] Successfully loaded $TARGET_MODULE after loading prerequisites."
-      echo "[script.sh.erb] Detected RStudio module: $TARGET_MODULE"
-      if command -v Rscript >/dev/null 2>&1; then
-        R_VER=$(Rscript --version 2>&1 | head -1)
-        echo "[script.sh.erb] Detected R: $R_VER"
-      fi
-      if command -v rserver >/dev/null 2>&1; then
-        RSERVER_VER=$(rserver --version 2>/dev/null | head -1 || true)
-        [[ -n "$RSERVER_VER" ]] && echo "[script.sh.erb] Detected rserver: $RSERVER_VER"
-      fi
     else
       echo "[script.sh.erb] Failed to load $TARGET_MODULE even after loading prerequisites."
       exit 1
@@ -77,34 +47,16 @@ else
   fi
 fi
 
-# R library path: ~/.rstudio/<version>/library (version = module name, / -> -)
-# RStudio and rsession will use R_LIBS_USER to find user packages
-RSTUDIO_VERSION="${TARGET_MODULE//\//-}"
-R_LIB_USER="${HOME}/.rstudio/${RSTUDIO_VERSION}/library"
-mkdir -p "${R_LIB_USER}"
-export R_LIBS_USER="${R_LIB_USER}"
-echo "[script.sh.erb] R_LIBS_USER=${R_LIB_USER} (user packages)"
 
-# Set working dir from OOD job dir only (ignore RSTUDIO_DATA_HOME from module/env so we never use /tmp)
-WORKDIR="${OOD_JOB_DIR}/rstudio-data"
-export RSTUDIO_DATA_HOME="${WORKDIR}"
-# Use job dir for temp so nothing goes to /tmp
-export TMPDIR="${WORKDIR}/tmp"
-export TEMP="${WORKDIR}/tmp"
-export TMP="${WORKDIR}/tmp"
-echo "[script.sh.erb] Creating RStudio working directories under ${WORKDIR} (TMPDIR=${TMPDIR})"
+# Set working dir for RStudio session
+WORKDIR="${RSTUDIO_DATA_HOME}"
+echo "[script.sh.erb] Creating RStudio working directories under ${WORKDIR}"
 mkdir -p "${WORKDIR}/var/run" \
          "${WORKDIR}/var/lib" \
          "${WORKDIR}/tmp" \
          "${WORKDIR}/etc" \
          "${WORKDIR}/rstudio-server" \
          "${WORKDIR}/database"
-
-# Write selected module name and R library path for rsession wrapper
-RSTUDIO_MODULE="<%= context.rstudio_server_version %>"
-echo "${RSTUDIO_MODULE}" > "${WORKDIR}/rstudio-server/rsession_module"
-echo "${R_LIB_USER}" > "${WORKDIR}/rstudio-server/rsession_r_libs_user"
-echo "[script.sh.erb] Wrote rsession module: ${RSTUDIO_MODULE}, R library: ${R_LIB_USER}"
 
 # Secure cookie key
 COOKIE_KEY="${WORKDIR}/rstudio-server/secure-cookie-key"
@@ -116,40 +68,33 @@ else
   echo "[script.sh.erb] Secure cookie key already exists."
 fi
 
-# RSession wrapper: load same module and R_LIBS_USER before each R session
+# PAM Auth script
+AUTH_SCRIPT="${WORKDIR}/rstudio-server/auth.sh"
+echo "[script.sh.erb] Writing PAM auth helper script to ${AUTH_SCRIPT}"
+cat > "${AUTH_SCRIPT}" <<EOF
+#!/usr/bin/env bash
+read -s PASSWORD
+WORKDIR="${WORKDIR}"
+RSTUDIO_PASSWORD="${RSTUDIO_PASSWORD}"
+echo "\$(date): auth attempt" >> "\${WORKDIR}/auth_debug.log"
+if [[ "\$PASSWORD" == "\$RSTUDIO_PASSWORD" ]]; then
+  echo "\$(date): success" >> "\${WORKDIR}/auth_debug.log"
+  exit 0
+else
+  echo "\$(date): fail" >> "\${WORKDIR}/auth_debug.log"
+  exit 1
+fi
+EOF
+
+chmod 700 "${AUTH_SCRIPT}"
+echo "[script.sh.erb] PAM auth helper ready."
+
+# RSession wrapper
 echo "[script.sh.erb] Creating RSession wrapper at ${RSESSION_WRAPPER_FILE}"
-MODULE_FILE="${WORKDIR}/rstudio-server/rsession_module"
-R_LIBS_FILE="${WORKDIR}/rstudio-server/rsession_r_libs_user"
 cat > "${RSESSION_WRAPPER_FILE}" <<EOF
 #!/usr/bin/env bash
 exec >> "${RSESSION_LOG_FILE}" 2>&1
 echo "RSession wrapper invoked"
-# Temp under job dir, not /tmp
-export TMPDIR="${WORKDIR}/tmp"
-export TEMP="${WORKDIR}/tmp"
-export TMP="${WORKDIR}/tmp"
-# R package search path (same as job's ~/.rstudio/<version>/library)
-if [[ -f "${R_LIBS_FILE}" ]]; then
-  R_LIB=\$(cat "${R_LIBS_FILE}")
-  if [[ -n "\$R_LIB" ]]; then export R_LIBS_USER="\$R_LIB"; fi
-fi
-# Load module environment for this R session (same as job's rstudio-server version)
-MODULE_FILE="${MODULE_FILE}"
-if [[ -f "\${MODULE_FILE}" ]]; then
-  mod=\$(cat "\${MODULE_FILE}")
-  if [[ -n "\$mod" ]]; then
-    if type module &>/dev/null 2>&1; then
-      module load "\$mod" 2>/dev/null && echo "Loaded module: \$mod" || true
-    else
-      for f in /etc/profile.d/modules.sh /usr/share/modules/init/bash /usr/share/Modules/init/bash; do
-        if [[ -r "\$f" ]]; then source "\$f" 2>/dev/null && break; fi
-      done
-      if type module &>/dev/null 2>&1; then
-        module load "\$mod" 2>/dev/null && echo "Loaded module: \$mod" || true
-      fi
-    fi
-  fi
-fi
 exec rsession "\$@"
 EOF
 
@@ -165,38 +110,21 @@ directory=${WORKDIR}/database
 EOF
 echo "[script.sh.erb] Database config written."
 
-# Install R packages in background (skip already installed); rserver starts immediately so job doesn't get stuck.
-PKG_LOG="${WORKDIR}/rstudio_pkg_install.log"
-echo "[script.sh.erb] Starting R package install in background (log: ${PKG_LOG}); already-installed packages are skipped."
-if command -v Rscript >/dev/null 2>&1; then
-  (
-    export R_LIBS_USER="${R_LIB_USER}"
-    Rscript -e "
-      lib <- \"${R_LIB_USER}\"
-      pkgs <- c(\"tidyverse\", \"data.table\", \"devtools\", \"plotly\", \"DT\", \"knitr\", \"rmarkdown\", \"lubridate\", \"readxl\", \"writexl\", \"jsonlite\", \"httr\", \"xml2\")
-      for (p in pkgs) {
-        if (require(p, character.only = TRUE, quietly = TRUE)) {
-          cat(\"Package \", p, \" already installed, skipping\n\", sep = \"\")
-        } else {
-          install.packages(p, repos = \"https://cloud.r-project.org\", lib = lib, dependencies = TRUE)
-        }
-      }
-    "
-    echo "[background] Package install finished."
-  ) >> "${PKG_LOG}" 2>&1 &
-fi
-
-# Launch RStudio Server (foreground); output to job log so OOD/after.sh sees port come up and any errors are visible
+# Launch RStudio Server
 echo "[script.sh.erb] Launching rserver..."
+echo "[script.sh.erb] Logging to ${RSTUDIO_LOG_FILE}"
 rserver \
   --server-user "${USER}" \
   --www-port "${port}" \
-  --auth-none 1 \
+  --auth-none 0 \
+  --auth-encrypt-password 0 \
+  --auth-pam-helper-path "${AUTH_SCRIPT}" \
   --server-working-dir "${WORKDIR}" \
   --server-data-dir "${WORKDIR}/var/run" \
   --secure-cookie-key-file "${COOKIE_KEY}" \
   --database-config-file "${DB_CONFIG}" \
   --rsession-path "${RSESSION_WRAPPER_FILE}" \
-  --server-app-armor-enabled=0
+  --server-app-armor-enabled=0 \
+  --auth-timeout-minutes=0
 
-echo "[script.sh.erb] RStudio Server exited."
+echo "[script.sh.erb] RStudio Server Started."
