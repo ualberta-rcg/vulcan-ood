@@ -2,10 +2,6 @@
 
 echo "[script.sh.erb] Starting RStudio Server"
 
-# Capture OOD job dir first (before cd/module load); all RStudio data and logs go here, never /tmp
-OOD_JOB_DIR="${PWD}"
-echo "[script.sh.erb] OOD job dir: ${OOD_JOB_DIR}"
-
 # Change to user's home directory
 cd "${HOME}"
 echo "[script.sh.erb] Changed working directory to ${HOME}"
@@ -52,9 +48,8 @@ else
 fi
 
 
-# Set working dir from OOD job dir only (ignore RSTUDIO_DATA_HOME from module/env so we never use /tmp)
-WORKDIR="${OOD_JOB_DIR}/rstudio-data"
-export RSTUDIO_DATA_HOME="${WORKDIR}"
+# Set working dir for RStudio session
+WORKDIR="${RSTUDIO_DATA_HOME}"
 echo "[script.sh.erb] Creating RStudio working directories under ${WORKDIR}"
 mkdir -p "${WORKDIR}/var/run" \
          "${WORKDIR}/var/lib" \
@@ -94,13 +89,7 @@ directory=${WORKDIR}/database
 EOF
 echo "[script.sh.erb] Database config written."
 
-# Session config: keep screen/session lock disabled (no idle suspend)
-RSESSION_CONF="${WORKDIR}/etc/rsession.conf"
-mkdir -p "${WORKDIR}/etc"
-echo "session-timeout-minutes=0" > "${RSESSION_CONF}"
-echo "[script.sh.erb] Session lock disabled (session-timeout-minutes=0)"
-
-# Launch RStudio Server (auth-none: no login; auth-timeout-minutes=0: keep session/screen lock disabled)
+# Launch RStudio Server (auth-none: no password; timeouts 0 so session/screen lock stay disabled)
 echo "[script.sh.erb] Launching rserver..."
 echo "[script.sh.erb] Logging to ${RSTUDIO_LOG_FILE}"
 rserver \
