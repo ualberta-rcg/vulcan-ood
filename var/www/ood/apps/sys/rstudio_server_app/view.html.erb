@@ -1,25 +1,4 @@
-<%
-  username = ENV["USER"]
-  token    = ENV["token"]
-%>
-<script type="text/javascript">
-(function () {
-   let date = new Date();
-   date.setTime(date.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 days
-   let expires = "expires=" + date.toUTCString();
-   let cookiePath = "path=/rnode/" + "<%= host.to_s %>" + "/" + "<%= port.to_s %>/";
-   let cookie = `csrf-token=<%= token %>;${expires};${cookiePath};SameSite=strict;secure`;
-   document.cookie = cookie;
-})();
-</script>
-
-<form action="/rnode/<%= host %>/<%= port %>/auth-do-sign-in" method="post" target="_blank">
-  <input type="hidden" name="username" value="<%= username %>">
-  <input type="hidden" name="password" value="<%= password %>">
-  <input type="hidden" name="staySignedIn" value="1">
-  <input type="hidden" name="csrf-token" value="<%= token %>">
-  <input type="hidden" name="appUri" value="">
-  <button class="btn btn-primary" type="submit">
-    🔓 Connect to RStudio Server
-  </button>
-</form>
+<%# With auth-none, RStudio trusts the OOD proxy; no login form needed %>
+<a href="/rnode/<%= host %>/<%= port %>/" class="btn btn-primary" target="_blank">
+  🔓 Connect to RStudio Server
+</a>

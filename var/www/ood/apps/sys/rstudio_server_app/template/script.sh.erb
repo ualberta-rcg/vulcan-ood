@@ -2,6 +2,13 @@
 
 echo "[script.sh.erb] Starting RStudio Server"
 
+# Set squid proxy for the job (R package installs, etc.)
+export http_proxy="http://squid.vulcan.local:3128"
+export HTTP_PROXY="http://squid.vulcan.local:3128"
+export https_proxy="http://squid.vulcan.local:3128"
+export HTTPS_PROXY="http://squid.vulcan.local:3128"
+echo "[script.sh.erb] Set proxy: http://squid.vulcan.local:3128"
+
 # Change to user's home directory
 cd "${HOME}"
 echo "[script.sh.erb] Changed working directory to ${HOME}"
@@ -47,24 +54,17 @@ else
   fi
 fi
 
-# Install R packages to user's personal library
+# Install R packages to ~/.rstudio/<version>/library (version = module name, / -> -)
+RSTUDIO_VERSION="${TARGET_MODULE//\//-}"
+R_LIB_USER="${HOME}/.rstudio/${RSTUDIO_VERSION}/library"
+mkdir -p "${R_LIB_USER}"
+export R_LIBS_USER="${R_LIB_USER}"
+echo "[script.sh.erb] User R library: ${R_LIB_USER}"
+
+# Install R packages to user's personal library (same R as RStudio via loaded module)
 echo "[script.sh.erb] Checking R availability and installing packages..."
 if command -v Rscript >/dev/null 2>&1; then
-  echo "[script.sh.erb] R is available, configuring proxy and checking packages..."
-
-  # Configure proxy for R (squid proxy on port 3128)
-  export HTTP_PROXY="http://squid:3128"
-  export HTTPS_PROXY="http://squid:3128"
-  export http_proxy="http://squid:3128"
-  export https_proxy="http://squid:3128"
-  echo "[script.sh.erb] Configured proxy: http://squid:3128"
-
-  # Create user's personal R library directory if it doesn't exist
-  R_LIB_USER="${HOME}/.R/library"
-  mkdir -p "${R_LIB_USER}"
-  export R_LIBS_USER="${R_LIB_USER}"
-
-  echo "[script.sh.erb] User R library: ${R_LIB_USER}"
+  echo "[script.sh.erb] R is available (same as RStudio), checking packages..."
 
   # List of packages to install
   PACKAGES=(
@@ -83,14 +83,10 @@ if command -v Rscript >/dev/null 2>&1; then
     "xml2"
   )
 
-  # Install packages (skip if already installed). Set proxy explicitly in R (libcurl).
+  # Install packages (skip if already installed)
   for pkg in "${PACKAGES[@]}"; do
     echo "[script.sh.erb] Checking/installing package: ${pkg}..."
     Rscript -e "
-      options(
-        download.file.method = 'libcurl',
-        download.file.extra = '--proxy http://squid:3128'
-      )
       if (!require(\"${pkg}\", quietly = TRUE, character.only = TRUE)) {
         install.packages(\"${pkg}\", repos = \"https://cloud.r-project.org\", lib = \"${R_LIB_USER}\", dependencies = TRUE)
       } else {
@@ -117,10 +113,11 @@ mkdir -p "${WORKDIR}/var/run" \
          "${WORKDIR}/rstudio-server" \
          "${WORKDIR}/database"
 
-# Write selected module name for rsession wrapper (so each R session loads it)
+# Write selected module name and R library path for rsession wrapper
 RSTUDIO_MODULE="<%= context.rstudio_server_version %>"
 echo "${RSTUDIO_MODULE}" > "${WORKDIR}/rstudio-server/rsession_module"
-echo "[script.sh.erb] Wrote rsession module: ${RSTUDIO_MODULE}"
+echo "${R_LIB_USER}" > "${WORKDIR}/rstudio-server/rsession_r_libs_user"
+echo "[script.sh.erb] Wrote rsession module: ${RSTUDIO_MODULE}, R library: ${R_LIB_USER}"
 
 # Secure cookie key
 COOKIE_KEY="${WORKDIR}/rstudio-server/secure-cookie-key"
@@ -132,34 +129,19 @@ else
   echo "[script.sh.erb] Secure cookie key already exists."
 fi
 
-# PAM Auth script
-AUTH_SCRIPT="${WORKDIR}/rstudio-server/auth.sh"
-echo "[script.sh.erb] Writing PAM auth helper script to ${AUTH_SCRIPT}"
-cat > "${AUTH_SCRIPT}" <<EOF
-#!/usr/bin/env bash
-read -s PASSWORD
-WORKDIR="${WORKDIR}"
-RSTUDIO_PASSWORD="${RSTUDIO_PASSWORD}"
-echo "\$(date): auth attempt" >> "\${WORKDIR}/auth_debug.log"
-if [[ "\$PASSWORD" == "\$RSTUDIO_PASSWORD" ]]; then
-  echo "\$(date): success" >> "\${WORKDIR}/auth_debug.log"
-  exit 0
-else
-  echo "\$(date): fail" >> "\${WORKDIR}/auth_debug.log"
-  exit 1
-fi
-EOF
-
-chmod 700 "${AUTH_SCRIPT}"
-echo "[script.sh.erb] PAM auth helper ready."
-
-# RSession wrapper: load same module before each R session so R has correct env
+# RSession wrapper: load same module and R_LIBS_USER before each R session
 echo "[script.sh.erb] Creating RSession wrapper at ${RSESSION_WRAPPER_FILE}"
 MODULE_FILE="${WORKDIR}/rstudio-server/rsession_module"
+R_LIBS_FILE="${WORKDIR}/rstudio-server/rsession_r_libs_user"
 cat > "${RSESSION_WRAPPER_FILE}" <<EOF
 #!/usr/bin/env bash
 exec >> "${RSESSION_LOG_FILE}" 2>&1
 echo "RSession wrapper invoked"
+# Use same R library as job (~/.rstudio/<version>/library)
+if [[ -f "${R_LIBS_FILE}" ]]; then
+  R_LIB=\$(cat "${R_LIBS_FILE}")
+  if [[ -n "\$R_LIB" ]]; then export R_LIBS_USER="\$R_LIB"; fi
+fi
 # Load module environment for this R session (same as job's rstudio-server version)
 MODULE_FILE="${MODULE_FILE}"
 if [[ -f "\${MODULE_FILE}" ]]; then
@@ -198,15 +180,12 @@ echo "[script.sh.erb] Logging to ${RSTUDIO_LOG_FILE}"
 rserver \
   --server-user "${USER}" \
   --www-port "${port}" \
-  --auth-none 0 \
-  --auth-encrypt-password 0 \
-  --auth-pam-helper-path "${AUTH_SCRIPT}" \
+  --auth-none 1 \
   --server-working-dir "${WORKDIR}" \
   --server-data-dir "${WORKDIR}/var/run" \
   --secure-cookie-key-file "${COOKIE_KEY}" \
   --database-config-file "${DB_CONFIG}" \
   --rsession-path "${RSESSION_WRAPPER_FILE}" \
-  --server-app-armor-enabled=0 \
-  --auth-timeout-minutes=0
+  --server-app-armor-enabled=0
 
 echo "[script.sh.erb] RStudio Server Started."
