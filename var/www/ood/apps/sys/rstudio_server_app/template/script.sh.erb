@@ -47,6 +47,48 @@ else
   fi
 fi
 
+# Install R packages to user's personal library
+echo "[script.sh.erb] Checking R availability and installing packages..."
+if command -v Rscript >/dev/null 2>&1; then
+  echo "[script.sh.erb] R is available, proceeding with package installation..."
+  
+  # Create user's personal R library directory if it doesn't exist
+  R_LIB_USER="${HOME}/.R/library"
+  mkdir -p "${R_LIB_USER}"
+  export R_LIBS_USER="${R_LIB_USER}"
+  
+  echo "[script.sh.erb] User R library: ${R_LIB_USER}"
+  
+  # List of packages to install
+  PACKAGES=(
+    "tidyverse"
+    "data.table"
+    "devtools"
+    "plotly"
+    "DT"
+    "knitr"
+    "rmarkdown"
+    "lubridate"
+    "readxl"
+    "writexl"
+    "jsonlite"
+    "httr"
+    "xml2"
+  )
+  
+  # Install packages (skip if already installed)
+  for pkg in "${PACKAGES[@]}"; do
+    echo "[script.sh.erb] Checking/installing package: ${pkg}..."
+    Rscript -e "if (!require(\"${pkg}\", quietly = TRUE, character.only = TRUE)) { install.packages(\"${pkg}\", repos = \"https://cloud.r-project.org\", lib = \"${R_LIB_USER}\", dependencies = TRUE) } else { cat(\"Package ${pkg} already installed\n\") }" 2>&1 | while IFS= read -r line; do
+      echo "[script.sh.erb] R: $line"
+    done
+  done
+  
+  echo "[script.sh.erb] Package installation completed."
+else
+  echo "[script.sh.erb] WARNING: Rscript not found. Skipping package installation."
+  echo "[script.sh.erb] WARNING: Packages can be installed manually after RStudio starts."
+fi
 
 # Set working dir for RStudio session
 WORKDIR="${RSTUDIO_DATA_HOME}"
