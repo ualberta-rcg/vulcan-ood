@@ -5,13 +5,13 @@
 
 <div class="mt-3">
   <details class="ood-appkit">
-    <summary>Installing R packages</summary>
-    <p class="mb-1">Packages install to <code>~/.rstudio/&lt;version&gt;/library</code> (one folder per RStudio version).</p>
-    <p class="mb-1"><strong>From the R Console:</strong></p>
+    <summary>Installing R packages (after RStudio is running)</summary>
+    <p class="mb-2">After you connect to RStudio, you can install packages in either of these ways. They go to <code>~/.rstudio/&lt;version&gt;/library</code> (one folder per RStudio version).</p>
+    <p class="mb-1"><strong>From the R Console</strong> (recommended):</p>
     <pre class="bg-light p-2 rounded mb-2"><code>install.packages("package_name", repos = "https://cloud.r-project.org", dependencies = TRUE)</code></pre>
-    <p class="mb-1"><strong>From the RStudio Terminal</strong> (Tools → Terminal): set the library path first, then use R or Rscript:</p>
+    <p class="mb-1"><strong>From the RStudio Terminal</strong> (Tools → Terminal): set the library path, then run R:</p>
     <pre class="bg-light p-2 rounded mb-2"><code>export R_LIBS_USER="$HOME/.rstudio/rstudio-server-4.4/library"
 R -e 'install.packages("package_name", repos = "https://cloud.r-project.org", dependencies = TRUE)'</code></pre>
-    <p class="mb-0 small text-muted">Use the version folder that matches your session (e.g. <code>rstudio-server-4.4</code>). Check <code>.libPaths()</code> in R to see your path.</p>
+    <p class="mb-0 small text-muted">Replace <code>package_name</code> with the package you want. Use the version folder that matches your session (e.g. <code>rstudio-server-4.4</code>). In R, run <code>.libPaths()</code> to see your library path.</p>
   </details>
 </div>
