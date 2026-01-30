@@ -6,30 +6,21 @@ echo "[script.sh.erb] Starting OpenRefine Server"
 cd "${HOME}"
 echo "[script.sh.erb] Changed working directory to ${HOME}"
 
-# Load required modules
-echo "[script.sh.erb] Loading Java and OpenRefine modules..."
+# Load required modules (CVMFS: openrefine/3.9.3 requires StdEnv/2023)
+echo "[script.sh.erb] Loading StdEnv/2023 and openrefine/3.9.3..."
 module purge
-
-# Load Java module (required for OpenRefine)
-if module load java/17.0.6; then
-  echo "[script.sh.erb] Successfully loaded Java 17"
-else
-  echo "[script.sh.erb] Failed to load Java module"
+if ! module load StdEnv/2023 openrefine/3.9.3; then
+  echo "[script.sh.erb] ERROR: Failed to load openrefine/3.9.3 (StdEnv/2023). Check: module spider openrefine"
   exit 1
 fi
 
-# Use the OpenRefine executable from the installation directory
-if [[ -n "${OPENREFINE_EXECUTABLE}" && -x "${OPENREFINE_EXECUTABLE}" ]]; then
-  echo "[script.sh.erb] Using downloaded OpenRefine: $OPENREFINE_EXECUTABLE"
-  OPENREFINE_CMD="${OPENREFINE_EXECUTABLE}"
-else
-  echo "[script.sh.erb] ERROR: OpenRefine executable not found or not executable"
-  echo "[script.sh.erb] Expected path: ${OPENREFINE_EXECUTABLE}"
-  echo "[script.sh.erb] This should have been set up in before.sh.erb"
+# Resolve OpenRefine executable from module (CVMFS)
+OPENREFINE_CMD=$(command -v refine 2>/dev/null || true)
+if [[ -z "${OPENREFINE_CMD}" || ! -x "${OPENREFINE_CMD}" ]]; then
+  echo "[script.sh.erb] ERROR: 'refine' not found after loading openrefine/3.9.3. PATH=$PATH"
   exit 1
 fi
-
-echo "[script.sh.erb] Using OpenRefine command: $OPENREFINE_CMD"
+echo "[script.sh.erb] Using OpenRefine from CVMFS: $OPENREFINE_CMD"
 
 # Set up OpenRefine environment
 export REFINE_PORT="${port}"
@@ -39,7 +30,7 @@ export REFINE_HEADLESS="true"
 # Create OpenRefine configuration
 OPENREFINE_CONFIG="${OPENREFINE_WORKDIR}/refine.ini"
 cat > "${OPENREFINE_CONFIG}" << EOF
-# OpenRefine Configuration for Open On Demand
+# OpenRefine Configuration for Open On Demand (CVMFS module)
 port=${port}
 data-dir=${OPENREFINE_WORKDIR}
 headless=true
