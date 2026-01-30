@@ -160,25 +160,26 @@ directory=${WORKDIR}/database
 EOF
 echo "[script.sh.erb] Database config written."
 
-# Install R packages in background so rserver can start immediately (avoids OOD timeout)
+# Install R packages into ~/.rstudio/<version>/library; skip any already installed (reuse existing, no re-download).
+# Run before rserver so only one process touches the library (avoids lock errors).
+PKG_LOG="${WORKDIR}/rstudio_pkg_install.log"
+echo "[script.sh.erb] Ensuring R packages (log: ${PKG_LOG}); already-installed packages are skipped."
 if command -v Rscript >/dev/null 2>&1; then
-  PKG_LOG="${WORKDIR}/rstudio_pkg_install.log"
-  echo "[script.sh.erb] Starting R package installation in background (log: ${PKG_LOG})"
-  (
-    export R_LIBS_USER="${R_LIB_USER}"
-    PACKAGES=( tidyverse data.table devtools plotly DT knitr rmarkdown lubridate readxl writexl jsonlite httr xml2 )
-    for pkg in "${PACKAGES[@]}"; do
-      Rscript -e "
-        if (!require(\"${pkg}\", quietly = TRUE, character.only = TRUE)) {
-          install.packages(\"${pkg}\", repos = \"https://cloud.r-project.org\", lib = \"${R_LIB_USER}\", dependencies = TRUE)
-        }
-      " >> "${PKG_LOG}" 2>&1
-    done
-    echo "[background] Package installation finished." >> "${PKG_LOG}"
-  ) &
+  Rscript -e "
+    lib <- \"${R_LIB_USER}\"
+    pkgs <- c(\"tidyverse\", \"data.table\", \"devtools\", \"plotly\", \"DT\", \"knitr\", \"rmarkdown\", \"lubridate\", \"readxl\", \"writexl\", \"jsonlite\", \"httr\", \"xml2\")
+    for (p in pkgs) {
+      if (require(p, character.only = TRUE, quietly = TRUE)) {
+        cat(\"Package \", p, \" already installed, skipping\n\", sep = \"\")
+      } else {
+        install.packages(p, repos = \"https://cloud.r-project.org\", lib = lib, dependencies = TRUE)
+      }
+    }
+  " >> "${PKG_LOG}" 2>&1
+  echo "[script.sh.erb] Package check/install done."
 fi
 
-# Launch RStudio Server (foreground so OOD sees it quickly); all logs to job dir
+# Launch RStudio Server (foreground); all logs to job dir
 echo "[script.sh.erb] Launching rserver (logs: ${RSTUDIO_LOG_FILE})"
 rserver \
   --server-user "${USER}" \
