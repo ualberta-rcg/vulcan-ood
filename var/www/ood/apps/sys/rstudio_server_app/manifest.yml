@@ -1,13 +1,17 @@
 ---
 name: RStudio Server
-category: Development & Data Science
+category: Interactive Apps
+subcategory: Servers
 role: batch_connect
 description: |
-  Launch an [RStudio Server] session on the [Vulcan] HPC cluster, managed by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].
+  Launch [RStudio Server] on the [Vulcan] high-performance computing (HPC) cluster, powered by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].
+
+  RStudio Server provides a browser-based R environment with the RStudio IDE. Jobs are scheduled with [SLURM], and you can request CPU and memory resources for your RStudio session.
 
   [RStudio Server]: https://posit.co/products/open-source/rstudio/
-  [Vulcan]: https://docs.alliancecan.ca/wiki/Vulcan
   [AMII]: https://www.amii.ca/
   [University of Alberta]: https://www.ualberta.ca/
   [Digital Research Alliance of Canada]: https://alliancecan.ca/en
+  [SLURM]: https://slurm.schedmd.com/documentation.html
+  [Vulcan]: https://docs.alliancecan.ca/wiki/Vulcan
 
