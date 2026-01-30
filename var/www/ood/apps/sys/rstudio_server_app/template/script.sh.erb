@@ -83,11 +83,14 @@ if command -v Rscript >/dev/null 2>&1; then
     "xml2"
   )
 
-  # Install packages (skip if already installed)
+  # Install packages (skip if already installed). Set proxy explicitly in R (libcurl).
   for pkg in "${PACKAGES[@]}"; do
     echo "[script.sh.erb] Checking/installing package: ${pkg}..."
     Rscript -e "
-      options(download.file.method = 'libcurl')
+      options(
+        download.file.method = 'libcurl',
+        download.file.extra = '--proxy http://squid:3128'
+      )
       if (!require(\"${pkg}\", quietly = TRUE, character.only = TRUE)) {
         install.packages(\"${pkg}\", repos = \"https://cloud.r-project.org\", lib = \"${R_LIB_USER}\", dependencies = TRUE)
       } else {
@@ -113,6 +116,11 @@ mkdir -p "${WORKDIR}/var/run" \
          "${WORKDIR}/etc" \
          "${WORKDIR}/rstudio-server" \
          "${WORKDIR}/database"
+
+# Write selected module name for rsession wrapper (so each R session loads it)
+RSTUDIO_MODULE="<%= context.rstudio_server_version %>"
+echo "${RSTUDIO_MODULE}" > "${WORKDIR}/rstudio-server/rsession_module"
+echo "[script.sh.erb] Wrote rsession module: ${RSTUDIO_MODULE}"
 
 # Secure cookie key
 COOKIE_KEY="${WORKDIR}/rstudio-server/secure-cookie-key"
@@ -145,12 +153,30 @@ EOF
 chmod 700 "${AUTH_SCRIPT}"
 echo "[script.sh.erb] PAM auth helper ready."
 
-# RSession wrapper
+# RSession wrapper: load same module before each R session so R has correct env
 echo "[script.sh.erb] Creating RSession wrapper at ${RSESSION_WRAPPER_FILE}"
+MODULE_FILE="${WORKDIR}/rstudio-server/rsession_module"
 cat > "${RSESSION_WRAPPER_FILE}" <<EOF
 #!/usr/bin/env bash
 exec >> "${RSESSION_LOG_FILE}" 2>&1
 echo "RSession wrapper invoked"
+# Load module environment for this R session (same as job's rstudio-server version)
+MODULE_FILE="${MODULE_FILE}"
+if [[ -f "\${MODULE_FILE}" ]]; then
+  mod=\$(cat "\${MODULE_FILE}")
+  if [[ -n "\$mod" ]]; then
+    if type module &>/dev/null 2>&1; then
+      module load "\$mod" 2>/dev/null && echo "Loaded module: \$mod" || true
+    else
+      for f in /etc/profile.d/modules.sh /usr/share/modules/init/bash /usr/share/Modules/init/bash; do
+        if [[ -r "\$f" ]]; then source "\$f" 2>/dev/null && break; fi
+      done
+      if type module &>/dev/null 2>&1; then
+        module load "\$mod" 2>/dev/null && echo "Loaded module: \$mod" || true
+      fi
+    fi
+  fi
+fi
 exec rsession "\$@"
 EOF
 
