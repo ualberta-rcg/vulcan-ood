@@ -89,7 +89,9 @@ echo "[script.sh.erb] R_LIBS_USER=${R_LIB_USER} (user packages)"
 WORKDIR="${OOD_JOB_DIR}/rstudio-data"
 export RSTUDIO_DATA_HOME="${WORKDIR}"
 # Use job dir for temp so nothing goes to /tmp
-
+export TMPDIR="${WORKDIR}/tmp"
+export TEMP="${WORKDIR}/tmp"
+export TMP="${WORKDIR}/tmp"
 echo "[script.sh.erb] Creating RStudio working directories under ${WORKDIR} (TMPDIR=${TMPDIR})"
 mkdir -p "${WORKDIR}/var/run" \
          "${WORKDIR}/var/lib" \
@@ -122,7 +124,10 @@ cat > "${RSESSION_WRAPPER_FILE}" <<EOF
 #!/usr/bin/env bash
 exec >> "${RSESSION_LOG_FILE}" 2>&1
 echo "RSession wrapper invoked"
-
+# Temp under job dir, not /tmp
+export TMPDIR="${WORKDIR}/tmp"
+export TEMP="${WORKDIR}/tmp"
+export TMP="${WORKDIR}/tmp"
 # R package search path (same as job's ~/.rstudio/<version>/library)
 if [[ -f "${R_LIBS_FILE}" ]]; then
   R_LIB=\$(cat "${R_LIBS_FILE}")
