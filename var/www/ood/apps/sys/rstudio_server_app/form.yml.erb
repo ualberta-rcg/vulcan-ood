@@ -89,6 +89,5 @@ form:
   - cpunum                    # Hidden: max CPUs available
   - mincpu                    # Hidden: minimum CPUs required
   - minram                    # Hidden: minimum memory required
-# Import form fields from template with environment options (CPU cores, memory, GPU, environment setup, VNC settings, etc.)
-<% IO.foreach(template_root+"form_params_env") do |line| %><%= line %><% end %>
-
+# Import form fields from template (CPU cores, memory, GPU options, VNC settings, etc.)
+<% IO.foreach(template_root+"form_params") do |line| %><%= line %><% end %>
