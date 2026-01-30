@@ -25,12 +25,13 @@ else
   echo "[before.sh.erb] Selected available port: $port"
 fi
 
-# Export log locations
+# All logs and temp under OOD job dir (nothing in /tmp)
 export RSTUDIO_LOG_FILE="${JOB_DIR}/rstudio.log"
 export RSESSION_WRAPPER_FILE="${JOB_DIR}/rsession_wrapper.sh"
 export RSESSION_LOG_FILE="${JOB_DIR}/rsession.log"
 export RSTUDIO_DATA_HOME="${JOB_DIR}/rstudio-data"
 
+echo "[before.sh.erb] All logs under job dir: ${JOB_DIR}"
 echo "[before.sh.erb] RSTUDIO_LOG_FILE=${RSTUDIO_LOG_FILE}"
 echo "[before.sh.erb] RSESSION_LOG_FILE=${RSESSION_LOG_FILE}"
 echo "[before.sh.erb] RSTUDIO_DATA_HOME=${RSTUDIO_DATA_HOME}"
