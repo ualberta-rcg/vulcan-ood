@@ -186,8 +186,8 @@ if command -v Rscript >/dev/null 2>&1; then
   ) >> "${PKG_LOG}" 2>&1 &
 fi
 
-# Launch RStudio Server (foreground); all logs to job dir
-echo "[script.sh.erb] Launching rserver (logs: ${RSTUDIO_LOG_FILE})"
+# Launch RStudio Server (foreground); output to job log so OOD/after.sh sees port come up and any errors are visible
+echo "[script.sh.erb] Launching rserver..."
 rserver \
   --server-user "${USER}" \
   --www-port "${port}" \
@@ -197,7 +197,6 @@ rserver \
   --secure-cookie-key-file "${COOKIE_KEY}" \
   --database-config-file "${DB_CONFIG}" \
   --rsession-path "${RSESSION_WRAPPER_FILE}" \
-  --server-app-armor-enabled=0 \
-  >> "${RSTUDIO_LOG_FILE}" 2>&1
+  --server-app-armor-enabled=0
 
-echo "[script.sh.erb] RStudio Server Started."
+echo "[script.sh.erb] RStudio Server exited."
