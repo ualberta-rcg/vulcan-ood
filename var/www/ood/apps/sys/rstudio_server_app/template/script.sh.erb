@@ -165,23 +165,25 @@ directory=${WORKDIR}/database
 EOF
 echo "[script.sh.erb] Database config written."
 
-# Install R packages into ~/.rstudio/<version>/library; skip any already installed (reuse existing, no re-download).
-# Run before rserver so only one process touches the library (avoids lock errors).
+# Install R packages in background (skip already installed); rserver starts immediately so job doesn't get stuck.
 PKG_LOG="${WORKDIR}/rstudio_pkg_install.log"
-echo "[script.sh.erb] Ensuring R packages (log: ${PKG_LOG}); already-installed packages are skipped."
+echo "[script.sh.erb] Starting R package install in background (log: ${PKG_LOG}); already-installed packages are skipped."
 if command -v Rscript >/dev/null 2>&1; then
-  Rscript -e "
-    lib <- \"${R_LIB_USER}\"
-    pkgs <- c(\"tidyverse\", \"data.table\", \"devtools\", \"plotly\", \"DT\", \"knitr\", \"rmarkdown\", \"lubridate\", \"readxl\", \"writexl\", \"jsonlite\", \"httr\", \"xml2\")
-    for (p in pkgs) {
-      if (require(p, character.only = TRUE, quietly = TRUE)) {
-        cat(\"Package \", p, \" already installed, skipping\n\", sep = \"\")
-      } else {
-        install.packages(p, repos = \"https://cloud.r-project.org\", lib = lib, dependencies = TRUE)
+  (
+    export R_LIBS_USER="${R_LIB_USER}"
+    Rscript -e "
+      lib <- \"${R_LIB_USER}\"
+      pkgs <- c(\"tidyverse\", \"data.table\", \"devtools\", \"plotly\", \"DT\", \"knitr\", \"rmarkdown\", \"lubridate\", \"readxl\", \"writexl\", \"jsonlite\", \"httr\", \"xml2\")
+      for (p in pkgs) {
+        if (require(p, character.only = TRUE, quietly = TRUE)) {
+          cat(\"Package \", p, \" already installed, skipping\n\", sep = \"\")
+        } else {
+          install.packages(p, repos = \"https://cloud.r-project.org\", lib = lib, dependencies = TRUE)
+        }
       }
-    }
-  " >> "${PKG_LOG}" 2>&1
-  echo "[script.sh.erb] Package check/install done."
+    "
+    echo "[background] Package install finished."
+  ) >> "${PKG_LOG}" 2>&1 &
 fi
 
 # Launch RStudio Server (foreground); all logs to job dir
