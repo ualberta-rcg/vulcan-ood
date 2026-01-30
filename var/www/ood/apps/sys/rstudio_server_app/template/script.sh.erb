@@ -68,27 +68,6 @@ else
   echo "[script.sh.erb] Secure cookie key already exists."
 fi
 
-# PAM Auth script
-AUTH_SCRIPT="${WORKDIR}/rstudio-server/auth.sh"
-echo "[script.sh.erb] Writing PAM auth helper script to ${AUTH_SCRIPT}"
-cat > "${AUTH_SCRIPT}" <<EOF
-#!/usr/bin/env bash
-read -s PASSWORD
-WORKDIR="${WORKDIR}"
-RSTUDIO_PASSWORD="${RSTUDIO_PASSWORD}"
-echo "\$(date): auth attempt" >> "\${WORKDIR}/auth_debug.log"
-if [[ "\$PASSWORD" == "\$RSTUDIO_PASSWORD" ]]; then
-  echo "\$(date): success" >> "\${WORKDIR}/auth_debug.log"
-  exit 0
-else
-  echo "\$(date): fail" >> "\${WORKDIR}/auth_debug.log"
-  exit 1
-fi
-EOF
-
-chmod 700 "${AUTH_SCRIPT}"
-echo "[script.sh.erb] PAM auth helper ready."
-
 # RSession wrapper
 echo "[script.sh.erb] Creating RSession wrapper at ${RSESSION_WRAPPER_FILE}"
 cat > "${RSESSION_WRAPPER_FILE}" <<EOF
@@ -110,15 +89,19 @@ directory=${WORKDIR}/database
 EOF
 echo "[script.sh.erb] Database config written."
 
-# Launch RStudio Server
+# Session config: keep screen/session lock disabled (no idle suspend)
+RSESSION_CONF="${WORKDIR}/etc/rsession.conf"
+mkdir -p "${WORKDIR}/etc"
+echo "session-timeout-minutes=0" > "${RSESSION_CONF}"
+echo "[script.sh.erb] Session lock disabled (session-timeout-minutes=0)"
+
+# Launch RStudio Server (auth-none: no login; auth-timeout-minutes=0: keep session/screen lock disabled)
 echo "[script.sh.erb] Launching rserver..."
 echo "[script.sh.erb] Logging to ${RSTUDIO_LOG_FILE}"
 rserver \
   --server-user "${USER}" \
   --www-port "${port}" \
-  --auth-none 0 \
-  --auth-encrypt-password 0 \
-  --auth-pam-helper-path "${AUTH_SCRIPT}" \
+  --auth-none 1 \
   --server-working-dir "${WORKDIR}" \
   --server-data-dir "${WORKDIR}/var/run" \
   --secure-cookie-key-file "${COOKIE_KEY}" \

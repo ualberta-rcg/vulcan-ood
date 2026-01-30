@@ -25,20 +25,6 @@ else
   echo "[before.sh.erb] Selected available port: $port"
 fi
 
-# Generate secure password for RStudio
-export password="$(create_passwd 16)"
-export RSTUDIO_PASSWORD="${password}"
-echo "[before.sh.erb] Generated RStudio password: $RSTUDIO_PASSWORD"
-
-# Create CSRF token
-<%
-  require 'securerandom'
-  token = SecureRandom.uuid
-  ENV["token"] = token
-%>
-export token="<%= token %>"
-echo "[before.sh.erb] Generated CSRF token: $token"
-
 # Export log locations
 export RSTUDIO_LOG_FILE="${JOB_DIR}/rstudio.log"
 export RSESSION_WRAPPER_FILE="${JOB_DIR}/rsession_wrapper.sh"
