@@ -2,6 +2,10 @@
 
 echo "[script.sh.erb] Starting RStudio Server"
 
+# Capture OOD job dir first (before cd/module load); use for WORKDIR so we never use /tmp
+OOD_JOB_DIR="${PWD}"
+echo "[script.sh.erb] OOD job dir: ${OOD_JOB_DIR}"
+
 # Change to user's home directory
 cd "${HOME}"
 echo "[script.sh.erb] Changed working directory to ${HOME}"
@@ -48,8 +52,9 @@ else
 fi
 
 
-# Set working dir for RStudio session
-WORKDIR="${RSTUDIO_DATA_HOME}"
+# Set working dir from OOD job dir only (ignore RSTUDIO_DATA_HOME from module so we never use /tmp)
+WORKDIR="${OOD_JOB_DIR}/rstudio-data"
+export RSTUDIO_DATA_HOME="${WORKDIR}"
 echo "[script.sh.erb] Creating RStudio working directories under ${WORKDIR}"
 mkdir -p "${WORKDIR}/var/run" \
          "${WORKDIR}/var/lib" \
