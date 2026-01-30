@@ -171,6 +171,3 @@ $(document).ready(function () {
     $('#batch_connect_session_context_num_cores').val(minCpus);
   }
 });
-
-
-
