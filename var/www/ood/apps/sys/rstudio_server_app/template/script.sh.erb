@@ -2,6 +2,10 @@
 
 echo "[script.sh.erb] Starting RStudio Server"
 
+# Capture OOD job dir first (before cd/module load); all RStudio data and logs go here, never /tmp
+OOD_JOB_DIR="${PWD}"
+echo "[script.sh.erb] OOD job dir: ${OOD_JOB_DIR}"
+
 # Set squid proxy for the job (R package installs, etc.)
 export http_proxy="http://squid.vulcan.local:3128"
 export HTTP_PROXY="http://squid.vulcan.local:3128"
@@ -81,12 +85,11 @@ mkdir -p "${R_LIB_USER}"
 export R_LIBS_USER="${R_LIB_USER}"
 echo "[script.sh.erb] R_LIBS_USER=${R_LIB_USER} (user packages)"
 
-# Set working dir for RStudio session (do this before package install so we can start rserver quickly)
-WORKDIR="${RSTUDIO_DATA_HOME}"
+# Set working dir from OOD job dir only (ignore RSTUDIO_DATA_HOME from module/env so we never use /tmp)
+WORKDIR="${OOD_JOB_DIR}/rstudio-data"
+export RSTUDIO_DATA_HOME="${WORKDIR}"
 # Use job dir for temp so nothing goes to /tmp
-export TMPDIR="${WORKDIR}/tmp"
-export TEMP="${WORKDIR}/tmp"
-export TMP="${WORKDIR}/tmp"
+
 echo "[script.sh.erb] Creating RStudio working directories under ${WORKDIR} (TMPDIR=${TMPDIR})"
 mkdir -p "${WORKDIR}/var/run" \
          "${WORKDIR}/var/lib" \
@@ -119,10 +122,7 @@ cat > "${RSESSION_WRAPPER_FILE}" <<EOF
 #!/usr/bin/env bash
 exec >> "${RSESSION_LOG_FILE}" 2>&1
 echo "RSession wrapper invoked"
-# Temp under job dir, not /tmp
-export TMPDIR="${WORKDIR}/tmp"
-export TEMP="${WORKDIR}/tmp"
-export TMP="${WORKDIR}/tmp"
+
 # R package search path (same as job's ~/.rstudio/<version>/library)
 if [[ -f "${R_LIBS_FILE}" ]]; then
   R_LIB=\$(cat "${R_LIBS_FILE}")
