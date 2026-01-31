@@ -29,11 +29,20 @@ fi
 export RSTUDIO_LOG_FILE="${JOB_DIR}/rstudio.log"
 export RSESSION_WRAPPER_FILE="${JOB_DIR}/rsession_wrapper.sh"
 export RSESSION_LOG_FILE="${JOB_DIR}/rsession.log"
-export RSTUDIO_DATA_HOME="${JOB_DIR}"
+export RSTUDIO_DATA_HOME="${JOB_DIR}/rstudio-data"
 
 echo "[before.sh.erb] RSTUDIO_LOG_FILE=${RSTUDIO_LOG_FILE}"
 echo "[before.sh.erb] RSESSION_LOG_FILE=${RSESSION_LOG_FILE}"
 echo "[before.sh.erb] RSTUDIO_DATA_HOME=${RSTUDIO_DATA_HOME}"
+
+# Create data dir
+mkdir -p "$RSTUDIO_DATA_HOME"
+if [[ $? -ne 0 ]]; then
+  echo "[before.sh.erb] ERROR: Failed to create directory ${RSTUDIO_DATA_HOME}"
+  exit 1
+else
+  echo "[before.sh.erb] Successfully created data directory."
+fi
 
 echo "[before.sh.erb] Setup complete."
 
