@@ -95,7 +95,8 @@ EOF
 echo "[script.sh.erb] Database config written."
 
 # Install common R packages in the background (skip if already installed)
-PKG_LOG="${WORKDIR}/pkg_install.log"
+# Log in OOD job dir (same place as rstudio.log, rsession.log) - never /tmp
+PKG_LOG="$(dirname "${RSTUDIO_DATA_HOME}")/pkg_install.log"
 echo "[pkg_install] Started at $(date)" >> "${PKG_LOG}"
 (
   export R_LIBS_USER="${R_LIBS_USER}"
