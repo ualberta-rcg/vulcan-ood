@@ -47,12 +47,9 @@ else
   fi
 fi
 
-# After module load: create rstudio dir and set exports so rserver/rsession use job dir, not /tmp
-export RSTUDIO_LOG_FILE="${JOB_DIR}/rstudio.log"
-export RSESSION_WRAPPER_FILE="${JOB_DIR}/rsession_wrapper.sh"
-export RSESSION_LOG_FILE="${JOB_DIR}/rsession.log"
-export RSTUDIO_DATA_HOME="${JOB_DIR}/rstudio-data"
-WORKDIR="${RSTUDIO_DATA_HOME}"
+# After module load: use short path under /tmp for rserver data (avoids "File name too long")
+# Logs stay in OOD job dir (RSTUDIO_LOG_FILE, RSESSION_LOG_FILE, PKG_LOG from before / below)
+WORKDIR="/tmp/rs-${port}"
 mkdir -p "${WORKDIR}/var/run" \
          "${WORKDIR}/var/lib" \
          "${WORKDIR}/tmp" \
@@ -62,7 +59,7 @@ mkdir -p "${WORKDIR}/var/run" \
 export TMPDIR="${WORKDIR}/tmp"
 export TEMP="${TMPDIR}"
 export TMP="${TMPDIR}"
-echo "[script.sh.erb] RStudio dir and exports set (WORKDIR=${WORKDIR}, TMPDIR=${TMPDIR})"
+echo "[script.sh.erb] RStudio runtime dir (short path): WORKDIR=${WORKDIR}"
 
 # Set R_LIBS_USER so Terminal and R sessions use a writable user library (~/.rstudio/<version>/library)
 RSTUDIO_VERSION="${TARGET_MODULE//\//-}"
@@ -80,17 +77,18 @@ else
   echo "[script.sh.erb] Secure cookie key already exists."
 fi
 
-# RSession wrapper
+# RSession wrapper in short path (rserver exec's it); log still goes to OOD job dir
+RSESSION_WRAPPER_FILE="${WORKDIR}/rsession_wrapper.sh"
 echo "[script.sh.erb] Creating RSession wrapper at ${RSESSION_WRAPPER_FILE}"
 cat > "${RSESSION_WRAPPER_FILE}" <<EOF
 #!/usr/bin/env bash
-exec >> "${RSESSION_LOG_FILE}" 2>&1
+exec >> "${JOB_DIR}/rsession.log" 2>&1
 echo "RSession wrapper invoked"
 exec rsession "\$@"
 EOF
 
 chmod +x "${RSESSION_WRAPPER_FILE}"
-echo "[script.sh.erb] RSession wrapper script created."
+echo "[script.sh.erb] RSession wrapper created (rsession.log in job dir)."
 
 # Database config
 DB_CONFIG="${WORKDIR}/rstudio-server/database.conf"
