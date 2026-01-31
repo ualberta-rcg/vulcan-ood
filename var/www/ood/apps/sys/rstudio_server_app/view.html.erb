@@ -4,12 +4,10 @@
 </a>
 
 <div class="mt-3">
-  <details class="ood-appkit">
-    <summary>Installing R packages (after RStudio is running)</summary>
-    <p class="mb-2">After you connect to RStudio, open <strong>Tools → Terminal</strong> and run the following. Set <code>R_LIBS_USER</code> to a writable path (system R library is not writable), then install with <code>lib=</code> so packages go to that folder:</p>
-    <pre class="bg-light p-2 rounded mb-2"><code>export R_LIBS_USER="$HOME/.rstudio/rstudio-server-4.4/library"
+  <p class="mb-1"><strong>Installing R packages (after RStudio is running)</strong></p>
+  <p class="mb-2">After you connect to RStudio, open <strong>Tools → Terminal</strong> and run the following. Set <code>R_LIBS_USER</code> to a writable path (system R library is not writable), then install with <code>lib=</code> so packages go to that folder:</p>
+  <pre class="bg-light p-2 rounded mb-2"><code>export R_LIBS_USER="$HOME/.rstudio/rstudio-server-4.4/library"
 mkdir -p "$R_LIBS_USER"
 R -e 'install.packages("package_name", repos = "https://cloud.r-project.org", lib = Sys.getenv("R_LIBS_USER"), dependencies = TRUE)'</code></pre>
-    <p class="mb-0 small text-muted">Replace <code>package_name</code> with the package you want (e.g. <code>tidyverse</code>). Use the version folder that matches your session (e.g. <code>rstudio-server-4.4</code>).</p>
-  </details>
+  <p class="mb-0 small text-muted">Replace <code>package_name</code> with the package you want (e.g. <code>tidyverse</code>). Use the version folder that matches your session (e.g. <code>rstudio-server-4.4</code>).</p>
 </div>
