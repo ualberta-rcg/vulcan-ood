@@ -94,6 +94,16 @@ directory=${WORKDIR}/database
 EOF
 echo "[script.sh.erb] Database config written."
 
+# Install common R packages in the background (skip if already installed)
+(
+  export R_LIBS_USER="${R_LIBS_USER}"
+  PKG_LOG="${WORKDIR}/pkg_install.log"
+  echo "[pkg_install] Started at $(date)" >> "${PKG_LOG}"
+  R -e 'pkgs <- c("tidyverse", "devtools", "data.table", "knitr", "rmarkdown"); for (p in pkgs) { if (!requireNamespace(p, quietly = TRUE)) { message("Installing ", p); install.packages(p, repos = "https://cloud.r-project.org", lib = Sys.getenv("R_LIBS_USER"), dependencies = TRUE) } else { message(p, " already installed") } }' >> "${PKG_LOG}" 2>&1
+  echo "[pkg_install] Finished at $(date)" >> "${PKG_LOG}"
+) &
+echo "[script.sh.erb] Background R package install started (log: ${WORKDIR}/pkg_install.log)."
+
 # Launch RStudio Server (auth-none: no password; timeouts 0 so session/screen lock stay disabled)
 echo "[script.sh.erb] Launching rserver..."
 echo "[script.sh.erb] Logging to ${RSTUDIO_LOG_FILE}"
@@ -109,4 +119,4 @@ rserver \
   --server-app-armor-enabled=0 \
   --auth-timeout-minutes=0
 
-echo "[script.sh.erb] RStudio Server Started."
+echo "[script.sh.erb] RStudio Server process ended."
