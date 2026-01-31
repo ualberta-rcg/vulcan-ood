@@ -47,21 +47,28 @@ else
   fi
 fi
 
-# Set R_LIBS_USER so Terminal and R sessions use a writable user library (~/.rstudio/<version>/library)
-RSTUDIO_VERSION="${TARGET_MODULE//\//-}"
-export R_LIBS_USER="${HOME}/.rstudio/${RSTUDIO_VERSION}/library"
-mkdir -p "${R_LIBS_USER}"
-echo "[script.sh.erb] R_LIBS_USER=${R_LIBS_USER}"
-
-# Set working dir for RStudio session (from before.sh)
+# After module load: create rstudio dir and set exports so rserver/rsession use job dir, not /tmp
+export RSTUDIO_LOG_FILE="${JOB_DIR}/rstudio.log"
+export RSESSION_WRAPPER_FILE="${JOB_DIR}/rsession_wrapper.sh"
+export RSESSION_LOG_FILE="${JOB_DIR}/rsession.log"
+export RSTUDIO_DATA_HOME="${JOB_DIR}/rstudio-data"
 WORKDIR="${RSTUDIO_DATA_HOME}"
-echo "[script.sh.erb] Creating RStudio working directories under ${WORKDIR}"
 mkdir -p "${WORKDIR}/var/run" \
          "${WORKDIR}/var/lib" \
          "${WORKDIR}/tmp" \
          "${WORKDIR}/etc" \
          "${WORKDIR}/rstudio-server" \
          "${WORKDIR}/database"
+export TMPDIR="${WORKDIR}/tmp"
+export TEMP="${TMPDIR}"
+export TMP="${TMPDIR}"
+echo "[script.sh.erb] RStudio dir and exports set (WORKDIR=${WORKDIR}, TMPDIR=${TMPDIR})"
+
+# Set R_LIBS_USER so Terminal and R sessions use a writable user library (~/.rstudio/<version>/library)
+RSTUDIO_VERSION="${TARGET_MODULE//\//-}"
+export R_LIBS_USER="${HOME}/.rstudio/${RSTUDIO_VERSION}/library"
+mkdir -p "${R_LIBS_USER}"
+echo "[script.sh.erb] R_LIBS_USER=${R_LIBS_USER}"
 
 # Secure cookie key
 COOKIE_KEY="${WORKDIR}/rstudio-server/secure-cookie-key"
@@ -96,7 +103,7 @@ echo "[script.sh.erb] Database config written."
 
 # Install common R packages in the background (skip if already installed)
 # Log in OOD job dir (same place as rstudio.log, rsession.log) - never /tmp
-PKG_LOG="$(dirname "${RSTUDIO_DATA_HOME}")/pkg_install.log"
+PKG_LOG="${JOB_DIR}/pkg_install.log"
 echo "[pkg_install] Started at $(date)" >> "${PKG_LOG}"
 (
   export R_LIBS_USER="${R_LIBS_USER}"
