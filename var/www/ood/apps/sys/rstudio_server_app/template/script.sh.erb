@@ -1,6 +1,8 @@
 #!/bin/bash
 
-echo "[script.sh.erb] Starting RStudio Server"
+# Job dir is cwd when OOD starts the script; capture before any cd (env RSTUDIO_DATA_HOME may point at /tmp)
+OOD_JOB_DIR="${PWD}"
+echo "[script.sh.erb] Starting RStudio Server (job dir: ${OOD_JOB_DIR})"
 
 # Change to user's home directory
 cd "${HOME}"
@@ -53,8 +55,8 @@ export R_LIBS_USER="${HOME}/.rstudio/${RSTUDIO_VERSION}/library"
 mkdir -p "${R_LIBS_USER}"
 echo "[script.sh.erb] R_LIBS_USER=${R_LIBS_USER}"
 
-# Set working dir for RStudio session
-WORKDIR="${RSTUDIO_DATA_HOME}"
+# RServer data dir = job dir (ignore RSTUDIO_DATA_HOME from module/env which may be /tmp)
+WORKDIR="${OOD_JOB_DIR}"
 echo "[script.sh.erb] Creating RStudio working directories under ${WORKDIR}"
 mkdir -p "${WORKDIR}/var/run" \
          "${WORKDIR}/var/lib" \
