@@ -1,109 +1,145 @@
 ---
+################################################################################
+# Open OnDemand Bootstrap Playbook
+################################################################################
+# Purpose: Deploy and configure Open OnDemand web portal for HPC cluster access
+# Target: ood-login overlay nodes
+# Execution: Run via Warewulf overlay system during node provisioning
+################################################################################
+
 - name: Bootstrap Open OnDemand (overlay-based)
   hosts: localhost
   become: true
 
   vars:
+    # Temporary workspace for downloads and git operations
     workdir: /tmp/ondemand-bootstrap
-    repo_url: https://github.com/ualberta-rcg/vulcan-ood.git
-    repo_dir: /tmp/ondemand-bootstrap/vulcan-ood
 
-    ssl_dir: /etc/ssl/ood
-    ssl_cn: eureka.paice-ua.com
+    # Source repository containing custom OOD configurations
+    repo_url: https://github.com/ualberta-rcg/eureka-ood.git
+    repo_dir: /tmp/ondemand-bootstrap/ood
 
-    # OOD cleanup
+    # Staging directory paths for configuration overrides
+    src_path: "/etc/ood/staging/"
+    dest_path: "/etc/ood/"
+
+    # Default OOD applications to remove (conflicts with custom apps)
     ood_sys_app_dir: /var/www/ood/apps/sys
     ood_sys_dirs_to_remove:
-      - bc_desktop
+      - bc_desktop  # Remove default desktop app (using custom version)
 
   tasks:
 
-    # --------------------------------------------------
-    # 0. Working directory FIRST (critical)
-    # --------------------------------------------------
+    ############################################################################
+    # PHASE 0: Environment Preparation
+    ############################################################################
+    # Create working directory structure before any operations
+
     - name: Ensure temporary working directory exists
       file:
         path: "{{ workdir }}"
         state: directory
         mode: '0755'
 
-    # --------------------------------------------------
-    # 1. Base packages
-    # --------------------------------------------------
+    ############################################################################
+    # PHASE 1: System Dependencies
+    ############################################################################
+    # Install required packages for OOD, Apache, authentication, and VirtualGL
+
     - name: Install base packages
       apt:
         name:
+          # Network utilities
           - curl
           - wget
           - git
           - ca-certificates
           - apt-transport-https
+
+          # Web server and authentication
           - apache2
-          - libapache2-mod-auth-openidc
+          - libapache2-mod-auth-openidc      # OpenID Connect authentication
+          - libapache2-mod-authnz-pam        # PAM authentication support
+
+          # Python dependencies for OOD features
           - python3-requests
           - python3-requests-oauthlib
+
+          # VirtualGL for remote desktop acceleration
           - virtualgl
         state: present
         update_cache: true
 
-    # --------------------------------------------------
-    # 2. Install Open OnDemand
-    # --------------------------------------------------
+    ############################################################################
+    # PHASE 2: Open OnDemand Installation
+    ############################################################################
+    # Install OOD from official Ohio Supercomputer Center repository
+
     - name: Download OOD repo package
       get_url:
         url: https://apt.osc.edu/ondemand/4.0/ondemand-release-web_4.0.0-noble_all.deb
         dest: "{{ workdir }}/ondemand-release-web.deb"
         mode: '0644'
 
-    - name: Install OOD repo
+    - name: Install OOD repository configuration
       apt:
         deb: "{{ workdir }}/ondemand-release-web.deb"
 
-    - name: Install ondemand
+    - name: Install Open OnDemand package
       apt:
         name: ondemand
         state: present
         update_cache: true
 
-    # --------------------------------------------------
-    # 3. Clone overlay repo
-    # --------------------------------------------------
-    - name: Clone vulcan-ood repository
+    ############################################################################
+    # PHASE 3: Custom Configuration Repository
+    ############################################################################
+    # Clone site-specific OOD configurations and applications
+
+    - name: Clone ood repository
       git:
         repo: "{{ repo_url }}"
         dest: "{{ repo_dir }}"
         update: yes
 
-    # --------------------------------------------------
-    # 4. Fix executable permissions BEFORE copy
-    # --------------------------------------------------
+    ############################################################################
+    # PHASE 4: Pre-deployment Permissions
+    ############################################################################
+    # Fix executable permissions on scripts BEFORE copying to production paths
+    # This prevents permission-related runtime errors
+
     - name: Make shell scripts executable
       command: >
         find {{ repo_dir }} -name "*.sh" -type f -exec chmod +x {} \;
 
-    - name: Make sh.erb scripts executable
+    - name: Make ERB template scripts executable
       command: >
         find {{ repo_dir }} -name "*.sh.erb" -type f -exec chmod +x {} \;
 
-    # --------------------------------------------------
-    # 5. Remove conflicting OOD defaults
-    # --------------------------------------------------
+    ############################################################################
+    # PHASE 5: Remove Conflicting Defaults
+    ############################################################################
+    # Clean up default OOD applications that conflict with custom implementations
+
     - name: Remove known conflicting OOD sys apps
       file:
         path: "{{ ood_sys_app_dir }}/{{ item }}"
         state: absent
       loop: "{{ ood_sys_dirs_to_remove }}"
 
-    # --------------------------------------------------
-    # 6. Deploy overlay files (SCOPED)
-    # --------------------------------------------------
-    - name: Deploy OOD config
+    ############################################################################
+    # PHASE 6: Deploy Custom Configurations
+    ############################################################################
+    # Copy custom OOD configurations, web apps, and operational scripts
+    # Organized by functional directory structure
+
+    - name: Deploy OOD configuration files
       copy:
         src: "{{ repo_dir }}/etc/ood/"
         dest: /etc/ood/
         remote_src: true
 
-    - name: Deploy OOD web apps
+    - name: Deploy OOD web applications
       copy:
         src: "{{ repo_dir }}/var/www/ood/"
         dest: /var/www/ood/
@@ -115,92 +151,170 @@
         dest: /opt/ood/
         remote_src: true
 
-    - name: Deploy cron scripts
+    - name: Deploy custom MOTD
+      copy:
+        src: "{{ repo_dir }}/etc/motd"
+        dest: /etc/motd
+        remote_src: true
+        mode: '0644'
+
+    - name: Deploy cron job definitions
       copy:
         src: "{{ repo_dir }}/opt/ood/cron/"
         dest: /etc/cron.d/
         remote_src: true
         mode: '0644'
 
-    # --------------------------------------------------
-    # 7. Run cron generators ONCE
-    # --------------------------------------------------
-    - name: Generate cluster config
+    # Synchronize staging configs to production (overwrites existing files)
+    - name: Apply staging configuration overrides
+      ansible.posix.synchronize:
+        src: "{{ src_path }}"
+        dest: "{{ dest_path }}"
+        recursive: yes
+        archive: yes
+        checksum: yes  # Force overwrite even if file sizes match
+
+    ############################################################################
+    # PHASE 7: Dynamic Configuration Generation
+    ############################################################################
+    # Run configuration generators to create cluster-specific configs
+    # Must run BEFORE applying bug fixes that depend on generated files
+
+    - name: Generate cluster configuration from Slurm
       command: /opt/ood/cron/gen_cluster_rb.sh
-      args:
-        creates: /etc/ood/config/clusters.d
 
-    - name: Generate GPU config
+    - name: Generate GPU resource configuration
       command: /opt/ood/cron/gen_gpu_rb.sh
-      args:
-        creates: /etc/ood/config/gpus.rb
 
-    - name: Generate app config
+    - name: Generate application-specific configurations
       command: /opt/ood/cron/gen_app_rb.sh
-      args:
-        creates: /etc/ood/config/apps
 
-    # --------------------------------------------------
-    # 8. Deploy XDG Runtime (create-ice)
-    # --------------------------------------------------
-    - name: Install create-ice script
+
+    ############################################################################
+    # PHASE 8: XDG Runtime Support
+    ############################################################################
+    # Deploy helper script for XDG_RUNTIME_DIR creation (required for desktop sessions)
+    # Includes sudoers configuration for privileged operations
+
+    - name: Install XDG runtime directory creation script
       copy:
         src: "{{ repo_dir }}/usr/local/bin/create-ice.sh"
         dest: /usr/local/bin/create-ice.sh
         remote_src: true
         mode: '0755'
 
-    - name: Install sudoers rule for create-ice
+    - name: Install sudoers rule for XDG runtime creation
       copy:
         src: "{{ repo_dir }}/etc/sudoers.d/create-ice-xdg"
         dest: /etc/sudoers.d/create-ice-xdg
         remote_src: true
-        mode: '0440'
+        mode: '0440'  # Strict permissions required for sudoers files
 
-    # --------------------------------------------------
-    # 9. Apply common OOD fixes
-    # --------------------------------------------------
-    - name: Fix xterm color issue
+    ############################################################################
+    # PHASE 9: Known Issue Patches
+    ############################################################################
+    # Apply fixes for common OOD bugs and misconfigurations
+
+    - name: Fix xterm color issue (enable 256 color support)
       replace:
         path: /var/www/ood/apps/sys/shell/app.js
         regexp: xterm-16color
         replace: xterm-256color
 
-    - name: Fix noVNC compression minimum
+    - name: Fix noVNC compression minimum (prevent compression=0 errors)
       replace:
         path: /var/www/ood/apps/sys/dashboard/app/views/batch_connect/sessions/connections/_novnc.html.erb
         regexp: 'min:\s*0'
         replace: 'min: 1'
 
-    # --------------------------------------------------
-    # 10. SSL (self-signed)
-    # --------------------------------------------------
+    - name: Fix GPU info shard column parsing bug
+      replace:
+        path: /etc/ood/config/apps/dashboard/initializers/paice_gpu_info.rb
+        regexp: '([0-9]+),shard,'
+        replace: '\1,'
+
+    ############################################################################
+    # PHASE 10: SSL/TLS Configuration
+    ############################################################################
+    # Prepare SSL directory (certificate installation handled separately)
+
     - name: Ensure SSL directory exists
       file:
-        path: "{{ ssl_dir }}"
+        path: /etc/ssl/ood
         state: directory
         mode: '0755'
 
-    - name: Generate self-signed SSL cert
-      command: >
-        openssl req -x509 -nodes -days 365
-        -newkey rsa:4096
-        -keyout {{ ssl_dir }}/privkey.pem
-        -out {{ ssl_dir }}/fullchain.pem
-        -subj "/C=CA/ST=AB/O=University of Alberta/CN={{ ssl_cn }}"
-      args:
-        creates: "{{ ssl_dir }}/privkey.pem"
+    ############################################################################
+    # PHASE 11: Critical Permissions and Ownership
+    ############################################################################
+    # Fix ownership and permissions to ensure proper OOD functionality
+    # Order matters: fix service accounts first, then user access
 
-    # --------------------------------------------------
-    # 11. Enable Apache + restart
-    # --------------------------------------------------
-    - name: Enable Apache modules
+    # Fix ondemand-nginx service account ownership
+    - name: Ensure ondemand-nginx owns runtime directories
+      file:
+        path: "{{ item }}"
+        owner: ondemand-nginx
+        group: ondemand-nginx
+        recurse: true
+        state: directory
+      loop:
+        - /var/lib/ondemand-nginx
+
+    # Enable user access to OOD configuration files
+    - name: Set proper permissions on /etc/ood directory
+      file:
+        path: /etc/ood
+        mode: '0755'
+        state: directory
+
+    - name: Set proper permissions on dashboard config directory
+      file:
+        path: /etc/ood/config/apps/dashboard
+        mode: '0755'
+        state: directory
+
+    # Add Apache service account to OOD group for proper integration
+    - name: Add www-data user to ondemand-nginx group
+      user:
+        name: www-data
+        groups: ondemand-nginx
+        append: yes
+
+    # Secure system applications (prevent user modification)
+    - name: Ensure OOD system apps are root-owned
+      file:
+        path: /var/www/ood/apps/sys
+        owner: root
+        group: root
+        recurse: true
+        mode: '0755'
+
+    ############################################################################
+    # PHASE 12: OOD Regeneration and Cleanup
+    ############################################################################
+    # Clean stale nginx configurations and regenerate portal config
+
+    - name: Clean OOD nginx stage (remove stale per-user instances)
+      command: >
+        /opt/ood/nginx_stage/sbin/nginx_stage nginx_clean --force
+
+    - name: Regenerate Open OnDemand portal configuration
+      command: >
+        /opt/ood/ood-portal-generator/sbin/update_ood_portal -f
+
+    ############################################################################
+    # PHASE 13: Apache Configuration and Service Start
+    ############################################################################
+    # Enable required Apache modules and start web service
+
+    - name: Enable required Apache modules
       command: a2enmod ssl headers proxy proxy_http rewrite
 
-    - name: Enable OOD site
+    - name: Enable OOD site configuration
       command: a2ensite ood-portal.conf
 
-    - name: Restart Apache
+    - name: Restart Apache to apply all changes
       systemd:
         name: apache2
         state: restarted
