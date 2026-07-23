@@ -47,6 +47,9 @@ for app in \
   tracker-extract \
   tracker-miner-apps \
   tracker-miner-user-guides \
+  tracker-miner-fs-3 \
+  tracker-extract-3 \
+  tracker-miner-rss-3 \
   xfce4-power-manager \
   blueman \
   xfce-polkit; do

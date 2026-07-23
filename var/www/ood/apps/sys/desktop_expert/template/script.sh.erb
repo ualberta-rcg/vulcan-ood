@@ -18,8 +18,8 @@ echo "[script.sh.erb] SHELL set to: $SHELL"
 # Add xhost so that Firefox works
 xhost +SI:localuser:$USER
 
-# Websockify port information
-echo "[script.sh.erb] websockify is listening on port: ${WEBSOCKIFY_PORT}"
+# Websockify port information (var may be unset at this point in some OOD versions)
+echo "[script.sh.erb] websockify is listening on port: ${WEBSOCKIFY_PORT:-unknown (see websockify.log)}"
 
 # Display the desktop environment being launched
 echo "[script.sh.erb] Launching desktop session: '<%= context.desktop %>'..."

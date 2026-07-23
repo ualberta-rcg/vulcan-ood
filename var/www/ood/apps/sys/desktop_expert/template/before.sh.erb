@@ -8,6 +8,14 @@ USER_NAME="${USER:-$(whoami)}"
 USER_UID="$(id -u "$USER_NAME" 2>/dev/null || getent passwd "$USER_NAME" | cut -d: -f3)"
 echo "[before.sh.erb] User: $USER_NAME (UID: $USER_UID)"
 
+# Warm NSS/SSSD before launching the session — uid<->name lookups can transiently
+# fail on a cold node right at job start (seen as getpwuid_r errors in session logs)
+for _try in 1 2 3 4 5; do
+  getent passwd "$USER_NAME" >/dev/null 2>&1 && break
+  echo "[before.sh.erb] NSS lookup for $USER_NAME failed (try $_try), retrying..."
+  sleep 2
+done
+
 # Setup /run/user
 sudo /usr/local/bin/create-ice.sh "$USER_UID"
 
