@@ -253,4 +253,4 @@ en-CA:
       support_ticket_error: support_ticket is misconfigured. "email" or "rt_api" sections are required in the configuration YAML.
     welcome_html: |
       %{logo_img_tag}
-      <p class="lead">OnDemand provides an integrated, single access point for all of your HPC resources.</p>
+      <h2 class="mt-3">Welcome to the Vulcan Cluster</h2>

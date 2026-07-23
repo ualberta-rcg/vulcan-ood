@@ -131,3 +131,11 @@ footer.footer {
 .dashboard-banner-logo-wrap {
   width: 100%;
 }
+
+/* AMII dashboard logo: stretch to the full content-column width.
+   The logo is emitted by the stock welcome partial with height=150; force
+   width:100% so it fills the row (verified to render correctly). */
+img[src*="amii-logo"] {
+  width: 100% !important;
+  height: auto !important;
+}
