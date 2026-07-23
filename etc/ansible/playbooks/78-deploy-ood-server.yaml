@@ -192,26 +192,6 @@
 
 
     ############################################################################
-    # PHASE 8: XDG Runtime Support
-    ############################################################################
-    # Deploy helper script for XDG_RUNTIME_DIR creation (required for desktop sessions)
-    # Includes sudoers configuration for privileged operations
-
-    - name: Install XDG runtime directory creation script
-      copy:
-        src: "{{ repo_dir }}/usr/local/bin/create-ice.sh"
-        dest: /usr/local/bin/create-ice.sh
-        remote_src: true
-        mode: '0755'
-
-    - name: Install sudoers rule for XDG runtime creation
-      copy:
-        src: "{{ repo_dir }}/etc/sudoers.d/create-ice-xdg"
-        dest: /etc/sudoers.d/create-ice-xdg
-        remote_src: true
-        mode: '0440'  # Strict permissions required for sudoers files
-
-    ############################################################################
     # PHASE 9: Known Issue Patches
     ############################################################################
     # Apply fixes for common OOD bugs and misconfigurations
