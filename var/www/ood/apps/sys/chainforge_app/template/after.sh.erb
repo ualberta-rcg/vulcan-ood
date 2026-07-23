@@ -1,0 +1,13 @@
+#!/bin/bash
+
+echo "[after.sh.erb] Waiting for ChainForge to start on ${host}:${port}..."
+
+if wait_until_port_used "${host}:${port}" 300; then
+  echo "[after.sh.erb] Discovered ChainForge listening on port ${port}."
+else
+  echo "[after.sh.erb] Timed out waiting for ChainForge to open port ${port}!"
+  clean_up 1
+fi
+sleep 2
+
+echo "[after.sh.erb] ChainForge is ready."

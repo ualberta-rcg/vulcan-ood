@@ -1,0 +1,25 @@
+#!/bin/bash
+
+echo "[before.sh.erb] Starting ChainForge setup..."
+
+# Export the module function so script.sh.erb can use it
+if [[ $(type -t module) == "function" ]]; then
+  echo "[before.sh.erb] 'module' function is available."
+  export -f module
+else
+  echo "[before.sh.erb] WARNING: 'module' function not available."
+fi
+
+# Allocate a free port for the ChainForge server on this compute node
+export port=$(find_port ${host})
+if [[ -z "$port" ]]; then
+  echo "[before.sh.erb] ERROR: Failed to allocate a port."
+  exit 1
+fi
+echo "[before.sh.erb] Selected available port: $port"
+
+# Needed for Alliance clusters
+export CC_CLUSTER=vulcan
+export JOB_DIR="$PWD"
+
+echo "[before.sh.erb] Setup complete."

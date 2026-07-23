@@ -1,0 +1,82 @@
+#!/bin/bash
+
+echo "[script.sh.erb] Starting Voyant Server"
+
+# --- Voyant requires Java 11 specifically (may not work with other versions) ---
+module --force purge
+module load StdEnv/2023 java/11.0.22
+
+export SCRATCH="/home/${USER}/venv"
+
+VOYANT_VERSION="2.6.21"
+VOYANT_ZIP_URL="https://github.com/voyanttools/VoyantServer/releases/download/${VOYANT_VERSION}/VoyantServer.zip"
+
+# --- Locate or install the VoyantServer distribution ---
+# Preferred: a shared pre-staged copy -- set VOYANT_HOME to its directory (e.g. on
+# /project) so every user reuses it instead of downloading ~490 MB each. Otherwise
+# each user gets their own copy under $SCRATCH (shared across compute nodes).
+VOYANT_HOME="${VOYANT_HOME:-}"
+
+# Resolve an existing jar: explicit VOYANT_HOME, else any copy under $SCRATCH/voyant
+if [ -z "$VOYANT_HOME" ] || [ ! -f "${VOYANT_HOME}/VoyantServer.jar" ]; then
+  EXISTING="$(find "${SCRATCH}/voyant" -name VoyantServer.jar -print -quit 2>/dev/null)"
+  if [ -n "$EXISTING" ]; then
+    VOYANT_HOME="$(dirname "$EXISTING")"
+  fi
+fi
+
+# Download on first launch if still not found (runs on the compute node)
+if [ -z "$VOYANT_HOME" ] || [ ! -f "${VOYANT_HOME}/VoyantServer.jar" ]; then
+  echo "[script.sh.erb] First launch: downloading VoyantServer ${VOYANT_VERSION} (~490 MB) to ${SCRATCH}/voyant ..."
+  mkdir -p "${SCRATCH}/voyant"
+  cd "${SCRATCH}/voyant"
+  curl -fL -o "VoyantServer.zip" "${VOYANT_ZIP_URL}" || { echo "[script.sh.erb] ERROR: download failed (compute-node egress?). Pre-stage on /project and set VOYANT_HOME."; exit 1; }
+  unzip -q -o "VoyantServer.zip"
+  EXISTING="$(find "${SCRATCH}/voyant" -name VoyantServer.jar -print -quit)"
+  if [ -z "$EXISTING" ]; then echo "[script.sh.erb] ERROR: VoyantServer.jar not found after unzip."; exit 1; fi
+  VOYANT_HOME="$(dirname "$EXISTING")"
+  cd "${HOME}"
+  echo "[script.sh.erb] VoyantServer installed at ${VOYANT_HOME}"
+else
+  echo "[script.sh.erb] Reusing existing VoyantServer at ${VOYANT_HOME}"
+fi
+
+cd "${VOYANT_HOME}"
+
+# Persistent corpora/data directory on $SCRATCH (survives across sessions)
+mkdir -p "${SCRATCH}/voyant/data"
+
+# --- Reverse-proxy fix: Voyant's Voyant.getBaseUrlString(request) builds ABSOLUTE urls of
+# --- the form  //host:port/node/<host>/<port>/  from the request's Host header. Under OOD's
+# --- /node/ proxy the backend sees  Host=<compute-node>:<port>, so every iframe/panel/corpus
+# --- URL it writes into the page points at the UNREACHABLE compute node -- a different origin
+# --- from the OOD vhost -- which trips the browser's same-origin policy ("cross-origin frame")
+# --- and breaks uploads (the corpus UI can't reach its own panels). Jetty sends no
+# --- X-Frame-Options/CSP, so framing isn't the issue; these absolute URLs are.
+# --- Fix: patch every */index.jsp entry point to emit a PATH-ONLY base (the context path) so
+# --- the browser resolves iframe/AJAX URLs against the OOD origin (same origin). Idempotent.
+APPDIR="${VOYANT_HOME}/_app"
+if [ -d "$APPDIR" ] && grep -rq 'getBaseUrlString' "$APPDIR" 2>/dev/null; then
+  find "$APPDIR" -name index.jsp -exec sed -i 's|org\.voyanttools\.voyant\.Voyant\.getBaseUrlString(request)|request.getContextPath()+"/"|g' {} +
+  echo "[script.sh.erb] Patched Voyant */index.jsp for reverse-proxy (path-only baseUrl)."
+fi
+if [ -d "$APPDIR" ] && grep -rq 'getBaseUrlString' "$APPDIR" 2>/dev/null; then
+  echo "[script.sh.erb] WARNING: baseUrl patch did not apply (VOYANT_HOME read-only?); uploads will fail under the proxy. Pre-patch the shared VoyantServer or use a writable VOYANT_HOME." >&2
+fi
+
+# JVM heap in MB (raise this for very large text collections). The Slurm node must
+# have at least this much free RAM plus overhead (see the "Memory" form field).
+VOYANT_MEM="${VOYANT_MEM:-4096}"
+
+echo "[script.sh.erb] Launching Voyant headless on ${host}:${port} (context_path=/node/${host}/${port}/, heap=${VOYANT_MEM}MB) ..."
+
+# headless=true    -> no GUI controller (works on a headless compute node)
+# context_path     -> mount the app under /node/<host>/<port>/ so OOD's /node/ proxy serves it cleanly
+# host=0.0.0.0     -> bind all interfaces so the login-node proxy can reach this compute node
+exec java \
+  -Dorg.voyanttools.server.host=0.0.0.0 \
+  -Dorg.voyanttools.server.port="${port}" \
+  -Dorg.voyanttools.server.context_path="/node/${host}/${port}/" \
+  -Dorg.voyanttools.server.memory="${VOYANT_MEM}" \
+  -Dorg.voyanttools.server.data_directory="${SCRATCH}/voyant/data" \
+  -jar VoyantServer.jar headless=true

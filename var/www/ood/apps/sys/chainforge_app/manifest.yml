@@ -1,0 +1,21 @@
+---
+name: ChainForge
+category: Interactive Apps
+subcategory: Servers
+role: batch_connect
+description: |
+  Launch [ChainForge] on the [Vulcan] high-performance computing (HPC) cluster, powered by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].
+
+  ChainForge is a visual data-flow environment for prompt engineering: query multiple LLMs at once,
+  compare responses across prompt/model permutations, and score them with evaluation metrics.
+  Bring your own API keys (OpenAI, Anthropic, Google, etc.) via the in-app Settings, or query
+  locally-hosted models via Ollama. Jobs run as interactive CPU sessions scheduled with [SLURM].
+
+  The ChainForge environment is installed on demand into your `$SCRATCH` on first launch and reused thereafter.
+
+  [ChainForge]: https://chainforge.ai/
+  [AMII]: https://www.amii.ca/
+  [University of Alberta]: https://www.ualberta.ca/
+  [Digital Research Alliance of Canada]: https://alliancecan.ca/en
+  [SLURM]: https://slurm.schedmd.com/documentation.html
+  [Vulcan]: https://docs.alliancecan.ca/wiki/Vulcan

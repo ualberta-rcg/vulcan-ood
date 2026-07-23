@@ -1,0 +1,19 @@
+---
+name: Voyant
+category: Interactive Apps
+subcategory: Servers
+role: batch_connect
+description: |
+  Launch [Voyant Tools] on the [Vulcan] high-performance computing (HPC) cluster, powered by [AMII], the [University of Alberta], and supported by the [Digital Research Alliance of Canada].
+
+  Voyant is a web-based text-reading and analysis environment: upload a corpus and explore it with
+  word clouds, concordances, trends, collocates, scatter plots, and more. Running a local instance
+  keeps your texts private (no caching on a public server) and lets you analyse large collections
+  without timeouts. Jobs run as interactive sessions scheduled with [SLURM].
+
+  [Voyant Tools]: https://voyant-tools.org/
+  [AMII]: https://www.amii.ca/
+  [University of Alberta]: https://www.ualberta.ca/
+  [Digital Research Alliance of Canada]: https://alliancecan.ca/en
+  [SLURM]: https://slurm.schedmd.com/documentation.html
+  [Vulcan]: https://docs.alliancecan.ca/wiki/Vulcan

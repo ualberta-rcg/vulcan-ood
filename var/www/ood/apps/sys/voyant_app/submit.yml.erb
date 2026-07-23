@@ -1,0 +1,28 @@
+<%-
+  # Resolve the user's email from the OIDC claim captured by the PUN pre-hook
+  # (/opt/ood/scripts/ood_pun_oidc_email.sh writes ~/ondemand/oidc_email.txt).
+  emailaddr = File.read(File.expand_path('~/ondemand/oidc_email.txt')).strip rescue ''
+-%>
+
+batch_connect:
+  template: "basic"
+
+script:
+  cluster: "<%= cluster %>"
+  <% if defined?(bc_email_on_started) && bc_email_on_started == "1" && emailaddr != "" %>
+  email: <%= emailaddr.inspect %>
+  <% end %>
+  native:
+    - "-N"
+    - "1"
+    - "-n"
+    - "<%= num_cores %>"
+    - "--time=<%= bc_num_hours %>:00:00"
+    <%-# Always request a memory floor: Voyant runs a 4 GB JVM heap (plus the cluster's
+        -# global JAVA_TOOL_OPTIONS=-Xmx2g), and the default ~500 MB OOMs it. 8 GB confirmed
+        -# working. Use the user's choice if they raised it, else 8 GB. -%>
+    <%- memval = (defined?(memtask_checkbox) && memtask_checkbox == "1" && memtask.present? && memtask != "0") ? "#{memtask}G" : "8G" -%>
+    - "--mem=<%= memval %>"
+    # Use the same interactive partition as the other Vulcan apps.
+    # No --gres is requested: Voyant is CPU-only text analysis and needs no GPU.
+    - "--partition=gpubase_interac"

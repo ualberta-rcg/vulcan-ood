@@ -1,0 +1,14 @@
+#!/bin/bash
+
+echo "[after.sh.erb] Waiting for Voyant to start on ${host}:${port}..."
+
+# Voyant + Jetty takes a little longer to come up than a Flask app
+if wait_until_port_used "${host}:${port}" 300; then
+  echo "[after.sh.erb] Discovered Voyant listening on port ${port}."
+else
+  echo "[after.sh.erb] Timed out waiting for Voyant to open port ${port}!"
+  clean_up 1
+fi
+sleep 2
+
+echo "[after.sh.erb] Voyant is ready."

@@ -1,0 +1,250 @@
+#!/bin/bash
+
+echo "[script.sh.erb] Starting ChainForge"
+
+# Capture the OOD session directory (where output.log lives) BEFORE we cd away, so we can
+# also drop a dedicated chainforge.log there alongside it.
+CF_LOG_DIR="${PWD:-${HOME}}"
+
+# Flush every print / werkzeug log line immediately. By default Python buffers stdout when
+# it is not a TTY, so ChainForge's activity (and the Vulcan provider's per-request logs)
+# would sit in a buffer and never appear in output.log in real time -- which is why the app
+# looked silent. This single line is what turns the logging "up".
+export PYTHONUNBUFFERED=1
+
+cd "${HOME}"
+
+# IMPORTANT: use the OS Python (/usr/bin/python3 = 3.12), NOT the CVMFS python module.
+# The CVMFS Gentoo Python does not emit manylinux compatibility tags, so pip cannot use
+# PyPI's prebuilt wheels for Pillow / pypdfium2 / cryptography / onnxruntime and instead
+# tries to build them from source -- which runs out of memory and fails. The OS Python
+# accepts those wheels directly (no source build, no OOM).
+module --force purge
+export PATH=/usr/bin:/bin:/usr/local/bin:$PATH
+PY=/usr/bin/python3
+# $SCRATCH is normally set by CCconfig; keep a fallback in case the purge cleared it.
+export SCRATCH="/home/${USER}/venv"
+
+VENV="${SCRATCH}/chainforge/sysvenv"
+
+# On-the-fly install (runs ON THE COMPUTE NODE, never on the login node).
+# $SCRATCH is shared Lustre, so a venv created on first launch is reused on every
+# compute node afterwards.
+if [ ! -x "$VENV/bin/chainforge" ]; then
+  echo "[script.sh.erb] First launch: creating venv ($($PY --version 2>&1)) and installing chainforge ..."
+  "$PY" -m venv "$VENV"
+  source "$VENV/bin/activate"
+  # Pull from PyPI (the Alliance wheelhouse is Gentoo/cp311 and irrelevant to cp312).
+  unset PIP_CONFIG_FILE
+  pip install --upgrade pip
+  pip install --index-url https://pypi.org/simple/ chainforge
+  echo "[script.sh.erb] Install complete."
+else
+  echo "[script.sh.erb] Reusing existing chainforge venv at $VENV."
+  source "$VENV/bin/activate"
+fi
+
+# --- Patch the prebuilt React app so it works behind OOD's /rnode/<host>/<port>/ proxy.
+# ChainForge is Flask + Create-React-App. Two things break under /rnode/:
+#
+#  (1) ABSOLUTE ASSET PATHS. The CRA build bakes "/static/..." tags, which 404 under the
+#      sub-path proxy. CRA's auto-publicPath runtime re-infers the base from the <script>
+#      URL, so making the main tags relative ("./static/...") is enough. Idempotent.
+#
+#  (2) HARDCODED API BASE "/". The bundle computes its API base as  _f = "/"
+#      whenever window.__CF_HOSTNAME / __CF_PORT are defined (which they always are here).
+#      Under /rnode/<host>/<port>/ the browser therefore sends every XHR/fetch to the
+#      document ROOT -> the OOD *dashboard* answers with HTML ("<!DOCTYPE" / "405")
+#      instead of the Flask API. That single bug is why, through the UI, you could not
+#      save flows, upload files, or see the Vulcan provider -- even though the backend
+#      itself is healthy (verified: direct PUT /api/flows writes the file; the provider
+#      loads with all 24 chat models).
+#      Fix: inject a tiny script that rewrites absolute-path XHR + fetch URLs to the
+#      proxy mount path. It MUST go before </head>, NOT right after <head>: flask_app
+#      re-injects the __CF_HOSTNAME script at byte 60 on every request and would split
+#      anything placed inside that first-60-byte window. Idempotent (marker-gated).
+CFIDX="$(find "$VENV/lib" -path '*chainforge/react-server/build/index.html' -print -quit 2>/dev/null)"
+if [ -n "$CFIDX" ]; then
+  if grep -q '="/static/' "$CFIDX"; then
+    sed -i 's#="/static/#="./static/#g; s#="/favicon.ico"#="./favicon.ico"#g; s#="/logo192.png"#="./logo192.png"#g; s#="/manifest.json"#="./manifest.json"#g' "$CFIDX"
+    echo "[script.sh.erb] Patched frontend for reverse-proxy (relative assets)."
+  fi
+  if ! grep -q '__CF_PROXY_BASE_REWRITER' "$CFIDX"; then
+    python3 - "$CFIDX" <<'PYEOF'
+import sys
+idx = sys.argv[1]
+BLOCK = ('<script>window.__CF_PROXY_BASE_REWRITER=1;(function(){'
+         'var p=window.location.pathname||"/";'
+         'var b=p.charAt(p.length-1)==="/"?p:p+"/";'
+         'function rw(u){if(typeof u==="string"&&u.charAt(0)==="/"&&u.charAt(1)!=="/")return b.replace(/\\/$/,"")+u;return u;}'
+         'var o=XMLHttpRequest.prototype.open;'
+         'XMLHttpRequest.prototype.open=function(method,url){var a=[method,rw(url)];for(var k=2;k<arguments.length;k++)a.push(arguments[k]);return o.apply(this,a);};'
+         'if(window.fetch){var f=window.fetch;window.fetch=function(i,n){if(typeof i==="string")i=rw(i);else if(i&&typeof i.url==="string")i=new Request(rw(i.url),i);return f.call(this,i,n);};}'
+         '})();</script>')
+h = open(idx, encoding="utf-8").read()
+if "__CF_PROXY_BASE_REWRITER" not in h:
+    if "</head>" in h:
+        h = h.replace("</head>", BLOCK + "</head>", 1)
+    else:
+        h = BLOCK + h
+    open(idx, "w", encoding="utf-8").write(h)
+    print("[script.sh.erb] Injected API base rewriter for reverse proxy.")
+PYEOF
+  fi
+fi
+
+# --- Workspace persistence: ChainForge stores flows/settings under $XDG_DATA_HOME/chainforge
+# --- (default ~/.local/share/chainforge, in the user's $HOME). Set CF_DATA_HOME to relocate.
+if [ -n "${CF_DATA_HOME:-}" ]; then
+  export XDG_DATA_HOME="${CF_DATA_HOME}"
+fi
+
+# --- Seed the "Vulcan" custom provider. CRITICAL: ChainForge's loadCachedCustomProviders
+# --- execs every script in provider_scripts/ on startup AND DELETES the file if exec raises.
+# --- So the provider must do NO network/fragile work at load time. We pre-fetch the chat
+# --- model list to a LOCAL file here; the provider just reads it (instant, never fails).
+FLOWS_DIR="${XDG_DATA_HOME:-${HOME}/.local/share}/chainforge"
+mkdir -p "${FLOWS_DIR}/provider_scripts"
+# The Vulcan inference API is behind a Tyk gateway and REQUIRES an Authorization token.
+# Precedence: a per-user ~/.env_tyk OVERRIDES the site-wide shared key. The shared key is
+# injected by submit.yml.erb as CF_VULCAN_API_KEY from /opt/ood/vulcan_tyk.key, so all users
+# share one key until per-user keys are rolled out. We read the file directly (NOT ~/.bashrc).
+if [ -f "${HOME}/.env_tyk" ]; then
+  export CF_VULCAN_API_KEY="$(tr -d '[:space:]' < "${HOME}/.env_tyk")"
+fi
+if [ -z "${CF_VULCAN_API_KEY:-}" ]; then
+  echo "[script.sh.erb] WARNING: no Vulcan API token (no ~/.env_tyk and job_environment didn't provide the shared key); Vulcan prompts will get 401." >&2
+fi
+
+cat > "${FLOWS_DIR}/provider_scripts/vulcan_provider.py" <<'PYEOF'
+"""Vulcan inference API provider for ChainForge.
+
+Calls the Vulcan inference chat/completions endpoint (OpenAI-compatible) behind the
+Alliance Tyk gateway. The gateway REQUIRES an Authorization token; we read it from
+$CF_VULCAN_API_KEY (set by the OOD launch script from ~/.env_tyk) or ~/.env_tyk directly.
+
+We expose a SMALL curated set of chat models that are kept scaled-up on Vulcan, so
+prompts don't block on a multi-minute cold start. All activity is logged to stdout
+(captured in the OOD output.log / chainforge.log). No network at load time.
+"""
+import os
+import requests
+from chainforge.providers import provider
+
+BASE = os.environ.get(
+    "CF_VULCAN_BASE_URL",
+    "https://inference.kubeflow.vulcan.alliancecan.ca/serving/api/v1",
+)
+
+
+def _load_token():
+    """Tyk gateway key: prefer $CF_VULCAN_API_KEY, else read ~/.env_tyk."""
+    k = os.environ.get("CF_VULCAN_API_KEY", "").strip()
+    if k:
+        return k
+    try:
+        with open(os.path.join(os.path.expanduser("~"), ".env_tyk")) as f:
+            v = f.read().strip()
+        if v:
+            return v
+    except Exception:
+        pass
+    return ""
+
+
+API_KEY = _load_token()
+
+# Curated chat models kept scaled-up (replicas>=1) on Vulcan so prompts don't cold-start.
+# (command-r-7b is truly always-on; the rest scale-to-zero but are normally warm.)
+# All verified chat-capable + ready.
+_MODELS = [
+    "gpt-oss-120b",
+    "gpt-oss-20b",
+    "command-r-7b",
+    "gemma-4-26b-a4b",
+    "qwen35-122b",
+]
+
+
+_SETTINGS = {
+    "settings": {
+        "temperature": {"type": "number", "title": "temperature", "default": 0.7,
+                        "minimum": 0, "maximum": 2, "multipleOf": 0.01},
+        # Default 1024; reasoning models get a higher floor via _REASONING_FLOOR below.
+        "max_tokens": {"type": "integer", "title": "max_tokens", "default": 1024,
+                       "minimum": 1, "maximum": 2048},
+    },
+    "ui": {
+        "temperature": {"ui:widget": "range"},
+        "max_tokens": {"ui:widget": "range"},
+    },
+}
+
+
+def _call_vulcan(prompt, model, chat_history, temperature, max_tokens):
+    """Call the Vulcan inference chat/completions endpoint (OpenAI format) for one model."""
+    if not API_KEY:
+        raise Exception(
+            "Vulcan API token not found. Put your Tyk gateway key in ~/.env_tyk "
+            "(or export CF_VULCAN_API_KEY) -- the Vulcan endpoint requires authorization."
+        )
+    messages = list(chat_history) if chat_history else []
+    messages.append({"role": "user", "content": prompt})
+    headers = {"Content-Type": "application/json", "Authorization": "Bearer " + API_KEY}
+    print(f"[Vulcan {model}] -> temp={temperature} max_tokens={max_tokens} prompt={len(prompt)} chars", flush=True)
+    try:
+        resp = requests.post(
+            f"{BASE}/chat/completions",
+            headers=headers,
+            json={"model": model, "messages": messages,
+                  "temperature": temperature, "max_tokens": max_tokens},
+            timeout=300,
+        )
+        # Friendly handling of the common gateway failures (don't make users decode HTTP errors):
+        if resp.status_code == 401:
+            raise Exception("Vulcan API rejected the token (401). Check ~/.env_tyk / CF_VULCAN_API_KEY.")
+        if resp.status_code == 503:
+            try:
+                msg = resp.json().get("error", {}).get("message", resp.text[:200])
+            except Exception:
+                msg = resp.text[:200]
+            raise Exception(f"Vulcan model '{model}' is not ready (503): {msg}")
+        resp.raise_for_status()
+        _choice = resp.json()["choices"][0]
+        content = (_choice.get("message", {}) or {}).get("content") or ""
+        _fr = _choice.get("finish_reason")
+        _preview = (content or "").strip().replace("\n", " ")[:150]
+        print(f"[Vulcan {model}] <- OK finish={_fr} clen={len(content)} :: {_preview!r}", flush=True)
+        return content
+    except Exception as e:
+        print(f"[Vulcan {model}] ERROR: {e}", flush=True)
+        raise
+
+
+# Reasoning models (gpt-oss) emit thinking tokens counted against max_tokens, so they get the
+# high end of the budget; other models are concise. (Per-model floor applied below.)
+_REASONING_FLOOR = {"gpt-oss-120b": 4096, "gpt-oss-20b": 4096}
+
+
+@provider(name="Vulcan", emoji="\U0001F30B", models=_MODELS,
+          rate_limit=5, settings_schema=_SETTINGS)
+def VulcanCompletion(prompt, model, chat_history=None, temperature=0.7,
+                     max_tokens=2048, **kwargs):
+    """Call the Vulcan inference chat/completions endpoint (OpenAI format)."""
+    floor = _REASONING_FLOOR.get(model)
+    if floor and max_tokens < floor:
+        max_tokens = floor
+    return _call_vulcan(prompt, model, chat_history, temperature, max_tokens)
+PYEOF
+echo "[script.sh.erb] Seeded Vulcan provider -> ${FLOWS_DIR}/provider_scripts/vulcan_provider.py"
+
+# Launch bound to 0.0.0.0 so the OnDemand reverse proxy (on the login node) can reach this
+# compute node. OOD serves it under /rnode/<host>/<port>/. We tee all server output to a
+# dedicated chainforge.log in the session dir (alongside output.log); pipefail means that if
+# the server crashes, the script exits non-zero and the Slurm job ends -- like the other apps.
+# (OOD's output.log still captures everything regardless; chainforge.log is a convenience copy.
+# Guard the log dir so a non-writable $PWD can never block the launch -- fall back to $HOME.)
+[ -d "$CF_LOG_DIR" ] && [ -w "$CF_LOG_DIR" ] || CF_LOG_DIR="${HOME}"
+echo "[script.sh.erb] Launching chainforge on 0.0.0.0:${port} (log: ${CF_LOG_DIR}/chainforge.log) ..."
+set -o pipefail
+chainforge serve --host 0.0.0.0 --port "${port}" 2>&1 | tee "${CF_LOG_DIR}/chainforge.log"
