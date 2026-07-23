@@ -109,13 +109,12 @@ dashboard_layout:
           - motd
           - pinned_apps
     - columns:
-      - width: 4
+      - width: 6
         widgets:
-          - metrics/metrics_summary      # cluster nodes/CPUs/GPUs at a glance
           - metrics/fairshare            # your per-account fairshare
-      - width: 4
+          - system_status                # cluster node states
+      - width: 6
         widgets:
-          - metrics/jobs_summary         # your running/pending jobs
           - vulcan/quota                 # disk quota (home/scratch/project)
 
 # =============================================================================
