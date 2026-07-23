@@ -1,0 +1,20 @@
+<%- links = app.router.name == "files" ? Array(app.links.first) : app.links -%>
+
+<% links.each do |link| %>
+  <%- tile_data = link.tile -%>
+  <div class="col-6 col-md-3 app-launcher-container">
+    <div class="app-launcher app-launcher-hover" data-bs-toggle="<%= link.new_tab? ? '' : 'launcher-button' %>">
+    <%=
+      link_to(
+        link.url.to_s,
+        class: ['launcher-click', tile_data[:border_color]],
+        target: link.new_tab? ? "_blank" : nil,
+        data: link.data
+      ) do
+    %>
+        <%= render partial: "/widgets/pinned_apps/app_content", locals: { link: link } %>
+
+    <% end %>
+    </div>
+  </div>
+<% end %>

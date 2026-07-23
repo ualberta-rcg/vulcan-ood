@@ -107,12 +107,15 @@ dashboard_layout:
       - width: 12
         widgets:
           - motd
-          - pinned_apps
+          - system_status                # cluster node states (full width)
+    - columns:
+      - width: 12
+        widgets:
+          - pinned_apps                  # 2 per row (small) / 4 per row (large)
     - columns:
       - width: 6
         widgets:
           - metrics/fairshare            # your per-account fairshare
-          - system_status                # cluster node states
       - width: 6
         widgets:
           - vulcan/quota                 # disk quota (home/scratch/project)
