@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# script.sh.erb — main desktop launch hook (OOD batch_connect 'script').
+# before.sh.erb already ran: runtime dirs, env cleanup, and GPU/VirtualGL setup.
 
 echo "[script.sh.erb] Starting desktop environment setup for user: $USER"
 echo "[script.sh.erb] Working directory: $HOME"
@@ -11,23 +13,35 @@ cd "${HOME}" || {
 echo "[script.sh.erb] Purging and restoring modules..."
 module purge && module restore
 
-# Set the login shell
-export SHELL="$(getent passwd "$USER" | cut -d: -f7)"
+# Login shell (from env, set when the session started — no NSS lookup)
+export SHELL="${SHELL:-/bin/bash}"
 echo "[script.sh.erb] SHELL set to: $SHELL"
 
-# Add xhost so that Firefox works
-xhost +SI:localuser:$USER
+# Allow local user connections (Firefox etc.)
+xhost +SI:localuser:"$USER" 2>/dev/null || true
 
-# Websockify port information (var may be unset at this point in some OOD versions)
-echo "[script.sh.erb] websockify is listening on port: ${WEBSOCKIFY_PORT:-unknown (see websockify.log)}"
+echo "[script.sh.erb] websockify listening on port: ${WEBSOCKIFY_PORT:-unknown (see websockify.log)}"
 
-# Display the desktop environment being launched
+# Background GL probe: confirms (in output.log) whether GL is hardware-accelerated.
+# Runs once after the desktop is up. Non-fatal if glxinfo is absent.
+(
+  sleep 12
+  if command -v glxinfo >/dev/null 2>&1; then
+    renderer="$(glxinfo -B 2>/dev/null | awk -F': ' '/OpenGL renderer string/{print $2; exit}')"
+    echo "[script.sh.erb] GL probe → OpenGL renderer: ${renderer:-<none / glxinfo failed>}"
+    case "${renderer,,}" in
+      *llvmpipe*|*softpipe*|*swrast*) echo "[script.sh.erb] WARNING: software rendering in use (GPU not engaged)";;
+      *) echo "[script.sh.erb] OK: hardware GL renderer active";;
+    esac
+  else
+    echo "[script.sh.erb] GL probe skipped (glxinfo not installed)"
+  fi
+) &
+
+# Launch the chosen desktop
 echo "[script.sh.erb] Launching desktop session: '<%= context.desktop %>'..."
-
-# Construct path to desktop launcher script
 DESKTOP_SCRIPT="<%= session.staged_root.join("desktops", "#{context.desktop}.sh") %>"
 
-# Confirm script exists before sourcing
 if [[ -x "$DESKTOP_SCRIPT" ]]; then
   echo "[script.sh.erb] Executing desktop startup script: $DESKTOP_SCRIPT"
   source "$DESKTOP_SCRIPT"
@@ -36,4 +50,3 @@ else
   echo "[script.sh.erb] ERROR: Desktop script not found or not executable: $DESKTOP_SCRIPT"
   exit 1
 fi
-

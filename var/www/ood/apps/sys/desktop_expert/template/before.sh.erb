@@ -1,58 +1,50 @@
 #!/bin/bash
+# before.sh.erb — runs once before the desktop launch (OOD batch_connect 'before' hook).
+# Identity is established by OIDC at login: $USER is the LDAP username, authoritative.
 
-# Export module if available
+# Export module function into non-login shells spawned later
 [[ $(type -t module) == "function" ]] && export -f module
 
-# Get user and UID
+# --- Identity (no NSS lookups — OIDC user is already the running process) ---
 USER_NAME="${USER:-$(whoami)}"
-USER_UID="$(id -u "$USER_NAME" 2>/dev/null || getent passwd "$USER_NAME" | cut -d: -f3)"
+USER_UID="$(id -u)"
 echo "[before.sh.erb] User: $USER_NAME (UID: $USER_UID)"
 
-# Warm NSS/SSSD before launching the session — uid<->name lookups can transiently
-# fail on a cold node right at job start (seen as getpwuid_r errors in session logs)
-for _try in 1 2 3 4 5; do
-  getent passwd "$USER_NAME" >/dev/null 2>&1 && break
-  echo "[before.sh.erb] NSS lookup for $USER_NAME failed (try $_try), retrying..."
-  sleep 2
-done
-
-# Setup /run/user
+# --- Runtime dirs (needs root): /tmp/.ICE-unix + symlink /run/user/$UID -> xdg-runtime ---
 sudo /usr/local/bin/create-ice.sh "$USER_UID"
 
-
-# Set working dir for OOD (used by launch scripts like kde.sh)
+# Working dir for OOD launch scripts
 export OOD_DIR="${PWD}"
 
-# Clean problematic env vars
-unset DBUS_SESSION_BUS_ADDRESS
-unset DBUS_SESSION_BUS_PID
-unset XDG_SESSION_TYPE
-unset WAYLAND_DISPLAY
+# --- Strip login-shell leftovers that confuse desktop sessions ---
+unset DBUS_SESSION_BUS_ADDRESS DBUS_SESSION_BUS_PID
+unset XDG_SESSION_TYPE WAYLAND_DISPLAY
+unset $(env | grep -o '^BASH_FUNC_.*%%' | cut -d= -f1) 2>/dev/null || true
 
-# Set fallback XDG_RUNTIME_DIR
+# XDG_RUNTIME_DIR (create-ice symlinks /run/user/$UID to this)
 export XDG_RUNTIME_DIR="/tmp/xdg-runtime-$USER_UID"
 mkdir -p "$XDG_RUNTIME_DIR"
 chmod 700 "$XDG_RUNTIME_DIR"
-echo "[before.sh.erb] XDG_RUNTIME_DIR set to $XDG_RUNTIME_DIR"
+echo "[before.sh.erb] XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
 
-# Unset bash-exported functions (KDE dislikes these)
-unset $(env | grep -o '^BASH_FUNC_.*%%' | cut -d= -f1)
-
-# GPU detection
+# --- GPU / VirtualGL (one place, used by all desktops) ---
+# Use libvglfaker-nodl ONLY: libdlfaker hooks dlopen() and breaks app stacks.
+# EGL backend renders GL on the GPU, reads back into the TurboVNC framebuffer.
 VGL_LIB_PATH="/usr/lib"
+VGL_FAKER="${VGL_LIB_PATH}/libvglfaker-nodl.so"
 GPU_PRESENT=$(nvidia-smi --query-gpu=name --format=csv,noheader,nounits 2>/dev/null | grep -v "^$" | head -n 1)
 
-if [[ -n "$GPU_PRESENT" && "$GPU_PRESENT" != "No devices were found" && -f "${VGL_LIB_PATH}/libdlfaker.so" && -f "${VGL_LIB_PATH}/libvglfaker.so" ]]; then
+if [[ -n "$GPU_PRESENT" && "$GPU_PRESENT" != "No devices were found" && -f "$VGL_FAKER" ]]; then
   export OOD_GPU_AVAILABLE=true
   export VGL_DISPLAY=egl
-  export LD_PRELOAD="${VGL_LIB_PATH}/libdlfaker.so:${VGL_LIB_PATH}/libvglfaker.so"
+  export LD_PRELOAD="$VGL_FAKER${LD_PRELOAD:+:${LD_PRELOAD}}"
   echo "[before.sh.erb] GPU detected: $GPU_PRESENT"
-  echo "[before.sh.erb] VirtualGL enabled"
+  echo "[before.sh.erb] VirtualGL enabled (libvglfaker-nodl + EGL backend)"
 else
   export OOD_GPU_AVAILABLE=false
   export LIBGL_ALWAYS_SOFTWARE=1
   export QT_QUICK_BACKEND=software
-  echo "[before.sh.erb] No GPU or VirtualGL missing — using software rendering"
+  echo "[before.sh.erb] No GPU / VirtualGL — software rendering"
 fi
 
 echo "[before.sh.erb] Setup complete."

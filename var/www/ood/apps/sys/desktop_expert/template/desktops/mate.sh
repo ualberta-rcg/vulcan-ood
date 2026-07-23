@@ -20,6 +20,21 @@ if [[ -f "${HOME}/.config/monitors.xml" ]]; then
   mv "${HOME}/.config/monitors.xml" "${HOME}/.config/monitors.xml.bak"
 fi
 
+# Disable tracker3 autostarts (NFS indexing + log spam) — consistent across desktops
+mkdir -p "${HOME}/.config/autostart"
+for app in tracker-miner-fs-3 tracker-extract-3 tracker-miner-rss-3; do
+  df="${HOME}/.config/autostart/${app}.desktop"
+  if [[ ! -f "$df" ]] || ! grep -q '^Hidden=true$' "$df"; then
+    cat > "$df" <<EOF
+[Desktop Entry]
+Type=Application
+Name=${app}
+Exec=${app}
+Hidden=true
+EOF
+  fi
+done
+
 # Set terminal to open as login shell (harmless if dconf isn't installed)
 dconf write /org/mate/terminal/profiles/default/login-shell true 2>/dev/null || true
 
