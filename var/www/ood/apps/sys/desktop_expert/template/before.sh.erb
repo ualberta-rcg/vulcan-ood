@@ -49,17 +49,29 @@ fi
 
 echo "[before.sh.erb] Setup complete."
 
-# --- Chrome: exempt from the VGL faker + disable its sandbox ---
+# --- Chrome: exempt from the VGL faker + disable its sandbox/GPU ---
 # OOD jobs lack the user namespaces Chrome's sandbox needs (zygote broken-pipe
-# crash). Chrome doesn't need GPU accel for browsing, so drop the faker and add
-# --no-sandbox. Done via a per-user .desktop override (takes precedence over the
+# crash). Chrome is exempt from VGL (browsing needs no GPU accel) and its GPU
+# process can't init against TurboVNC anyway, so disable it for clean software
+# rendering. Done via a per-user .desktop override (takes precedence over the
 # system one in menu launchers, which call the absolute binary path).
 CHROME_SRC="/usr/share/applications/google-chrome.desktop"
 CHROME_DST="${HOME}/.local/share/applications/google-chrome.desktop"
 if [[ -f "$CHROME_SRC" ]]; then
   mkdir -p "$(dirname "$CHROME_DST")"
-  sed -e 's#^Exec=/usr/bin/google-chrome-stable#Exec=env -u LD_PRELOAD /usr/bin/google-chrome-stable --no-sandbox --disable-gpu-sandbox#' \
+  sed -e 's#^Exec=/usr/bin/google-chrome-stable#Exec=env -u LD_PRELOAD /usr/bin/google-chrome-stable --no-sandbox --disable-gpu-sandbox --disable-gpu#' \
       "$CHROME_SRC" > "$CHROME_DST"
   chmod 644 "$CHROME_DST"
-  echo "[before.sh.erb] Chrome launcher patched (--no-sandbox, no VGL faker)"
+  echo "[before.sh.erb] Chrome launcher patched (--no-sandbox, --disable-gpu, no VGL faker)"
 fi
+
+# --- Default browser = Chrome (freedesktop mimeapps.list + GNOME gsettings) ---
+# xdg-settings alone is ignored by GNOME; mimeapps.list is respected by all DEs.
+if command -v xdg-mime >/dev/null 2>&1; then
+  xdg-mime default google-chrome.desktop \
+    text/html x-scheme-handler/http x-scheme-handler/https \
+    x-scheme-handler/about x-scheme-handler/unknown \
+    application/xhtml+xml application/pdf 2>/dev/null || true
+fi
+gsettings set org.gnome.desktop.default-applications.browser exec 'google-chrome' 2>/dev/null || true
+echo "[before.sh.erb] Default browser set to Chrome"

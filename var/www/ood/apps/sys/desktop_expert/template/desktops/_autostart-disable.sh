@@ -34,6 +34,10 @@ for app in \
   tracker-miner-rss-3 \
   xfce4-power-manager \
   xfce-polkit \
+  mate-power-manager \
+  gnome-screensaver \
+  mate-screensaver \
+  xscreensaver-properties \
   gdu-notification-daemon; do
 
   df="${AUTOSTART}/${app}.desktop"

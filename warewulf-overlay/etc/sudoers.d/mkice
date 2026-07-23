@@ -1,0 +1,5 @@
+# Allow any user to prepare their own ICE/XDG runtime dir for OOD VNC jobs.
+# create-ice.sh enforces that the uid arg == SUDO_UID (the caller's own uid),
+# so a user can only touch their own /run/user/<uid>. Tightened from the old
+# `ALL ALL=(ALL)` form (which allowed running as any user).
+ALL ALL=(root) NOPASSWD: /usr/local/bin/create-ice.sh *
