@@ -1,0 +1,8 @@
+<%# AMII logo as a full-width banner across the dashboard content column. %>
+<% unless @user_configuration.disable_dashboard_logo %>
+  <div class="text-center mb-3">
+    <%= image_tag(@user_configuration.dashboard_logo,
+                  alt: "Vulcan HPC Cluster",
+                  style: "width: 100%; height: auto;") %>
+  </div>
+<% end %>

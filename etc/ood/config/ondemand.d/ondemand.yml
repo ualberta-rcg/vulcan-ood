@@ -94,11 +94,11 @@ pinned_apps:
   - sys/shell              # Terminal access to cluster
   - sys/myjobs             # User's job queue management
   - sys/activejobs         # Currently running jobs
-  - sys/system-status      # Cluster status information
   - sys/desktop_expert     # VNC desktop sessions
   - sys/jupyter_app        # Jupyter notebook environment
   - sys/rstudio_server_app # RStudio IDE for R development
   - sys/vs_code_html_app   # VS Code web interface
+  - sys/octave_app         # Octave numerical computing
 
 # Dashboard widget layout configuration
 dashboard_layout:
@@ -106,7 +106,6 @@ dashboard_layout:
     - columns:
       - width: 12
         widgets:
-          - motd
           - system_status                # cluster node states (full width)
     - columns:
       - width: 12
