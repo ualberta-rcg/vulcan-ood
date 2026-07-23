@@ -108,6 +108,6 @@ form:
   - mincpu                    # Hidden: minimum CPUs required
   - minram                    # Hidden: minimum memory required
 # Import CPU-only form fields from template (CPU cores, memory, VNC settings - no GPU options)
-<% IO.foreach(template_root+"form_params_cpu") do |line| %><%= line %><% end %>
+<% IO.foreach(template_root+"form_params") do |line| %><%= line %><% end %>
 
 

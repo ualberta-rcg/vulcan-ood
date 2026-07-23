@@ -1,0 +1,13 @@
+# Normalize all text files to LF line endings (repo had CRLF in some app forms)
+* text=auto eol=lf
+
+# Binary assets — never normalize/diff as text
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.gif binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
