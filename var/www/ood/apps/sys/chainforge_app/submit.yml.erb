@@ -34,3 +34,4 @@ script:
     # Use the same interactive partition as the other Vulcan apps.
     # No --gres is requested: ChainForge only calls external LLM APIs and needs no GPU.
     - "--partition=gpubase_interac"
+    - "--qos=interac"
