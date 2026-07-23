@@ -1,0 +1,51 @@
+#!/bin/bash
+
+echo "[before.sh.erb] Starting TensorBoard setup..."
+
+# Export the module function if available (script needs it for module load)
+if [[ $(type -t module) == "function" ]]; then
+  echo "[before.sh.erb] 'module' function is available."
+  export -f module
+else
+  echo "[before.sh.erb] WARNING: 'module' function not available."
+fi
+
+# Find available port to run server on
+export port=$(find_port ${host})
+if [[ -z "$port" ]]; then
+  echo "[before.sh.erb] ERROR: Failed to allocate a port."
+  exit 1
+else
+  echo "[before.sh.erb] Selected available port: $port"
+fi
+
+# Needed for Alliance clusters
+export CC_CLUSTER=vulcan
+
+export JOB_DIR="$PWD"
+echo "[before.sh.erb] JOB_DIR=${JOB_DIR}"
+
+export TENSORBOARD_LOG_FILE="${JOB_DIR}/tensorboard.log"
+echo "[before.sh.erb] TENSORBOARD_LOG_FILE: ${TENSORBOARD_LOG_FILE}"
+
+LOGDIR_FROM_FORM="<%= context.respond_to?(:logdir) ? context.logdir.to_s.strip : "" %>"
+if [[ -n "${LOGDIR_FROM_FORM}" ]]; then
+  export TENSORBOARD_LOGDIR="${LOGDIR_FROM_FORM}"
+  echo "[before.sh.erb] TENSORBOARD_LOGDIR from form: ${TENSORBOARD_LOGDIR}"
+elif [[ -n "${TENSORBOARD_LOGDIR}" ]]; then
+  echo "[before.sh.erb] TENSORBOARD_LOGDIR from environment: ${TENSORBOARD_LOGDIR}"
+else
+  export TENSORBOARD_LOGDIR="${JOB_DIR}/runs"
+  echo "[before.sh.erb] TENSORBOARD_LOGDIR default (session runs): ${TENSORBOARD_LOGDIR}"
+fi
+
+if [[ -e "${TENSORBOARD_LOGDIR}" && ! -d "${TENSORBOARD_LOGDIR}" ]]; then
+  echo "[before.sh.erb] ERROR: Not a directory: ${TENSORBOARD_LOGDIR}"
+  exit 1
+fi
+if ! mkdir -p "${TENSORBOARD_LOGDIR}"; then
+  echo "[before.sh.erb] ERROR: Cannot create directory: ${TENSORBOARD_LOGDIR}"
+  exit 1
+fi
+
+echo "[before.sh.erb] TensorBoard setup complete."

@@ -1,0 +1,13 @@
+---
+name: AlphaFold
+category: Interactive Apps
+subcategory: Bioinformatics
+role: batch_connect
+description: |
+  Launch [AlphaFold] protein structure predictions on the Vulcan high-performance computing (HPC) cluster using the shared CVMFS software stack.
+
+  This app prepares the OpenMM AlphaFold environment on a Vulcan compute node (StdEnv/2020, CUDA 11.4, Python 3.8) and runs AlphaFold as a batch job under your Slurm account, writing prediction results to a per-project output directory.
+
+  [AlphaFold]: https://alphafold.ebi.ac.uk/
+
+  Developed by Arlo Ludwig, University of Alberta IST ([Sensitive Data Research Environment (SDRE)](https://www.ualberta.ca/en/information-services-and-technology/initiatives/sensitive-data-research-environment.html)).

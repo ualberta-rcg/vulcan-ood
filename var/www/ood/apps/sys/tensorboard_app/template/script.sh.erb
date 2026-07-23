@@ -1,0 +1,80 @@
+#!/bin/bash
+
+echo "[script.sh.erb] Starting TensorBoard"
+
+# Unset broken proxy (squid hostname doesn't resolve on compute nodes)
+unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+
+cd "${HOME}"
+echo "[script.sh.erb] Changed working directory to ${HOME}"
+
+# Run any user-specified "Additional environment setup" commands first.
+<% if context.respond_to?(:additional_environment) && context.additional_environment.present? %>
+echo "[script.sh.erb] Applying additional environment setup..."
+JOB_DIR="${JOB_DIR:-$(pwd)}"
+cat > "${JOB_DIR}/additional_env.sh" << 'EOF'
+<%= context.additional_environment %>
+EOF
+source "${JOB_DIR}/additional_env.sh"
+<% end %>
+
+echo "[script.sh.erb] Loading TensorBoard modules..."
+module purge
+
+TARGET_ENV_MODULE="StdEnv/2023"
+TARGET_TENSORBOARD_MODULE="${TENSORBOARD_MODULE:-tensorboard/2.20.0}"
+
+# Same pattern as RStudio Server: try load, then resolve prerequisites via module spider
+if module load "${TARGET_ENV_MODULE}" "${TARGET_TENSORBOARD_MODULE}"; then
+  echo "[script.sh.erb] Successfully loaded ${TARGET_ENV_MODULE} ${TARGET_TENSORBOARD_MODULE}"
+else
+  echo "[script.sh.erb] Initial load failed, checking prerequisites for ${TARGET_TENSORBOARD_MODULE}..."
+  ALL_MODULES=$(module spider "${TARGET_TENSORBOARD_MODULE}" 2>&1 | \
+                awk '/You will need to load all module\(s\)/, /This module provides/' | \
+                grep -Eo '[A-Za-z0-9_/-]+/[0-9.]+' | sort -u)
+  PREREQS=""
+  for mod in $ALL_MODULES; do
+    if [[ "$mod" != "${TARGET_TENSORBOARD_MODULE}" ]]; then
+      PREREQS="$PREREQS $mod"
+    fi
+  done
+  if [[ -n "$PREREQS" ]]; then
+    echo "[script.sh.erb] Detected prerequisites: $PREREQS"
+    module load $PREREQS
+    echo "[script.sh.erb] Retrying load of ${TARGET_ENV_MODULE} ${TARGET_TENSORBOARD_MODULE}..."
+    if module load "${TARGET_ENV_MODULE}" "${TARGET_TENSORBOARD_MODULE}"; then
+      echo "[script.sh.erb] Successfully loaded after prerequisites."
+    else
+      echo "[script.sh.erb] ERROR: Failed to load TensorBoard stack even after prerequisites."
+      echo "[script.sh.erb] Hint: set TENSORBOARD_MODULE in Additional environment setup if your module name differs."
+      exit 1
+    fi
+  else
+    echo "[script.sh.erb] ERROR: No prerequisites found from module spider. Try: module spider ${TARGET_TENSORBOARD_MODULE}"
+    exit 1
+  fi
+fi
+
+TENSORBOARD_BIN="$(command -v tensorboard || true)"
+if [[ -z "${TENSORBOARD_BIN}" ]]; then
+  echo "[script.sh.erb] ERROR: 'tensorboard' executable not found in PATH after module load."
+  exit 1
+fi
+
+if [[ -z "${TENSORBOARD_LOGDIR}" ]]; then
+  echo "[script.sh.erb] ERROR: TENSORBOARD_LOGDIR is unset (before.sh should have set it)."
+  exit 1
+fi
+mkdir -p "${TENSORBOARD_LOGDIR}"
+
+echo "[script.sh.erb] Using tensorboard binary: ${TENSORBOARD_BIN}"
+echo "[script.sh.erb] TENSORBOARD_LOGDIR: ${TENSORBOARD_LOGDIR}"
+echo "[script.sh.erb] Listening on 0.0.0.0:${port} (OOD proxy: ${host}:${port})"
+
+# Foreground — after.sh waits for the port (same idea as Jupyter Lab)
+exec "${TENSORBOARD_BIN}" \
+  --host "0.0.0.0" \
+  --port "${port}" \
+  --logdir "${TENSORBOARD_LOGDIR}" \
+  --load_fast true \
+  >> "${TENSORBOARD_LOG_FILE}" 2>&1

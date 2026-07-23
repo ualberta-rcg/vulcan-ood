@@ -1,0 +1,137 @@
+<%
+# Application configuration and template setup
+app_name = "AlphaFold"
+template_root = "/var/www/ood/apps/templates/"
+
+# GPU configuration data passed to JavaScript for dynamic form behavior
+gpu_data = {
+  "gpu_types" => CustomGPUInfo.gpu_types,
+  "gpu_name_mappings" => CustomGPUInfo.gpu_name_mappings.transform_keys(&:to_s),
+  "gpu_max_counts" => CustomGPUInfo.gpu_max_counts.transform_keys(&:to_s)
+}
+
+# Application-specific minimum resource requirements
+min_cores = 8
+min_mem_gb = 16
+%>
+---
+# JavaScript file for client-side form validation and dynamic behavior
+javascript:
+  - form.js
+
+# Application title displayed in the interface
+title: <%= app_name %>
+
+# Form field definitions and configuration
+attributes:
+  # Hidden field containing GPU information for JavaScript form logic
+  gpudata:
+    widget: hidden_field
+    cacheable: false
+    value: "<%= gpu_data.to_json.gsub('"','\\"') %>"
+
+  # Hidden field with cluster's maximum memory per node for validation
+  memorydata:
+    widget: hidden_field
+    cacheable: false
+    value: "<%= CustomClusterInfo.max_memory_per_node %>"
+
+  # Hidden field with cluster's maximum CPUs per node for validation
+  cpunum:
+    widget: hidden_field
+    cacheable: false
+    value: "<%= CustomClusterInfo.max_cpus_per_node %>"
+
+  # Hidden field with application-specific minimum CPU requirement
+  mincpu:
+    widget: hidden_field
+    cacheable: false
+    value: "<%= min_cores %>"
+
+  # Hidden field with application-specific minimum memory requirement
+  minram:
+    widget: hidden_field
+    cacheable: false
+    value: "<%= min_mem_gb %>"
+
+  # Cluster selection dropdown (typically only one option)
+  cluster:
+    widget: select
+    label: Cluster
+    options:
+      - "<%= CustomClusterInfo.cluster_name %>"
+
+  # FASTA path for input sequence(s)
+  fasta_path:
+    widget: text_field
+    label: "FASTA file path"
+    help: |
+      Absolute path to the FASTA file containing one or more protein sequences.
+      Example: /uhome/$USER/projects/default/alphafold/input/example.fasta
+
+  # Optional explicit output directory
+  output_dir:
+    widget: text_field
+    label: "Output directory (optional)"
+    help: |
+      Directory where AlphaFold outputs (PDBs, logs) will be written.
+      If left blank, a per-job directory will be created under your project path or home.
+
+  # Model preset
+  model_preset:
+    widget: select
+    label: "Model preset"
+    help: "Choose the AlphaFold model preset to use."
+    options:
+      - [ "monomer", "monomer" ]
+      - [ "monomer_casp14", "monomer_casp14" ]
+      - [ "multimer", "multimer" ]
+
+# Import common job parameters from template (cores, hours, email, VNC resolution, etc.)
+<% IO.foreach(template_root+"job_params") do |line| %><%= line %><% end %>
+
+  # Override job_params so CPU/memory defaults match AlphaFold minima (JS also enforces)
+  num_cores:
+    widget: "number_field"
+    label: "Number of CPU cores"
+    value: <%= min_cores %>
+    min: <%= min_cores %>
+    max: <%= CustomClusterInfo.max_cpus_per_node %>
+    step: 1
+    help: "Maximum number of CPU cores is limited by the maximun CPU cores on a node. See [Alliance Cluster Documentation](https://docs.alliancecan.ca/wiki/Technical_support) for host specifications."
+
+  memtask:
+    widget: select
+    label: "Select Memory (GB)"
+    value: "<%= min_mem_gb %>"
+    options:
+      - [ "2 GB", "2" ]
+      - [ "4 GB", "4" ]
+      - [ "8 GB", "8" ]
+      - [ "16 GB", "16" ]
+      - [ "32 GB", "32" ]
+      - [ "64 GB", "64" ]
+      - [ "128 GB", "128" ]
+      - [ "256 GB", "256" ]
+      - [ "512 GB", "512" ]
+      - [ "1024 GB", "1024" ]
+
+  # Force memory customization to be enabled for this application
+  memtask_checkbox:
+    value: "1"
+    cacheable: false
+    widget: hidden_field
+
+# Form field display order and layout
+form:
+  - cluster                    # Cluster selection
+  - bc_num_hours              # Job runtime limit
+  - fasta_path                # Input FASTA
+  - output_dir                # Optional output directory
+  - model_preset              # Model preset
+  - memorydata                # Hidden: max memory available
+  - cpunum                    # Hidden: max CPUs available
+  - mincpu                    # Hidden: minimum CPUs required
+  - minram                    # Hidden: minimum memory required
+# Import form fields from template (CPU cores, memory, GPU options, VNC settings, etc.)
+<% IO.foreach(template_root+"form_params") do |line| %><%= line %><% end %>

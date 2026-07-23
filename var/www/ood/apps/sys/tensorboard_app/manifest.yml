@@ -1,0 +1,13 @@
+--- 
+name: TensorBoard
+category: Interactive Apps
+subcategory: Development
+role: batch_connect
+description: |
+  Launch [TensorBoard] on the Vulcan high-performance computing (HPC) cluster, using the shared CVMFS software stack.
+
+  TensorBoard lets you visualize metrics (loss, accuracy), model graphs, histograms, embeddings, and more for your machine learning experiments. This app runs TensorBoard on a Vulcan compute node under your Slurm account and exposes it through the browser.
+
+  [TensorBoard]: https://www.tensorflow.org/tensorboard
+
+  Developed by Arlo Ludwig, University of Alberta IST ([Sensitive Data Research Environment (SDRE)](https://www.ualberta.ca/en/information-services-and-technology/initiatives/sensitive-data-research-environment.html)).
