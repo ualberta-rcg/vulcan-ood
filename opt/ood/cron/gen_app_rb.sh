@@ -71,8 +71,11 @@ for app in "${apps[@]}"; do
   echo "  def self.${method_name}" >> "$TMPFILE"
   echo "    [" >> "$TMPFILE"
 
-  # Get output
-  output=$(sudo -u "$MODULE_USER" env -i bash --norc --noprofile -c "source /etc/profile 2>/dev/null && module spider $app 2>/dev/null")
+  # Get output. Source the Compute Canada profile directly (NOT /etc/profile):
+  # /etc/profile.d/zz-cvmfs.sh gates Lmod init by UID range and excludes service
+  # accounts like amiildapreader (uid 13000030 sits in an uncovered gap), so
+  # `module` is never defined for them. The CC profile defines it unconditionally.
+  output=$(sudo -u "$MODULE_USER" bash -c '. /cvmfs/soft.computecanada.ca/config/profile/bash.sh 2>/dev/null; module spider '"$app"' 2>/dev/null')
 
   inside_versions=false
   versions=()
