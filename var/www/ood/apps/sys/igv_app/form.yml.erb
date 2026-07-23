@@ -7,7 +7,9 @@ template_root = "/var/www/ood/apps/templates/"
 gpu_data = {
   "gpu_types" => CustomGPUInfo.gpu_types,
   "gpu_name_mappings" => CustomGPUInfo.gpu_name_mappings.transform_keys(&:to_s),
-  "gpu_max_counts" => CustomGPUInfo.gpu_max_counts.transform_keys(&:to_s)
+  "gpu_max_counts" => CustomGPUInfo.gpu_max_counts.transform_keys(&:to_s),
+  "gpu_sharing_available" => (CustomGPUInfo.gpu_sharing_available rescue false),
+  "slices_per_gpu" => (CustomGPUInfo.slices_per_gpu rescue nil)
 }
 
 # Application-specific minimum resource requirements (align with other VNC GUI apps)
