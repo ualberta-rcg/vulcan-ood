@@ -1,0 +1,5 @@
+4
+# Optional comments below (first integer line wins when copied to softmig_slices):
+# 0 = whole-GPU types only (no T.2 / T.4 in OOD)
+# 2 = whole + half (T.2)
+# 4 = whole + half + quarter (T.4)

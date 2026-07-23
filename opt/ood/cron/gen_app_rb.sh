@@ -2,9 +2,21 @@
 #set -euo pipefail
 set -x
 
+# Requires root: writes under /etc/ood/... and runs "sudo -u MODULE_USER" for module spider.
+if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
+  echo "gen_app_rb.sh: must run as root (e.g. sudo $0)" >&2
+  exit 1
+fi
+
 OUTDIR="/etc/ood/config/apps/dashboard/initializers"
 OUTFILE="${OUTDIR}/paice_app_versions.rb"
-MODULE_USER="amiildapreader"
+# Run module spider as this user (must see Lmod/CVMFS like a normal login). Override: export MODULE_USER=otheruser
+MODULE_USER="${MODULE_USER:-amiildapreader}"
+
+if ! id -u "$MODULE_USER" &>/dev/null; then
+  echo "gen_app_rb.sh: user '$MODULE_USER' does not exist (NSS/SSSD may need a refresh: systemctl restart sssd)." >&2
+  exit 1
+fi
 
 mkdir -p "$OUTDIR"
 
@@ -29,6 +41,7 @@ apps=(
   visit
   matlab
   vmd
+  igv
 )
 
 # Helper to title the app
@@ -40,6 +53,7 @@ get_title() {
     code-server) echo "VS Code Server" ;;
     paraview) echo "ParaView" ;;
     vmd) echo "VMD" ;;
+    igv) echo "IGV" ;;
     qgis) echo "QGIS" ;;
     blender) echo "Blender" ;;
     octave) echo "Octave" ;;

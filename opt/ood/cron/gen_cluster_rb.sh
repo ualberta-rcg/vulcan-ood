@@ -1,6 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
+# Requires root: writes paice_cluster_info.rb under /etc/ood/...
+if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
+  echo "gen_cluster_rb.sh: must run as root (e.g. sudo $0)" >&2
+  exit 1
+fi
+
 OUTDIR="/etc/ood/config/apps/dashboard/initializers"
 OUTFILE="${OUTDIR}/paice_cluster_info.rb"
 
