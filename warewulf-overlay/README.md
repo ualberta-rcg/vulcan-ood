@@ -12,6 +12,30 @@ Warewulf compute-node overlay/image — not via the playbook.
 |---|---|
 | `etc/sudoers.d/mkice` | Lets any user run `create-ice.sh` as root for their OWN uid (sets up `/run/user/$UID` + `/tmp/.ICE-unix` for VNC sessions). |
 | `usr/local/bin/create-ice.sh` | The hardened script (validates uid, enforces caller-owns-uid via SUDO_UID). |
+| `usr/bin/nvidia-smi` | SoftMig cgroup filter wrapper — non-root sees only GPU processes in their own SLURM job cgroup. |
+
+## nvidia-smi cgroup filter (SoftMig)
+
+Without this wrapper, `nvidia-smi` shows every user's GPU processes on a node
+(the NVIDIA driver enumerates all GPU contexts regardless of cgroup). The wrapper
+filters `--query-compute-apps` *and* the plain `Processes:` table by the caller's
+SLURM job cgroup (`job_<id>` from `/proc/self/cgroup`). Root sees everything;
+unknown cgroup → fail-closed (no process rows).
+
+**Deploy needs a boot-time rename** — the overlay can't atomically "rename + replace"
+because `/usr/bin/nvidia-smi` is the real driver binary. Wire this into a wwinit /
+runtime-overlay hook or firstboot (idempotent):
+
+```bash
+# preserve the real binary (only if /usr/bin/nvidia-smi is still the ELF binary)
+[ -x /usr/bin/nvidia-smi.real ] || file /usr/bin/nvidia-smi | grep -qi ELF && mv /usr/bin/nvidia-smi /usr/bin/nvidia-smi.real
+# the overlay already delivered the wrapper to /usr/bin/nvidia-smi
+chmod 0755 /usr/bin/nvidia-smi
+```
+
+Verified on rack01-11 (2026-07-23): with the wrapper, a non-root user with no job
+cgroup sees no process rows (fail-closed); a user in `job_58921` sees only that
+cgroup's processes — other users' (e.g. `job_57301`, `job_58932`) are hidden.
 
 ## Security (tightened 2026-07-23)
 

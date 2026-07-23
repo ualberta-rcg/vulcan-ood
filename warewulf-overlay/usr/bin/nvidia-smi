@@ -1,0 +1,61 @@
+#!/bin/bash
+# nvidia-smi cgroup filter (SoftMig).
+# Non-root users only see GPU processes in their OWN SLURM job cgroup.
+# Root sees normal, unfiltered output. Fails closed (no processes shown) if the
+# caller's cgroup can't be determined.
+#
+# Install: real binary -> /usr/bin/nvidia-smi.real ; this wrapper -> /usr/bin/nvidia-smi
+# (replacing /usr/bin so it works regardless of PATH).
+
+REAL_NVIDIA_SMI="/usr/bin/nvidia-smi.real"
+
+extract_job_id() { sed -n 's/.*\(job_[0-9][0-9]*\).*/\1/p' | head -1; }
+get_current_cgroup() { cat /proc/self/cgroup 2>/dev/null | extract_job_id; }
+get_pid_cgroup() { cat "/proc/$1/cgroup" 2>/dev/null | extract_job_id; }
+pid_in_my_cgroup() {
+  local pid="$1" cg="$2" pcg
+  [ -n "$cg" ] || return 1
+  [ -e "/proc/$pid/cgroup" ] || return 1
+  pcg="$(get_pid_cgroup "$pid")"
+  [ -n "$pcg" ] && [ "$pcg" = "$cg" ]
+}
+
+# Root: unfiltered
+if [ "$(id -u)" -eq 0 ]; then exec "$REAL_NVIDIA_SMI" "$@"; fi
+
+MY_CG="$(get_current_cgroup)"
+
+# --- --query-compute-apps: filter CSV rows by cgroup ---
+if [[ "$*" == *"--query-compute-apps"* ]]; then
+  noheader=0
+  [[ "$*" == *"--format=csv,noheader"* ]] && noheader=1
+  "$REAL_NVIDIA_SMI" "$@" | {
+    if [ "$noheader" -eq 0 ]; then IFS= read -r h || true; [ -n "$h" ] && echo "$h"; fi
+    [ -n "$MY_CG" ] || exit 0   # fail-closed
+    while IFS=',' read -r pid rest; do
+      pid="$(echo "$pid" | tr -d '[:space:]')"
+      if [[ "$pid" =~ ^[0-9]+$ ]] && pid_in_my_cgroup "$pid" "$MY_CG"; then
+        [ -n "$rest" ] && echo "$pid,$rest" || echo "$pid"
+      fi
+    done
+  }
+  exit $?
+fi
+
+# --- Default / plain query: filter the "Processes:" table by cgroup ---
+# After the "Processes:" header, drop any process row (matches "<PID>  C ")
+# whose PID isn't in our cgroup. Fails closed when cgroup is unknown.
+"$REAL_NVIDIA_SMI" "$@" | awk -v mycg="$MY_CG" '
+  {
+    if ($0 ~ /Processes:/) { inproc = 1; print; next }
+    if (inproc) {
+      if (match($0, /[0-9]+ +C /)) {
+        pid = substr($0, RSTART, RLENGTH); gsub(/[^0-9]/, "", pid)
+        if (mycg == "") next                                  # fail-closed
+        cmd = "cat /proc/" pid "/cgroup 2>/dev/null"; cmd | getline cg; close(cmd)
+        if (index(cg, mycg) > 0) { print } else { next }       # drop if not ours
+      } else { print }
+    } else { print }
+  }
+'
+exit $?
