@@ -26,48 +26,8 @@ export DBUS_SESSION_BUS_PID
 xfconf-query -c xfce4-session -p /startup/ssh-agent/enabled -n -t bool -s false
 xfconf-query -c xfce4-session -p /startup/gpg-agent/enabled -n -t bool -s false
 
-# Ensure Apps Disabled
-AUTOSTART="${HOME}/.config/autostart"
-mkdir -p "${AUTOSTART}"
-
-for app in \
-  polkit-gnome-authentication-agent-1 \
-  polkit-mate-authentication-agent-1 \
-  nm-applet \
-  blueman-applet \
-  light-locker \
-  xfce4-volumed \
-  xscreensaver \
-  xiccd \
-  system-config-printer-applet \
-  gnome-keyring-daemon \
-  pulseaudio \
-  rhsm-icon \
-  spice-vdagent \
-  tracker-extract \
-  tracker-miner-apps \
-  tracker-miner-user-guides \
-  tracker-miner-fs-3 \
-  tracker-extract-3 \
-  tracker-miner-rss-3 \
-  xfce4-power-manager \
-  blueman \
-  xfce-polkit; do
-
-  desktop_file="${AUTOSTART}/${app}.desktop"
-
-  # If file doesn't exist or doesn't already say Hidden=true, create it
-  if [[ ! -f "$desktop_file" ]] || ! grep -q '^Hidden=true$' "$desktop_file"; then
-    cat > "$desktop_file" <<EOF
-[Desktop Entry]
-Type=Application
-Name=${app}
-Exec=${app}
-Hidden=true
-EOF
-  fi
-
-done
+# Disable problematic autostart apps (shared across all desktops)
+source "$(dirname "${BASH_SOURCE[0]}")/_autostart-disable.sh"
 
 # Clean up old Google Chrome locks
 rm -f ~/.config/google-chrome/Singleton*

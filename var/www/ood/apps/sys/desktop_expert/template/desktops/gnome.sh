@@ -8,26 +8,8 @@ export PATH=/snap/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/b
 # Clean up old monitor config to avoid popups
 [[ -f "${HOME}/.config/monitors.xml" ]] && mv "${HOME}/.config/monitors.xml" "${HOME}/.config/monitors.xml.bak"
 
-# Disable disk utility popup
-mkdir -p "${HOME}/.config/autostart"
-if [[ -f /etc/xdg/autostart/gdu-notification-daemon.desktop ]]; then
-  cat /etc/xdg/autostart/gdu-notification-daemon.desktop <(echo "X-GNOME-Autostart-enabled=false") \
-    > "${HOME}/.config/autostart/gdu-notification-daemon.desktop"
-fi
-
-# Disable tracker3 autostarts (NFS indexing + log spam) — consistent across desktops
-for app in tracker-miner-fs-3 tracker-extract-3 tracker-miner-rss-3; do
-  df="${HOME}/.config/autostart/${app}.desktop"
-  if [[ ! -f "$df" ]] || ! grep -q '^Hidden=true$' "$df"; then
-    cat > "$df" <<EOF
-[Desktop Entry]
-Type=Application
-Name=${app}
-Exec=${app}
-Hidden=true
-EOF
-  fi
-done
+# Disable disk utility popup + problematic autostart apps (shared across desktops)
+source "$(dirname "${BASH_SOURCE[0]}")/_autostart-disable.sh"
 
 # Set GNOME settings - disable screensaver and session idle
 gsettings set org.gnome.nautilus.preferences always-use-browser true

@@ -48,3 +48,18 @@ else
 fi
 
 echo "[before.sh.erb] Setup complete."
+
+# --- Chrome: exempt from the VGL faker + disable its sandbox ---
+# OOD jobs lack the user namespaces Chrome's sandbox needs (zygote broken-pipe
+# crash). Chrome doesn't need GPU accel for browsing, so drop the faker and add
+# --no-sandbox. Done via a per-user .desktop override (takes precedence over the
+# system one in menu launchers, which call the absolute binary path).
+CHROME_SRC="/usr/share/applications/google-chrome.desktop"
+CHROME_DST="${HOME}/.local/share/applications/google-chrome.desktop"
+if [[ -f "$CHROME_SRC" ]]; then
+  mkdir -p "$(dirname "$CHROME_DST")"
+  sed -e 's#^Exec=/usr/bin/google-chrome-stable#Exec=env -u LD_PRELOAD /usr/bin/google-chrome-stable --no-sandbox --disable-gpu-sandbox#' \
+      "$CHROME_SRC" > "$CHROME_DST"
+  chmod 644 "$CHROME_DST"
+  echo "[before.sh.erb] Chrome launcher patched (--no-sandbox, no VGL faker)"
+fi
