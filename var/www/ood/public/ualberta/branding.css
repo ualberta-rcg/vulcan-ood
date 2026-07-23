@@ -122,3 +122,12 @@ footer.footer {
   background-color: #7bc47f !important;
 }
 
+
+/* AMII dashboard logo: stretch to the full content-column width */
+.dashboard-banner-logo {
+  width: 100% !important;
+  height: auto !important;
+}
+.dashboard-banner-logo-wrap {
+  width: 100%;
+}
