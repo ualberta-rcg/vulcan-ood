@@ -1,13 +1,11 @@
-<%-
-  # Render the live per-user cluster status (same engine as the shell MOTD).
-  # Runs as the user inside the PUN; vulcan-status caches + timeout-bounds itself.
-  status =
-    begin
-      `timeout 8 vulcan-status --plain 2>/dev/null`.to_s.chomp
-    rescue StandardError
-      ""
-    end
--%>
+<%
+status =
+  begin
+    `timeout 8 vulcan-status --plain 2>/dev/null`.to_s.chomp
+  rescue StandardError
+    ""
+  end
+%>
 <% if status.empty? %>
 ## Welcome to Vulcan
 
