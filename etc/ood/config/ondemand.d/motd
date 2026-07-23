@@ -1,18 +1,16 @@
 <%
-status =
+notice =
   begin
-    `timeout 8 vulcan-status --plain 2>/dev/null`.to_s.chomp
+    `timeout 8 vulcan-status --plain --only notice 2>/dev/null`.to_s.chomp
   rescue StandardError
     ""
   end
 %>
-<% if status.empty? %>
 ## Welcome to Vulcan
 
-You are signed in. Pick an app from the panel to launch an interactive session,
-or use **Files** / **Shell** / **Active Jobs** above.
-<% else %>
-```text
-<%= status %>
-```
+Pick an app below to launch an interactive session, or use **Files**, **Shell**,
+and **Active Jobs** in the top bar. Live cluster usage, your fairshare, and disk
+quota are shown in the panels on this page.
+<% unless notice.empty? %>
+<%= notice %>
 <% end %>

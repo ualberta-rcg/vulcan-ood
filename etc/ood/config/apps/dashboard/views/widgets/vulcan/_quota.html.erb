@@ -1,0 +1,32 @@
+<%# Disk quota widget — per-user home/scratch/project usage from diskusage_report %>
+<%
+  quotas = Vulcan::Quota.all
+  return if quotas.empty?
+%>
+<div class="card mt-3">
+  <div class="card-header"><h3 class="h5 mb-0">Disk Quota</h3></div>
+  <div class="card-body p-0">
+    <table class="table table-sm mb-0">
+      <tbody>
+        <% quotas.each do |q| %>
+          <% pct = [q[:pct], 100].min
+             color = q[:pct] >= 95 ? "danger" : (q[:pct] >= 80 ? "warning" : "success") %>
+          <tr>
+            <td style="width:30%">
+              <b><%= q[:path] %></b><br>
+              <small class="text-muted"><%= q[:scope] %></small>
+            </td>
+            <td>
+              <div class="progress" style="height: 14px;">
+                <div class="progress-bar bg-<%= color %>" role="progressbar"
+                     style="width: <%= pct %>%;" title="<%= q[:pct].round %>% used"></div>
+              </div>
+              <small><%= Vulcan::Quota.human(q[:used]) %> / <%= Vulcan::Quota.human(q[:limit]) %>
+                &middot; <%= q[:pct].round %>% used</small>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -30,44 +30,59 @@ custom_css_files:
 
 # Custom help menu with grouped links for user assistance
 help_menu:
-  # Documentation section
-  - group: "Alliance Documentation"
-  - title: "Vulcan HPC Cluster Information"
+  # Documentation
+  - group: "Documentation"
+  - title: "Vulcan HPC Cluster"
     icon: "fas://brain"
     url: "https://docs.alliancecan.ca/wiki/Vulcan"
-  - title: "Alliance - Getting Started"
+  - title: "Getting Started"
     icon: "fas://rocket"
     url: "https://docs.alliancecan.ca/wiki/Getting_started"
-  - title: "Alliance - Job Scheduling"
+  - title: "Running Jobs"
     icon: "fas://tasks"
     url: "https://docs.alliancecan.ca/wiki/Running_jobs"
+  - title: "AMII Engineering Docs"
+    icon: "fas://book"
+    url: "https://docs.engineering.amii.ca"
 
-  # External tools and portals
+  # Tools and portals
   - group: "Tools and Portals"
-  - title: "Alliance CCDB Portal"             # Compute Canada Database
+  - title: "CCDB Portal"
     icon: "fas://database"
     url: "https://ccdb.alliancecan.ca/"
-  - title: "Vulcan's Trailblazing Turtle Portal"  # Vulcan-specific portal
-    icon: "fas://cogs"
+  - title: "Metrix Portal"
+    icon: "fas://chart-bar"
     url: "https://portal.vulcan.alliancecan.ca/"
+  - title: "Aleph Inference"
+    icon: "fas://microchip"
+    url: "https://inference.vulcan.alliancecan.ca"
+  - title: "Globus Transfer"
+    icon: "fas://exchange-alt"
+    url: "https://app.globus.org"
 
   # Institutional links
-  - group: "Links"
-  - title: "Alberta Machine Intelligence Institute"
+  - group: "Vulcan Partners"
+  - title: "Alberta Machine Intelligence Institute (AMII)"
     icon: "fas://puzzle-piece"
     url: "https://www.amii.ca/"
-  - title: "University of Alberta - Research Computing"
+  - title: "U of A Research Computing"
     icon: "fas://server"
     url: "https://www.ualberta.ca/en/information-services-and-technology/research-computing/index.html"
+  - title: "Digital Research Alliance of Canada"
+    icon: "fas://flag"
+    url: "https://alliancecan.ca/"
 
-  # Support channels
+  # Support
   - group: "Support"
-  - title: "Alliance Support Website"
+  - title: "Alliance Technical Support"
     icon: "fas://life-ring"
     url: "https://alliancecan.ca/en/services/advanced-research-computing/technical-support"
-  - title: "Alliance Support Email"
+  - title: "Email Support"
     icon: "fas://envelope"
     url: "mailto:support@tech.alliancecan.ca"
+  - title: "Open OnDemand Docs"
+    icon: "fas://question-circle"
+    url: "https://docs.osc.edu/"
 
 
 # =============================================================================
@@ -89,10 +104,19 @@ pinned_apps:
 dashboard_layout:
   rows:
     - columns:
-      - width: 8           # Bootstrap column width (8 out of 12)
+      - width: 12
         widgets:
-          - motd           # Message of the Day widget
-          - pinned_apps    # Featured applications widget
+          - motd
+          - pinned_apps
+    - columns:
+      - width: 4
+        widgets:
+          - metrics/metrics_summary      # cluster nodes/CPUs/GPUs at a glance
+          - metrics/fairshare            # your per-account fairshare
+      - width: 4
+        widgets:
+          - metrics/jobs_summary         # your running/pending jobs
+          - vulcan/quota                 # disk quota (home/scratch/project)
 
 # =============================================================================
 # GLOBUS FILE TRANSFER INTEGRATION
