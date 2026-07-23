@@ -1,0 +1,21 @@
+<%# Custom Vulcan logout page (overrides stock dashboard logout view) %>
+<div class="jumbotron text-center mt-4">
+  <h1 class="display-4">You've been logged out of Vulcan</h1>
+  <p class="lead">Your OnDemand session has ended.</p>
+  <hr class="my-4">
+  <p>
+    To use Vulcan OnDemand again, click below. You may be asked to sign in once more
+    at the Alliance login page.
+  </p>
+  <p>
+    <a class="btn btn-success btn-lg" href="<%= root_path %>" role="button">
+      Return to Vulcan OnDemand
+    </a>
+  </p>
+  <p class="text-muted small mt-3">
+    Still signed in? The Alliance single sign-on may remember you. To fully end your
+    Alliance session, complete sign-out at
+    <a href="https://idp.alliancecan.ca/idp/profile/Logout" target="_blank">idp.alliancecan.ca</a>,
+    then close your browser.
+  </p>
+</div>

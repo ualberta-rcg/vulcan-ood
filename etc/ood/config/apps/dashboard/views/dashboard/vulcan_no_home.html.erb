@@ -1,0 +1,36 @@
+<%# Shown when a user is authenticated but their Vulcan home isn't provisioned. %>
+<div class="jumbotron text-center mt-4">
+  <h1 class="display-4">
+    <% if @vulcan_reason == :no_access %>
+      Welcome to Vulcan
+    <% else %>
+      Your account is being set up
+    <% end %>
+  </h1>
+  <p class="lead">
+    <% if @vulcan_reason == :no_access %>
+      You're signed in, but this account doesn't have access to Vulcan yet.
+    <% else %>
+      You're signed in as <strong><%= current_user.username rescue "you" %></strong>,
+      and your Vulcan home directory is still being created.
+    <% end %>
+  </p>
+  <hr class="my-4">
+  <p>
+    <% if @vulcan_reason == :no_access %>
+      Please request Vulcan access through the Alliance, then return here once it's
+      been approved.
+    <% else %>
+      Please come back in about <strong>10 minutes</strong>. If this message persists
+      after an hour, contact support.
+    <% end %>
+  </p>
+  <p>
+    <a class="btn btn-success btn-lg" href="https://docs.alliancecan.ca/wiki/Vulcan" target="_blank" role="button">Vulcan documentation</a>
+    <a class="btn btn-outline-secondary btn-lg" href="mailto:support@tech.alliancecan.ca" role="button">Contact support</a>
+  </p>
+  <p class="text-muted small mt-3">
+    Need to sign out?
+    <a href="/logout">Log out</a>
+  </p>
+</div>

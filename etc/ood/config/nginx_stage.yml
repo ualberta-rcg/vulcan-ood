@@ -2,7 +2,7 @@ pun_custom_env:
   # MOTD Configuration
   # Option 1: Use OOD-specific MOTD file with markdown support (recommended)
   MOTD_PATH: "/etc/ood/config/ondemand.d/motd"   # your custom file
-  MOTD_FORMAT: "markdown"                # or markdown_erb|txt|txt_erb|rss
+  MOTD_FORMAT: "markdown_erb"            # renders ERB, then markdown (embeds vulcan-status)
   OOD_LOCALE: "en-CA"
   
   # Option 2: Use system-wide MOTD file (commented out for reference)

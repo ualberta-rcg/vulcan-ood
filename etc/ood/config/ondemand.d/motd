@@ -1,7 +1,20 @@
-# Welcome to Vulcan
+<%-
+  # Render the live per-user cluster status (same engine as the shell MOTD).
+  # Runs as the user inside the PUN; vulcan-status caches + timeout-bounds itself.
+  status =
+    begin
+      `timeout 8 vulcan-status --plain 2>/dev/null`.to_s.chomp
+    rescue StandardError
+      ""
+    end
+-%>
+<% if status.empty? %>
+## Welcome to Vulcan
 
-- **Support:** [support@tech.alliancecan.ca](mailto:support@tech.alliancecan.ca)
-- **Documentation:** [https://docs.alliancecan.ca](https://docs.alliancecan.ca)
-- **Portal:** [https://portal.vulcan.alliancecan.ca](https://portal.vulcan.alliancecan.ca)
-- **Open OnDemand:** [https://vulcan.alliancecan.ca](https://vulcan.alliancecan.ca)
-- **Helpy:** [https://chat.cluster.paice-ua.com](https://chat.cluster.paice-ua.com)
+You are signed in. Pick an app from the panel to launch an interactive session,
+or use **Files** / **Shell** / **Active Jobs** above.
+<% else %>
+```text
+<%= status %>
+```
+<% end %>

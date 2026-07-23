@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Send the user to the U of A Research Computing page after sign-out. -->
+  <meta http-equiv="refresh" content="3; url=https://www.ualberta.ca/en/information-services-and-technology/research-computing/index.html">
+  <title>Signed out — Vulcan OnDemand</title>
+  <style>
+    :root { --green:#007C41; --green-dk:#005A2C; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+           background:#f7f8f7; color:#222; display:flex; min-height:100vh; align-items:center; justify-content:center; }
+    .card { background:#fff; border:1px solid #e3e6e3; border-top:6px solid var(--green);
+            border-radius:10px; padding:2.5rem 2.5rem 2rem; max-width:560px; width:90%; text-align:center;
+            box-shadow:0 6px 24px rgba(0,0,0,.06); }
+    h1 { color:var(--green-dk); margin:.2rem 0 .4rem; font-size:1.8rem; }
+    p { line-height:1.55; color:#444; }
+    .btn { display:inline-block; margin:.4rem .25rem 0; padding:.7rem 1.3rem; border-radius:6px;
+           text-decoration:none; font-weight:600; }
+    .btn.primary { background:var(--green); color:#fff; }
+    .btn.primary:hover { background:var(--green-dk); }
+    .btn.secondary { background:#eef; color:#335; border:1px solid #ccd; }
+    .muted { color:#888; font-size:.82rem; margin-top:1.4rem; }
+    .logo { height:46px; margin-bottom:.6rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img class="logo" src="/public/ualberta/logo.png" alt="University of Alberta">
+    <h1>You're signed out of Vulcan</h1>
+    <p>Your OnDemand session has ended. Taking you to the
+       U of A Research Computing page…</p>
+    <p>
+      <a class="btn primary" href="https://www.ualberta.ca/en/information-services-and-technology/research-computing/index.html">Go to Research Computing</a>
+      <a class="btn secondary" href="https://idp.alliancecan.ca/idp/profile/Logout?return=https%3A%2F%2Falliancecan.ca">End Alliance session too</a>
+    </p>
+    <p class="muted">
+      Use "End Alliance session too" to fully sign out of the shared Alliance login so
+      the next visit asks for your credentials.
+    </p>
+  </div>
+</body>
+</html>

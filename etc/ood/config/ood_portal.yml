@@ -27,7 +27,10 @@ auth:
   - "Require valid-user"              # Require authenticated users only
 
 # OIDC logout configuration
-logout_redirect: "https://idp.alliancecan.ca/idp/profile/Logout?return=https://alliancecan.ca"    # Redirect after logout
+# Route through mod_auth_openidc's logout so the local session cookie is destroyed
+# (otherwise the browser keeps it and you stay "logged in"). Lands on a public
+# (unauthenticated) page; the page offers to end the Alliance SSO session too.
+logout_redirect: "/oidc?logout=https://vulcan.alliancecan.ca/public/logged-out.html"
 
 # Per-user NGINX (PUN) pre-execution hooks
 pun_pre_hook_root_cmd: "/opt/ood/scripts/ood_pun_oidc_email.sh"  # Script to pass OIDC email to user's PUN
