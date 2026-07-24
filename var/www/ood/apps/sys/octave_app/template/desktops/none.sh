@@ -43,8 +43,14 @@ if [[ -n "$OOD_APP_LAUNCH" ]]; then
         unset OOD_APP_LAUNCH
       fi
     else
-      echo "[none.sh] No prerequisites found. Giving up."
-      unset OOD_APP_LAUNCH
+      echo "[none.sh] No spider prereqs found; trying default StdEnv..."
+      module load StdEnv/2023 2>/dev/null || module load StdEnv/2020 2>/dev/null
+      if module load "$TARGET_MODULE"; then
+        echo "[none.sh] Loaded $TARGET_MODULE with default StdEnv."
+      else
+        echo "[none.sh] Failed to load $TARGET_MODULE even with default StdEnv."
+        unset OOD_APP_LAUNCH
+      fi
     fi
   fi
 fi
