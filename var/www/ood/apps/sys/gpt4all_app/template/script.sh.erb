@@ -1,11 +1,12 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
 
-echo "[script.sh.erb] GPT4All session for $USER at $(date)"
+echo "[script.sh.erb] Starting GPT4All Server"
+
+cd "${HOME}"
 
 # --- CVMFS Python ---
-module purge 2>/dev/null
-module load StdEnv/2023 python/3.12.4 2>/dev/null
+module purge
+module load StdEnv/2023 python/3.12.4
 echo "[script.sh.erb] Python: $(python3 --version)"
 
 # --- venv in $SCRATCH (persists across sessions) ---
@@ -15,7 +16,6 @@ if [[ ! -d "$VENV" ]]; then
   python3 -m venv "$VENV"
 fi
 source "$VENV/bin/activate"
-echo "[script.sh.erb] venv active: $(which python3)"
 
 # --- install gpt4all + gradio if needed ---
 if ! python3 -c "import gpt4all" 2>/dev/null; then
@@ -24,12 +24,12 @@ if ! python3 -c "import gpt4all" 2>/dev/null; then
   pip install gpt4all gradio
 fi
 
-# --- model directory in $SCRATCH ---
+# --- model directory ---
 MODEL_DIR="${SCRATCH:-$HOME/scratch}/gpt4all-models"
 mkdir -p "$MODEL_DIR"
 
 # --- write the Gradio chat server ---
-cat > "${VENV}/gpt4all_server.py" <<'PYEOF'
+cat > "${VENV}/gpt4all_server.py" << 'PYEOF'
 import gradio as gr
 from gpt4all import GPT4All
 import os, glob, sys
@@ -38,7 +38,6 @@ MODEL_DIR = os.environ.get("GPT4ALL_MODEL_DIR", os.path.expanduser("~/gpt4all-mo
 PORT = int(os.environ.get("port", "7860"))
 DEFAULT = "orca-mini-3b-gguf2-q4_0"
 
-# reuse any already-downloaded model
 existing = glob.glob(os.path.join(MODEL_DIR, "*.bin")) + glob.glob(os.path.join(MODEL_DIR, "*.gguf"))
 name = os.path.basename(existing[0]) if existing else DEFAULT
 
@@ -49,19 +48,16 @@ except Exception as e:
     print(f"[GPT4All] ERROR: {e}", file=sys.stderr)
     sys.exit(1)
 
-print(f"[GPT4All] Model loaded. Serving Gradio chat on port {PORT} ...", flush=True)
-
-def chat(message, history):
-    resp = model.chat(message)
-    return resp
-
+print(f"[GPT4All] Serving Gradio chat on port {PORT} ...", flush=True)
 gr.ChatInterface(
-    fn=chat,
+    fn=lambda msg, hist: model.chat(msg),
     title="GPT4All — Local LLM Chat",
-    description=f"Model: {name} (running fully offline on CPU)",
+    description=f"Model: {name} (offline on CPU)",
 ).launch(server_name="0.0.0.0", server_port=PORT)
 PYEOF
 
 export GPT4ALL_MODEL_DIR="$MODEL_DIR"
-echo "[script.sh.erb] Launching GPT4All Gradio chat on port ${port} ..."
+
+# Launch GPT4All Gradio server
+echo "[script.sh.erb] Launching GPT4All on port ${port} ..."
 python3 "${VENV}/gpt4all_server.py"

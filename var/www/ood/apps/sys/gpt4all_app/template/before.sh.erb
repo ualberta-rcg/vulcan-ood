@@ -19,11 +19,20 @@ else
   echo "[before.sh.erb] Selected available port: $port"
 fi
 
-# Generate secure password
+# Generate secure password for GPT4All
 export password="$(create_passwd 16)"
-echo "[before.sh.erb] Generated password."
+echo "[before.sh.erb] Generated GPT4All password: $password"
 
 # Needed for Alliance Clusters
 export CC_CLUSTER=vulcan
 
-echo "[before.sh.erb] GPT4All setup complete."
+# GPT4All working directory (data and logs; GPT4All binary comes from CVMFS module)
+
+
+# Create GPT4All working directory
+if [[ $? -ne 0 ]]; then
+  exit 1
+else
+fi
+
+echo "[before.sh.erb] GPT4All setup complete (using CVMFS module openrefine/3.9.3)."
