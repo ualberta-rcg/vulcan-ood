@@ -1,0 +1,53 @@
+---
+################################################################################
+# System cleanup, service masking, and OOD config-generator scheduling
+################################################################################
+# Purpose: codify the system-level fixes that were applied live (sed/systemctl)
+# so they persist across reboots on stateless Warewulf nodes (root is tmpfs, so
+# everything applied by hand is lost at reboot). Runs after 78-deploy-ood-server.
+#
+# Target: ood-login nodes (run via firstboot at provisioning, or manually)
+################################################################################
+
+- name: System cleanup and OOD generator cron
+  hosts: localhost
+  become: true
+
+  tasks:
+
+    # ── Mask cosmetic services that fail on an OOD login node ──────────────
+    # These show as "failed" and add noise but aren't needed here.
+    - name: Mask unneeded services (reduce failed-unit noise)
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        masked: true
+      loop:
+        - motd-news.service        # Ubuntu Canonical MOTD ads
+        - openipmi.service         # no BMC/IPMI hardware on this node
+        - postfix@-.service        # postfix not installed; referenced unit
+
+    # ── Schedule the OOD config generators ─────────────────────────────────
+    # The generators (cluster/gpu/app) run once at boot via playbook 78, but
+    # Slurm partitions, GPU gres, and CVMFS module versions drift over time, so
+    # they must re-run periodically. NOTE: the generators are shell scripts and
+    # must NOT live in /etc/cron.d directly — cron parses them as crontabs and
+    # logs "bad minute" errors (and never runs them). 78 copies opt/ood/cron/*
+    # into /etc/cron.d; remove those bogus entries and use a real crontab.
+    - name: Remove bogus generator scripts misplaced in /etc/cron.d
+      ansible.builtin.file:
+        path: "/etc/cron.d/{{ item }}"
+        state: absent
+      loop:
+        - gen_cluster_rb.sh
+        - gen_gpu_rb.sh
+        - gen_app_rb.sh
+
+    - name: Install proper cron schedule for the OOD config generators
+      ansible.builtin.copy:
+        dest: /etc/cron.d/ood-generators
+        mode: '0644'
+        content: |
+          # Regenerate OOD dashboard configs (idempotent) — Slurm/CVMFS drift.
+          17 * * * *   root /opt/ood/cron/gen_cluster_rb.sh
+          */30 * * * * root /opt/ood/cron/gen_gpu_rb.sh
+          13 * * * *   root /opt/ood/cron/gen_app_rb.sh
