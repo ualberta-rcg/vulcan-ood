@@ -1,0 +1,30 @@
+<%-
+  emailaddr = File.read(File.expand_path('~/ondemand/oidc_email.txt')).strip rescue ''
+-%>
+
+batch_connect:
+  template: "vnc"
+  websockify_cmd: "/cvmfs/soft.computecanada.ca/gentoo/2023/x86-64-v3/usr/bin/websockify"
+  vnc_args: "-geometry 1920x1080"
+
+script:
+  cluster: "<%= cluster %>"
+  job_environment:
+    OOD_APP_CMD: "visit"
+  <% if defined?(bc_email_on_started) && bc_email_on_started == "1" && emailaddr != "" %>
+  email: <%= emailaddr.inspect %>
+  <% end %>
+  native:
+    - "-N"
+    - "1"
+    - "-n"
+    - "<%= num_cores %>"
+    - "--time=<%= bc_num_hours %>:00:00"
+    <%- if defined?(gpu_checkbox) && gpu_checkbox == "1" && gpu_type != "none" -%>
+    - "--gres=gpu:<%= gpu_type %>:<%= gpu_count %>"
+    <%- end -%>
+    <%- if defined?(memtask_checkbox) && memtask_checkbox == "1" && memtask.present? && memtask != "0" -%>
+    - "--mem=<%= memtask %>G"
+    <%- end -%>
+    - "--partition=gpubase_interac"
+    - "--qos=interac"

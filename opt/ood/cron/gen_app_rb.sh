@@ -42,6 +42,9 @@ apps=(
   matlab
   vmd
   igv
+  fsl
+  freesurfer
+  mrtrix
 )
 
 # Helper to title the app
@@ -58,6 +61,9 @@ get_title() {
     blender) echo "Blender" ;;
     octave) echo "Octave" ;;
     mujoco) echo "MuJoCo" ;;
+    fsl) echo "FSL" ;;
+    freesurfer) echo "FreeSurfer" ;;
+    mrtrix) echo "MRtrix" ;;
     *) echo "$1" ;;
   esac
 }

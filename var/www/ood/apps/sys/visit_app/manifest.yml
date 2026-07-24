@@ -1,0 +1,17 @@
+---
+name: VisIt
+category: Interactive Apps
+subcategory: Visualization
+role: batch_connect
+description: |
+  Launch [VisIt] on the [Vulcan] HPC cluster, operated by [AMII], the
+  [University of Alberta], and supported by the [Digital Research Alliance of Canada].
+
+  VisIt for interactive visualization of large scientific datasets. You interact with the VisIt GUI through a VNC session; GPU acceleration
+  is available if selected.
+
+  [VisIt]: https://wci.llnl.gov/simulation/computer-codes/visit/
+  [AMII]: https://www.amii.ca/
+  [University of Alberta]: https://www.ualberta.ca/
+  [Digital Research Alliance of Canada]: https://alliancecan.ca/en
+  [Vulcan]: https://docs.alliancecan.ca/wiki/Vulcan

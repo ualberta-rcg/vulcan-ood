@@ -1,0 +1,17 @@
+---
+name: MRtrix
+category: Interactive Apps
+subcategory: Bioinformatics
+role: batch_connect
+description: |
+  Launch [MRtrix] on the [Vulcan] HPC cluster, operated by [AMII], the
+  [University of Alberta], and supported by the [Digital Research Alliance of Canada].
+
+  MRtrix for diffusion MRI analysis and tractography. You interact with the MRtrix GUI through a VNC session; GPU acceleration
+  is available if selected.
+
+  [MRtrix]: https://www.mrtrix.org/
+  [AMII]: https://www.amii.ca/
+  [University of Alberta]: https://www.ualberta.ca/
+  [Digital Research Alliance of Canada]: https://alliancecan.ca/en
+  [Vulcan]: https://docs.alliancecan.ca/wiki/Vulcan
