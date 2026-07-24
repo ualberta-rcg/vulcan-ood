@@ -100,6 +100,10 @@ pinned_apps:
   - sys/vs_code_html_app   # VS Code web interface
   - sys/octave_app         # Octave numerical computing
 
+# Point the built-in Module Browser (Clusters menu) at the Lmod spider JSON
+# generated at boot by playbook 78 (PHASE 13) -> /ood/modules/vulcan.json.
+module_file_dir: /ood/modules
+
 # Dashboard widget layout configuration
 dashboard_layout:
   rows:
