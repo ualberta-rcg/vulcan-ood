@@ -79,3 +79,5 @@ form:
   - mincpu                    # Hidden: minimum CPUs required
   - minram                    # Hidden: minimum memory required
 <% IO.foreach(template_root+"form_params_cpu") do |line| %><%= line %><% end %>
+  - add_env_checkbox
+  - additional_environment

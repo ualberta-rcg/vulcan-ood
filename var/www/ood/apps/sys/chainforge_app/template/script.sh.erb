@@ -14,6 +14,11 @@ export PYTHONUNBUFFERED=1
 
 cd "${HOME}"
 
+<%- if context.respond_to?(:additional_environment) && context.additional_environment.present? -%>
+# Additional environment from user
+<%= context.additional_environment %>
+<%- end -%>
+
 # IMPORTANT: use the OS Python (/usr/bin/python3 = 3.12), NOT the CVMFS python module.
 # The CVMFS Gentoo Python does not emit manylinux compatibility tags, so pip cannot use
 # PyPI's prebuilt wheels for Pillow / pypdfium2 / cryptography / onnxruntime and instead

@@ -4,6 +4,11 @@ echo "[script.sh.erb] Starting VS Code Server"
 
 # Change to user's home directory
 cd "${HOME}"
+
+<%- if context.respond_to?(:additional_environment) && context.additional_environment.present? -%>
+# Additional environment from user
+<%= context.additional_environment %>
+<%- end -%>
 echo "[script.sh.erb] Changed working directory to ${HOME}"
 
 # Load selected module
