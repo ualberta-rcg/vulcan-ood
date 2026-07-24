@@ -1,0 +1,98 @@
+<%
+    metrics_service = SlurmMetrics::MetricsService.new
+    summary = metrics_service.read_metrics
+
+    from_text = summary.from.strftime('%Y-%m-%d')
+    to_text = summary.to.strftime('%Y-%m-%d')
+%>
+
+<style>
+    .metrics [title]{
+        cursor: default;
+    }
+
+    .metrics .card-header h3 {
+        padding-bottom: unset;
+        color: rgb(51, 51, 51);
+        letter-spacing: normal;
+        font-weight: bold;
+    }
+
+    .metrics-completed {
+        background-color: #28a745;
+    }
+
+    .metrics-timeout {
+        background-color: #97c13e;
+    }
+
+    .metrics-canceled {
+        background-color: #f2b134;
+    }
+
+    .metrics-memory {
+        background-color: #e6774c;
+    }
+
+    .metrics-failed {
+        background-color: #dc3545;
+    }
+
+    table.metrics th {
+        font-size: 0.9rem;
+    }
+
+    .metrics i.app-icon {
+        width: 0.9rem;
+        height: 0.9rem;
+        font-size: 0.9rem;
+    }
+
+    p[aria-expanded=true] .closed {
+        display: none;
+    }
+
+    p[aria-expanded=false] .open {
+        display: none;
+    }
+
+    .metric-summary .job-metrics-description {
+        margin: 0;
+        padding: 6px 5px;
+    }
+
+    .metric-summary .badge {
+        color: #fff;
+        min-width: 60px;
+    }
+
+    .metric-summary:nth-of-type(2n+1) {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .metric-summary {
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .metrics .badge {
+        margin-top: 2px;
+        color: #fff;
+    }
+
+    .metrics .metrics-note {
+        margin-bottom: -12px;
+    }
+</style>
+
+<div class="metrics">
+  <h3><%= metrics_service.cluster.metadata.title %> Metrics</h3>
+  <div class="metrics-container">
+    <%= render(partial: '/widgets/metrics/fairshare') %>
+
+    <%= render(partial: '/widgets/metrics/jobs_summary', locals: { title: 'CPU Jobs by State', from_text: from_text, to_text: to_text, total: summary.ntotal_cpu, completed: summary.ncd_cpu, timeout: summary.nto_cpu, canceled: summary.nca_cpu, memory: summary.noom_cpu, failed: summary.nf_cpu } ) %>
+    <%= render(partial: '/widgets/metrics/jobs_summary', locals: { title: 'GPU Jobs by State', from_text: from_text, to_text: to_text, total: summary.ntotal_gpu, completed: summary.ncd_gpu, timeout: summary.nto_gpu, canceled: summary.nca_gpu, memory: summary.noom_gpu, failed: summary.nf_gpu } ) %>
+
+    <%= render(partial: '/widgets/metrics/metrics_summary', locals: { summary: summary, from_text: from_text, to_text: to_text } ) %>
+  </div>
+</div>

@@ -1,0 +1,22 @@
+<%
+  require 'shellwords'
+  raw_username = @user.name.to_s
+  gecos = `getent passwd #{Shellwords.escape(raw_username)} 2>/dev/null`.split(':')[4].to_s.strip
+
+  # Remove duplicate words, preserving first occurrence and order
+  # e.g. "John Smith Smith" -> "John Smith"
+  # e.g. "Jane Doe Jane Doe" -> "Jane Doe"
+  display_name = if gecos.empty?
+    raw_username
+  else
+    seen = {}
+    gecos.split.select { |w| seen[w.downcase].nil? && (seen[w.downcase] = true) }.join(' ')
+  end
+  %>
+<li class="nav-item" data-container="body" data-bs-toggle="popover"
+  data-content="<%= t('dashboard.nav_user', username: display_name) %>" data-placement="bottom"
+  role="none">
+  <a class="nav-link disabled" role="menuitem" title="<%= t('dashboard.nav_user', username: display_name) %>" href="#">
+    <i class="fas fa-user" aria-hidden="true" aria-hidden="true"></i><span class="d-md-none d-xxl-inline"> <%= t('dashboard.nav_user', username: display_name) %></span>
+  </a>
+</li>

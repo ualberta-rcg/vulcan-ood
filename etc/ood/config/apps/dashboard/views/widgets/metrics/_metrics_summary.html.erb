@@ -1,0 +1,51 @@
+<%
+  summary = local_assigns.fetch(:summary, nil)
+  from_text = local_assigns.fetch(:from_text, nil)
+  to_text = local_assigns.fetch(:to_text, nil)
+  metrics_helper = SlurmMetrics::MetricsHelper.new
+  period_text = metrics_helper.period_text
+  period_title = metrics_helper.period_title(from_text, to_text)
+%>
+
+<div class="metrics-widget-component">
+  <div class="card mt-3">
+    <div class="card-header">
+      <small class="float-end float-right">Eligible Jobs: <%= summary.eligible_jobs %></small>
+      <h3 title="<%= period_title %>">Summary Job Stats</h3>
+      <small title="<%= period_title %>"><%= period_text %></small>
+    </div>
+
+    <div class="card-body">
+      <%= render(partial: '/widgets/metrics/metric_details',
+                 locals: { id: 'cpu-metric-summary',
+                           title: 'CPU Efficiency:',
+                           efficiency: summary.ave_cpu_eff.ceil(1),
+                           items: [['Average Used', "#{summary.ave_cpu_use.ceil(1)} CPU Hrs"],
+                                   ['Average Allocated', "#{summary.ave_cpu_req.ceil(1)} CPU Hrs"],
+                                   ['Total Walltime', "#{summary.tot_cpu_walltime.ceil(1)} CPU Hrs"]] } ) %>
+      <%= render(partial: '/widgets/metrics/metric_details',
+                 locals: { id: 'gpu-metric-summary',
+                           title: 'GPU Efficiency:',
+                           items: [['Average Allocated', "#{summary.ave_gpu_req.ceil(1)} GPU Hrs"],
+                                   ['Total Walltime', "#{summary.tot_gpu_hours.ceil(1)} GPU Hrs"]] } ) %>
+      <%= render(partial: '/widgets/metrics/metric_details',
+                 locals: { id: 'memory-metric-summary',
+                           title: 'Memory Efficiency:',
+                           efficiency: summary.ave_mem_eff.ceil(1),
+                           items: [['Average Used', "#{summary.ave_mem_use.ceil(1)}G"],
+                                   ['Average Allocated', "#{summary.ave_mem_req.ceil(1)}G"],
+                                   ['Total Used', "#{summary.tot_mem_use.ceil(1)}G"]] } ) %>
+      <%= render(partial: '/widgets/metrics/metric_details',
+                 locals: { id: 'time-metric-summary',
+                           title: 'Time Efficiency:',
+                           efficiency: summary.ave_time_eff.ceil(1),
+                           items: [['Average Used', metrics_helper.format_duration(summary.ave_time_use)],
+                                   ['Average Allocated', metrics_helper.format_duration(summary.ave_time_req)],
+                                   ['Average Waiting Time', metrics_helper.format_duration(summary.ave_wait_time)]] } ) %>
+
+      <small class="float-end float-right metrics-note mt-3" title="FASRC information on job efficiency and optimization best practices.">
+        <a target="_blank" href="https://docs.rc.fas.harvard.edu/kb/job-efficiency-and-optimization-best-practices/">FASRC Efficiency and Optimization</a>
+      </small>
+    </div>
+  </div>
+</div>

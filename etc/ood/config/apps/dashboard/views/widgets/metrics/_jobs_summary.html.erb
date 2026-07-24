@@ -1,0 +1,66 @@
+<%
+  # EXPECTED VARIABLES:
+  # title, from_text, to_text, total
+  # completed, timeout, canceled, memory, failed
+
+  metrics_helper = SlurmMetrics::MetricsHelper.new
+
+  period_text = metrics_helper.period_text
+  period_title = metrics_helper.period_title(from_text, to_text)
+  percentages = [
+    metrics_helper.metrics_round(total, completed),
+    metrics_helper.metrics_round(total, timeout),
+    metrics_helper.metrics_round(total, canceled),
+    metrics_helper.metrics_round(total, memory),
+    metrics_helper.metrics_round(total, failed),
+  ]
+  difference = 100 - percentages.sum
+  max_value, max_index = percentages.each_with_index.max
+  percentages[max_index] += difference
+
+  bar_values = [
+    metrics_helper.metrics_ceil(total, completed),
+    metrics_helper.metrics_ceil(total, timeout),
+    metrics_helper.metrics_ceil(total, canceled),
+    metrics_helper.metrics_ceil(total, memory),
+    metrics_helper.metrics_ceil(total, failed),
+  ]
+%>
+<div class="metrics-widget-component">
+    <div class="card mt-3">
+      <div class="card-header">
+        <small class="float-end float-right">Total Jobs: <%= total %></small>
+        <h3 title="<%= period_title %>"><%= title %></h3>
+        <small title="<%= period_title %>"><%= period_text %></small>
+      </div>
+      <div class="card-body">
+        <table class="table table-sm table-striped table-condensed metrics">
+          <thead>
+          <tr>
+            <th title="Number of jobs that completed within the time allocated">Completed</th>
+            <th title="Number of jobs that timeout">Timed Out</th>
+            <th title="Number of jobs that were canceled">Canceled</th>
+            <th title="Number of jobs that run out of memory">OOM</th>
+            <th title="Number of jobs that failed during execution">Failed</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+            <td title="Number of jobs that completed within the time allocated"><%= completed %></td>
+            <td title="Number of jobs that timeout"><%= timeout %></td>
+            <td title="Number of jobs that were canceled"><%= canceled %></td>
+            <td title="Number of jobs that run out of memory"><%= memory %></td>
+            <td title="Number of jobs that failed during execution"><%= failed %></td>
+          </tr>
+          </tbody>
+        </table>
+        <div class="progress metrics">
+          <div class="progress-bar metrics-completed" role="progressbar" style="width: <%= bar_values[0] %>%" aria-valuenow="<%= bar_values[0] %>" aria-valuemin="0" aria-valuemax="100" title="Jobs completed <%= percentages[0] %>%"><%= percentages[0] %>%</div>
+          <div class="progress-bar metrics-timeout" role="progressbar" style="width: <%= bar_values[1] %>%" aria-valuenow="<%= bar_values[1] %>" aria-valuemin="0" aria-valuemax="100" title="Jobs timeout <%= percentages[1] %>%"><%=percentages[1] %>%</div>
+          <div class="progress-bar metrics-canceled" role="progressbar" style="width: <%= bar_values[2] %>%" aria-valuenow="<%= bar_values[2] %>" aria-valuemin="0" aria-valuemax="100" title="Jobs canceled <%= percentages[2] %>%"><%= percentages[2] %>%</div>
+          <div class="progress-bar metrics-memory" role="progressbar" style="width: <%= bar_values[3] %>%" aria-valuenow="<%= bar_values[3  ] %>" aria-valuemin="0" aria-valuemax="100" title="Jobs out of memory <%= percentages[3] %>%"><%= percentages[3] %>%</div>
+          <div class="progress-bar metrics-failed" role="progressbar" style="width: <%= bar_values[4] %>%" aria-valuenow="<%= bar_values[4] %>" aria-valuemin="0" aria-valuemax="100" title="Jobs failed <%= percentages[4] %>%"><%= percentages[4] %>%</div>
+        </div>
+      </div>
+    </div>
+  </div>

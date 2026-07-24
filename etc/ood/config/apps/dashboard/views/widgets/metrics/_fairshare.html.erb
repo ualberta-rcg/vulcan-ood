@@ -1,0 +1,44 @@
+<%
+  metrics_service = SlurmMetrics::MetricsService.new
+  slurm_faishare = metrics_service.read_fairshare
+  timestamp = slurm_faishare.from
+  fairshare = slurm_faishare.data
+
+  metrics_helper = SlurmMetrics::MetricsHelper.new
+%>
+<div class="metrics-widget-component">
+    <div class="card mt-3">
+      <div class="card-header" title="Fairshare calculated at <%= timestamp.strftime('%Y-%m-%dT%H:%M:%S') %>">
+        <small class="float-end float-right"><%= timestamp.strftime('%Y-%m-%d') %></small>
+        <h3>Fairshare</h3>
+      </div>
+      <div class="card-body">
+        <% unless fairshare.blank? %>
+          <table class="table table-sm table-striped table-condensed metrics">
+            <thead>
+            <tr>
+              <th>Account <span class="float-end float-right">Fairshare</span></th>
+            </tr>
+            </thead>
+            <tbody>
+              <% fairshare.each do |fairshare_data| %>
+              <tr>
+                <td title="<%= fairshare_data[:fairshare].to_s.to_f.round(4) %> fairshare for account <%= fairshare_data[:account] %>">
+                  <%= fairshare_data[:account] %>
+                  <span class="badge <%= metrics_helper.fairshare_class(fairshare_data[:fairshare]) %> float-end float-right"><%= fairshare_data[:fairshare].to_s.to_f.round(4) %></span>
+                </td>
+              </tr>
+            <% end %>
+            </tbody>
+          </table>
+        <% else %>
+          <p class="no-fairshare-data">
+            No fairshare data available for user <span><%= @user.name %></span>
+          </p>
+        <% end %>
+        <small class="float-end float-right metrics-note" title="FASRC information on how fairshare is calculated and it affects your jobs.">
+          <a target="_blank" href="https://docs.rc.fas.harvard.edu/kb/fairshare/">FASRC Fairshare info</a>
+        </small>
+      </div>
+    </div>
+  </div>

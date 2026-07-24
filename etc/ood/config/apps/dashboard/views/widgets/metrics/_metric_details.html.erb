@@ -1,0 +1,41 @@
+<%
+  target = local_assigns.fetch(:id)
+  title = local_assigns.fetch(:title, '')
+  metric_efficiency = local_assigns.fetch(:efficiency, nil)
+  metric_efficiency_title = metric_efficiency ? "#{title} #{metric_efficiency}%" : "#{title} N/A"
+  metric_items = local_assigns.fetch(:items, [])
+
+  metrics_helper = SlurmMetrics::MetricsHelper.new
+
+%>
+<div class="metric-summary">
+  <% # COLLAPSE NEEDS TO BE COMPATIBLE WITH BOOTSTRAP v4 and v5 FOR THE TRANSITION BETWEEN OODv3.x and OODv4.x%>
+  <p class="job-metrics-description" data-toggle="collapse" data-target="#<%= target %>" data-bs-toggle="collapse" data-bs-target="#<%= target %>" aria-expanded="false">
+    <button class="btn btn-default btn-xs">
+      <i class="fa fa-plus fa-fw app-icon closed" aria-hidden="true"></i>
+      <i class="fa fa-minus fa-fw app-icon open" aria-hidden="true"></i>
+    </button>
+    <span><%= title %></span>
+    <span class="badge <%= metrics_helper.efficiency_class(metric_efficiency) %> float-end float-right" title="<%= metric_efficiency_title %>"><%= metric_efficiency ? "#{metric_efficiency}%" : 'N/A' %></span>
+  </p>
+  <div id="<%= target %>" class="job-metrics-summary collapse">
+    <table class="table table-sm table-striped table-condensed">
+      <thead>
+      <tr>
+        <% metric_items.each do |metric| %>
+          <% label, _ = metric %>
+          <th><%= label %></th>
+        <% end %>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <% metric_items.each do |metric| %>
+          <% _, value = metric %>
+          <td><%= value %></td>
+        <% end %>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,149 @@
+<%
+  cluster_service = SlurmCluster::ClusterService.new
+  timestamp, partitions = cluster_service.partitions
+
+  cluster_helper = SlurmCluster::ClusterHelper.new
+%>
+<script>
+  jQuery(function (){
+    $('#metrics-partition-status').DataTable({
+      searching: false,
+      lengthChange: true,
+      pageLength: 15,
+      lengthMenu: [[10, 15, 25, 50, -1], [10, 15, 25, 50, "All"]],
+      pagingType: "simple",
+      language: {
+        paginate: {
+          previous: '<',
+          next: '>'
+        },
+        info: "_START_ to _END_ of _TOTAL_",
+        infoEmpty: "No partitions data available for user <%= @user.name %>",
+      },
+      autoWidth: false, // Disable automatic column width calculation
+      columns: [
+        { width: "60%" },
+        { width: "15%" },
+        { width: "15%" },
+        { width: "15%" },
+      ],
+      initComplete: function () {
+        // Show table body after DataTables initializes to avoid flicker effect.
+        $('#metrics-partition-status').fadeIn();
+      }
+    });
+  });
+</script>
+<style>
+    div.partition-widget-component {
+        padding-bottom: 1rem;
+    }
+
+    .partition-widget-component h3 {
+        padding-bottom: unset;
+        color: rgb(51, 51, 51);
+        letter-spacing: normal;
+        font-weight: bold;
+    }
+
+    .partition-widget-component table {
+        display: none;
+    }
+
+    .partition-widget-component table {
+        font-size: 1rem;
+    }
+
+    .partition-widget-component table .small {
+        font-size: 0.85rem;
+    }
+
+    .partition-widget-component table td {
+        cursor: default;
+    }
+
+    .partition-widget-component [title]{
+        cursor: default;
+    }
+
+    .partition-widget-component table th:hover {
+        background-color: transparent;
+    }
+
+    .partition-widget-component table th.sorting::before {
+        content: "▲" !important;
+    }
+
+    .partition-widget-component table th.sorting::after {
+        content: "▼" !important;
+    }
+
+    .partition-widget-component li.paginate_button a {
+        padding: 1px 10px;
+    }
+
+    .partition-widget-component .card-body {
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+    }
+
+    .partition-widget-component div#metrics-partition-status_info {
+        padding-top: 5px;
+    }
+
+    .partition-widget-component .badge {
+        width: 90%;
+    }
+
+    #metrics-partition-status {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    .dataTables_wrapper td, .dataTables_wrapper th {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .dataTables_wrapper td {
+        white-space: nowrap;
+    }
+</style>
+<div class="partition-widget-component">
+  <div class="card mt-3">
+    <div class="card-header" title="Slurm partition status calculated at <%= timestamp.strftime('%Y-%m-%dT%H:%M:%S') %>">
+      <small class="float-end float-right"><%= timestamp.strftime('%Y-%m-%d') %></small>
+      <h3>Partition Status</h3>
+    </div>
+    <div class="card-body">
+      <table id="metrics-partition-status" class="table table-sm table-striped table-condensed">
+        <thead>
+        <tr>
+          <th>Partition</th>
+          <th class="small text-center" title="Nodes available in the partition">Free Nodes</th>
+          <th class="small text-center" title="Cores available in the partition">Free Cores</th>
+          <th class="small text-center" title="Memory in GB available in at least one node in the partition">Free Mem</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% partitions.each do |partition_data| %>
+          <tr>
+            <td class="" title="partition <%= partition_data[:partition] %> is <%= partition_data[:partition_state] %>">
+              <%= cluster_helper.state_icon(partition_data[:partition_state]).html_safe %><%= partition_data[:partition] %>
+            </td>
+            <td title="<%= partition_data[:nodes_by_state][1] %> nodes free - <%= partition_data[:nodes_by_state][0] %> out of <%= partition_data[:nodes_by_state][3] - partition_data[:nodes_by_state][2] %> used (<%= partition_data[:nodes_by_state][2] %> nodes offline)">
+              <span class="badge <%= cluster_helper.cores_class(partition_data[:nodes_by_state]) %>"><%= partition_data[:nodes_by_state][1] %></span>
+            </td>
+            <td title="<%= partition_data[:procs_by_state][1] %> cores free - <%= partition_data[:procs_by_state][0] %> out of <%= partition_data[:procs_by_state][3] - partition_data[:procs_by_state][2] %> used">
+              <span class="badge <%= cluster_helper.cores_class(partition_data[:procs_by_state]) %>"><%= partition_data[:procs_by_state][1] %></span>
+            </td>
+            <td title="<%= cluster_helper.convert_mb_to_gb(partition_data[:free_memory]) %>GB of memory free from the total possible <%= cluster_helper.convert_mb_to_gb(partition_data[:total_memory]) %>GB">
+              <span class="badge <%= cluster_helper.memory_class(partition_data[:free_memory], partition_data[:total_memory]) %>"><%= cluster_helper.convert_mb_to_gb(partition_data[:free_memory]) %></span>
+            </td>
+          </tr>
+        <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
