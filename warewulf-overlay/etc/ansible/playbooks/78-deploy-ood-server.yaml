@@ -152,13 +152,6 @@
         dest: /opt/ood/
         remote_src: true
 
-    - name: Deploy custom MOTD
-      copy:
-        src: "{{ repo_dir }}/etc/motd"
-        dest: /etc/motd
-        remote_src: true
-        mode: '0644'
-
     # NOTE: the config generators (gen_*_rb.sh) are shell scripts and must NOT
     # live in /etc/cron.d (cron parses them as crontabs -> "bad minute" spam and
     # they never run). They are deployed to /opt/ood/cron/ by the opt/ood copy
