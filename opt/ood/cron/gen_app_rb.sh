@@ -38,9 +38,7 @@ apps=(
   afni
   gnuplot
   geant4
-  matlab
   vmd
-  igv
   fsl
   mrtrix
 )
@@ -54,7 +52,6 @@ get_title() {
     code-server) echo "VS Code Server" ;;
     paraview) echo "ParaView" ;;
     vmd) echo "VMD" ;;
-    igv) echo "IGV" ;;
     qgis) echo "QGIS" ;;
     blender) echo "Blender" ;;
     octave) echo "Octave" ;;
