@@ -1,0 +1,13 @@
+#!/bin/bash
+
+echo "[after.sh.erb] Waiting for GPT4All Server to start on ${host}:${port}..."
+
+if wait_until_port_used "${host}:${port}" 600; then
+  echo "Discovered GPT4All Server listening on port ${port}!"
+else
+  echo "Timed out waiting for GPT4All server to open port ${port}!"
+  clean_up 1
+fi
+sleep 2
+
+echo "[after.sh.erb] GPT4All Server ready."
