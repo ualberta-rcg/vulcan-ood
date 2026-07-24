@@ -227,6 +227,14 @@
         state: directory
         mode: '0755'
 
+    # Generate 2048-bit DH params fresh at boot (stateless node, /etc on tmpfs).
+    # MUST run before the portal regen/restart so the SSLOpenSSLConfCmd DHParameters
+    # directive in ood_portal.yml resolves at apache startup.
+    - name: Generate DH params for TLS
+      command: openssl dhparam -out /etc/ssl/ood/dhparam.pem 2048
+      args:
+        creates: /etc/ssl/ood/dhparam.pem
+
     ############################################################################
     # PHASE 11: Critical Permissions and Ownership
     ############################################################################

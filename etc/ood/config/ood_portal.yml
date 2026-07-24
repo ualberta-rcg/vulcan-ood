@@ -76,6 +76,11 @@ oidc_settings:
 ssl:
   - 'SSLCertificateFile "/etc/ssl/ood/fullchain.pem"'   # Full certificate chain (generate manually)
   - 'SSLCertificateKeyFile "/etc/ssl/ood/privkey.pem"'  # Private key file (generate manually)
+  # --- TLS hardening (drops weak HMAC/static-key ciphers; ffdhe2048 DH) ---
+  - 'SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1'            # TLS 1.2+ only
+  - 'SSLCipherSuite HIGH:!aNULL:!eNULL:!MD5:!3DES:!RC4:!CAMELLIA:!EXPORT:!PSK'
+  - 'SSLHonorCipherOrder on'                            # server picks the cipher
+  - 'SSLOpenSSLConfCmd DHParameters "/etc/ssl/ood/dhparam.pem"'  # 2048-bit, generated at boot by playbook 78
 
 # =============================================================================
 # CUSTOM APACHE DIRECTIVES
