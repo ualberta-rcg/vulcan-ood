@@ -1,6 +1,12 @@
 #!/bin/bash
-# before.sh.erb — ChainForge setup. Shared preamble from templates/web_setup.sh.
-export OOD_APP_NAME="chainforge"
-<% template_root = "/var/www/ood/apps/templates/" %>
-<% IO.foreach(template_root + "web_setup.sh") do |line| %><%= line %><% end %>
-echo "[before:${OOD_APP_NAME}] setup complete"
+# before.sh.erb — ChainForge setup (OOD batch_connect 'before' hook).
+echo "[before] starting ChainForge setup for $USER (uid $(id -u))"
+
+if [[ $(type -t module) == "function" ]]; then export -f module; else echo "[before] WARN: module function unavailable"; fi
+
+export port="$(find_port ${host})"
+[[ -z "$port" ]] && { echo "[before] ERROR: no free port"; exit 1; }
+export JOB_DIR="${PWD}"
+export CC_CLUSTER=vulcan
+echo "[before] port=${port} job_dir=${JOB_DIR}"
+echo "[before] setup complete"

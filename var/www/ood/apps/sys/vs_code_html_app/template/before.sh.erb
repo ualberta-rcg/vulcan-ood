@@ -1,14 +1,20 @@
 #!/bin/bash
-# before.sh.erb — VS Code Server setup. Shared preamble from templates/web_setup.sh;
-# code-server data dir + password below.
-export OOD_APP_NAME="vscode"
-<% template_root = "/var/www/ood/apps/templates/" %>
-<% IO.foreach(template_root + "web_setup.sh") do |line| %><%= line %><% end %>
+# before.sh.erb — VS Code Server setup (OOD batch_connect 'before' hook).
+echo "[before] starting VS Code Server setup for $USER (uid $(id -u))"
 
-# --- VS Code-specific ---
+if [[ $(type -t module) == "function" ]]; then export -f module; else echo "[before] WARN: module function unavailable"; fi
+
+export port="$(find_port ${host})"
+[[ -z "$port" ]] && { echo "[before] ERROR: no free port"; exit 1; }
+export JOB_DIR="${PWD}"
+export CC_CLUSTER=vulcan
+echo "[before] port=${port} job_dir=${JOB_DIR}"
+
+# --- VS Code: code-server data dir + password ---
 export CODESERVER_LOG_FILE="${JOB_DIR}/code-server.log"
 export CODESERVER_DATA_HOME="${HOME}/.vscode-ood"
 export CODESERVER_PASSWORD="$(create_passwd 16)"
 export password="$CODESERVER_PASSWORD"
-mkdir -p "$CODESERVER_DATA_HOME" || { echo "[before:${OOD_APP_NAME}] ERROR: mkdir $CODESERVER_DATA_HOME failed"; exit 1; }
-echo "[before:${OOD_APP_NAME}] code-server data: ${CODESERVER_DATA_HOME}"
+mkdir -p "$CODESERVER_DATA_HOME" || { echo "[before] ERROR: mkdir $CODESERVER_DATA_HOME failed"; exit 1; }
+echo "[before] code-server data: ${CODESERVER_DATA_HOME}"
+echo "[before] setup complete"

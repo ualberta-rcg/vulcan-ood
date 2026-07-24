@@ -1,7 +1,11 @@
 #!/bin/bash
-# after.sh.erb — wait for the code-server server. Shared wait logic lives in
-# templates/web_after.sh (ERB-inlined here). Sets app name + timeout, nothing else.
-export OOD_APP_NAME="code-server"
-export WAIT_TIMEOUT=120
-<% template_root = "/var/www/ood/apps/templates/" %>
-<% IO.foreach(template_root + "web_after.sh") do |line| %><%= line %><% end %>
+# after.sh.erb — wait for the VS Code Server server (OOD batch_connect 'after' hook).
+echo "[after] waiting for VS Code Server on ${host}:${port} (timeout 120s)..."
+if wait_until_port_used "${host}:${port}" "120"; then
+  echo "[after] VS Code Server is up on port ${port}"
+else
+  echo "[after] ERROR: timed out waiting for port ${port} — check output.log"
+  clean_up 1
+fi
+sleep 2
+echo "[after] ready"

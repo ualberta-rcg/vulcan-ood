@@ -1,7 +1,11 @@
 #!/bin/bash
-# after.sh.erb — wait for the jupyter server. Shared wait logic lives in
-# templates/web_after.sh (ERB-inlined here). Sets app name + timeout, nothing else.
-export OOD_APP_NAME="jupyter"
-export WAIT_TIMEOUT=600
-<% template_root = "/var/www/ood/apps/templates/" %>
-<% IO.foreach(template_root + "web_after.sh") do |line| %><%= line %><% end %>
+# after.sh.erb — wait for the Jupyter Lab server (OOD batch_connect 'after' hook).
+echo "[after] waiting for Jupyter Lab on ${host}:${port} (timeout 600s)..."
+if wait_until_port_used "${host}:${port}" "600"; then
+  echo "[after] Jupyter Lab is up on port ${port}"
+else
+  echo "[after] ERROR: timed out waiting for port ${port} — check output.log"
+  clean_up 1
+fi
+sleep 2
+echo "[after] ready"

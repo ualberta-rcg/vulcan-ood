@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "[script.sh.erb] Starting JupyterLab Server"
+echo "[script] Starting JupyterLab Server"
 
 cd "${HOME}"
 
@@ -9,7 +9,7 @@ cd "${HOME}"
 <%= context.additional_environment %>
 <%- end -%>
 
-echo "[script.sh.erb] Loading JupyterLab-Apps."
+echo "[script] Loading JupyterLab-Apps."
 module load jupyterlab-apps/1.0
 
 # Source the CVMFS-based Jupyter environment (handles noexec issue)
@@ -21,4 +21,4 @@ jupyter kernelspec list
 # Launch Jupyter Lab
 jupyter lab --config="${CONFIG_FILE}"
 
-echo "[script.sh.erb] JupyterLab Server Started."
+echo "[script] JupyterLab Server Started."

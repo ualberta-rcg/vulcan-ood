@@ -1,11 +1,18 @@
 #!/bin/bash
-# before.sh.erb — Jupyter Lab setup. Shared preamble from templates/web_setup.sh;
-# secure password + notebook server config below.
-export OOD_APP_NAME="jupyter"
-<% template_root = "/var/www/ood/apps/templates/" %>
-<% IO.foreach(template_root + "web_setup.sh") do |line| %><%= line %><% end %>
+# before.sh.erb — Jupyter Lab setup (OOD batch_connect 'before' hook).
+echo "[before] starting Jupyter Lab setup for $USER (uid $(id -u))"
 
-# --- Jupyter-specific: secure password + notebook server config ---
+# --- module function (script.sh.erb loads modules) ---
+if [[ $(type -t module) == "function" ]]; then export -f module; else echo "[before] WARN: module function unavailable"; fi
+
+# --- port + job context ---
+export port="$(find_port ${host})"
+[[ -z "$port" ]] && { echo "[before] ERROR: no free port"; exit 1; }
+export JOB_DIR="${PWD}"
+export CC_CLUSTER=vulcan
+echo "[before] port=${port} job_dir=${JOB_DIR}"
+
+# --- Jupyter: secure password + notebook server config ---
 SALT="$(create_passwd 16)"
 password="$(create_passwd 16)"
 PASSWORD_SHA1="$(echo -n "${password}${SALT}" | openssl dgst -sha1 | awk '{print $NF}')"
@@ -26,4 +33,5 @@ c.NotebookApp.notebook_dir = '${HOME}'
 c.NotebookApp.disable_check_xsrf = True
 EOL
 )
-echo "[before:${OOD_APP_NAME}] wrote notebook config: ${CONFIG_FILE}"
+echo "[before] wrote notebook config: ${CONFIG_FILE}"
+echo "[before] setup complete"

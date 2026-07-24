@@ -1,7 +1,11 @@
 #!/bin/bash
-# after.sh.erb — wait for the rstudio server. Shared wait logic lives in
-# templates/web_after.sh (ERB-inlined here). Sets app name + timeout, nothing else.
-export OOD_APP_NAME="rstudio"
-export WAIT_TIMEOUT=300
-<% template_root = "/var/www/ood/apps/templates/" %>
-<% IO.foreach(template_root + "web_after.sh") do |line| %><%= line %><% end %>
+# after.sh.erb — wait for the RStudio Server server (OOD batch_connect 'after' hook).
+echo "[after] waiting for RStudio Server on ${host}:${port} (timeout 300s)..."
+if wait_until_port_used "${host}:${port}" "300"; then
+  echo "[after] RStudio Server is up on port ${port}"
+else
+  echo "[after] ERROR: timed out waiting for port ${port} — check output.log"
+  clean_up 1
+fi
+sleep 2
+echo "[after] ready"
