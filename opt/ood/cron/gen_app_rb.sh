@@ -41,6 +41,7 @@ apps=(
   vmd
   fsl
   mrtrix
+  matlab
 )
 
 # Helper to title the app
@@ -58,6 +59,7 @@ get_title() {
     mujoco) echo "MuJoCo" ;;
     fsl) echo "FSL" ;;
     mrtrix) echo "MRtrix" ;;
+    matlab) echo "MATLAB" ;;
     *) echo "$1" ;;
   esac
 }
