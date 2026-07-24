@@ -1,0 +1,5 @@
+# Regenerate OOD dashboard configs (idempotent) — Slurm partitions, GPU gres,
+# and CVMFS module versions drift over time. Generators live in /opt/ood/cron/.
+17 * * * *   root /opt/ood/cron/gen_cluster_rb.sh
+*/30 * * * * root /opt/ood/cron/gen_gpu_rb.sh
+13 * * * *   root /opt/ood/cron/gen_app_rb.sh
