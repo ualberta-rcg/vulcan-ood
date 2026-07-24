@@ -25,5 +25,5 @@ script:
     <%- if defined?(additional_environment) && additional_environment.present? -%>
     # Additional environment setup will be handled in the job script
     <%- end -%>
-    - "--partition=gpubase_interac"
+    - "--partition=cpubase_interac"
     - "--qos=interac"

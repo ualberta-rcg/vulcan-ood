@@ -13,6 +13,11 @@ cd "${HOME}" || {
 echo "[script.sh.erb] Purging and restoring modules..."
 module purge && module restore
 
+# Apply additional environment if provided
+<%- if context.respond_to?(:additional_environment) && context.additional_environment.present? -%>
+<%= context.additional_environment %>
+<%- end -%>
+
 # Login shell (from env, set when the session started — no NSS lookup)
 export SHELL="${SHELL:-/bin/bash}"
 echo "[script.sh.erb] SHELL set to: $SHELL"
