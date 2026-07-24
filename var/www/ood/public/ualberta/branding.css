@@ -139,3 +139,17 @@ img[src*="amii-logo"] {
   width: 100% !important;
   height: auto !important;
 }
+
+/* Pinned apps grid: 2 per row on small screens, 4 per row on md+.
+   Forces the flex basis directly so it holds regardless of the card's
+   bootstrap col-* classes or PUN view caching. */
+.app-launcher-container {
+  flex: 0 0 50% !important;
+  max-width: 50% !important;
+}
+@media (min-width: 768px) {
+  .app-launcher-container {
+    flex: 0 0 25% !important;
+    max-width: 25% !important;
+  }
+}
