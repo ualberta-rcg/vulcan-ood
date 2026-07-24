@@ -3,13 +3,19 @@ module CustomAppVersions
 
   def self.rstudio_server_module_list
     [
+      ["RStudio Server 4.1", "rstudio-server/4.1"],
+      ["RStudio Server 4.2", "rstudio-server/4.2"],
       ["RStudio Server 4.3", "rstudio-server/4.3"],
       ["RStudio Server 4.4", "rstudio-server/4.4"],
+      ["RStudio Server 4.5", "rstudio-server/4.5"],
+      ["RStudio Server 4.6", "rstudio-server/4.6"],
     ].reverse
   end
 
   def self.code_server_module_list
     [
+      ["VS Code Server 3.5.0", "code-server/3.5.0"],
+      ["VS Code Server 3.12.0", "code-server/3.12.0"],
       ["VS Code Server 4.92.2", "code-server/4.92.2"],
       ["VS Code Server 4.101.2", "code-server/4.101.2"],
     ].reverse
@@ -17,19 +23,28 @@ module CustomAppVersions
 
   def self.paraview_module_list
     [
+      ["ParaView 5.8.0", "paraview/5.8.0"],
+      ["ParaView 5.9.1", "paraview/5.9.1"],
+      ["ParaView 5.10.0", "paraview/5.10.0"],
+      ["ParaView 5.11.0", "paraview/5.11.0"],
       ["ParaView 5.11.2", "paraview/5.11.2"],
       ["ParaView 5.13.1", "paraview/5.13.1"],
+      ["ParaView 6.0.0", "paraview/6.0.0"],
     ].reverse
   end
 
   def self.qgis_module_list
     [
+      ["QGIS 3.10.6", "qgis/3.10.6"],
+      ["QGIS 3.22.14", "qgis/3.22.14"],
       ["QGIS 3.28.12", "qgis/3.28.12"],
     ].reverse
   end
 
   def self.blender_module_list
     [
+      ["Blender 2.92.0", "blender/2.92.0"],
+      ["Blender 3.6.0", "blender/3.6.0"],
       ["Blender 4.0.2", "blender/4.0.2"],
       ["Blender 4.2.8", "blender/4.2.8"],
     ].reverse
@@ -37,12 +52,18 @@ module CustomAppVersions
 
   def self.octave_module_list
     [
+      ["Octave 5.2.0", "octave/5.2.0"],
       ["Octave 7.2.0", "octave/7.2.0"],
     ].reverse
   end
 
   def self.mujoco_module_list
     [
+      ["MuJoCo 2.2.0", "mujoco/2.2.0"],
+      ["MuJoCo 2.2.2", "mujoco/2.2.2"],
+      ["MuJoCo 2.2.2", "mujoco/2.2.2"],
+      ["MuJoCo 2.3.6", "mujoco/2.3.6"],
+      ["MuJoCo 2.3.6", "mujoco/2.3.6"],
       ["MuJoCo 3.0.1", "mujoco/3.0.1"],
       ["MuJoCo 3.0.1", "mujoco/3.0.1"],
       ["MuJoCo 3.1.6", "mujoco/3.1.6"],
@@ -54,18 +75,31 @@ module CustomAppVersions
 
   def self.afni_module_list
     [
+      ["afni 20.3.05", "afni/20.3.05"],
+      ["afni 21.2.10", "afni/21.2.10"],
+      ["afni 22.1.12", "afni/22.1.12"],
+      ["afni 23.1.00", "afni/23.1.00"],
+      ["afni 23.1.08", "afni/23.1.08"],
       ["afni 24.1.03", "afni/24.1.03"],
+      ["afni 26.0.09", "afni/26.0.09"],
     ].reverse
   end
 
   def self.gnuplot_module_list
     [
+      ["gnuplot 5.2.8", "gnuplot/5.2.8"],
+      ["gnuplot 5.4.2", "gnuplot/5.4.2"],
+      ["gnuplot 5.4.6", "gnuplot/5.4.6"],
       ["gnuplot 5.4.8", "gnuplot/5.4.8"],
+      ["gnuplot 6.0.3", "gnuplot/6.0.3"],
     ].reverse
   end
 
   def self.geant4_module_list
     [
+      ["geant4 10.06", "geant4/10.06"],
+      ["geant4 10.7.3", "geant4/10.7.3"],
+      ["geant4 11.1.0", "geant4/11.1.0"],
       ["geant4 11.1.2", "geant4/11.1.2"],
       ["geant4 11.2.1", "geant4/11.2.1"],
       ["geant4 11.3.0", "geant4/11.3.0"],
@@ -74,19 +108,41 @@ module CustomAppVersions
 
   def self.visit_module_list
     [
+      ["visit 2.13.3", "visit/2.13.3"],
+      ["visit 3.2.1", "visit/3.2.1"],
     ].reverse
   end
 
   def self.matlab_module_list
     [
+      ["matlab 2020a", "matlab/2020a"],
+      ["matlab 2020b", "matlab/2020b"],
+      ["matlab 2020b.4", "matlab/2020b.4"],
+      ["matlab 2020b.6", "matlab/2020b.6"],
+      ["matlab 2021a.1", "matlab/2021a.1"],
+      ["matlab 2021a.5", "matlab/2021a.5"],
+      ["matlab 2021b.3", "matlab/2021b.3"],
+      ["matlab 2022a", "matlab/2022a"],
+      ["matlab 2022b.2", "matlab/2022b.2"],
+      ["matlab 2023a.3", "matlab/2023a.3"],
       ["matlab 2023b.2", "matlab/2023b.2"],
       ["matlab 2024b.1", "matlab/2024b.1"],
+      ["matlab 2025b.1", "matlab/2025b.1"],
+      ["matlab 2026a.3", "matlab/2026a.3"],
     ].reverse
   end
 
   def self.vmd_module_list
     [
+      ["VMD 1.9.3", "vmd/1.9.3"],
+      ["VMD 1.9.4a43", "vmd/1.9.4a43"],
       ["VMD 1.9.4a57", "vmd/1.9.4a57"],
+    ].reverse
+  end
+
+  def self.igv_module_list
+    [
+      ["IGV 2.9.2", "igv/2.9.2"],
     ].reverse
   end
 end

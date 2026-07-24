@@ -5,8 +5,18 @@ module CustomClusterInfo
   end
   def self.partitions
     [
+      "cpubase_bycore_b1",
+      "cpubase_bycore_b2",
+      "cpubase_bycore_b3",
+      "cpubase_bycore_b4",
+      "cpubase_bycore_b5",
+      "cpubase_bynode_b1",
+      "cpubase_bynode_b2",
+      "cpubase_bynode_b3",
+      "cpubase_bynode_b4",
+      "cpubase_bynode_b5",
       "cpubase_interac",
-      "cpubase_short",
+      "distributive",
       "gpubase_bygpu_b1",
       "gpubase_bygpu_b2",
       "gpubase_bygpu_b3",
@@ -18,10 +28,11 @@ module CustomClusterInfo
       "gpubase_bynode_b4",
       "gpubase_bynode_b5",
       "gpubase_interac",
+      "test",
     ]
   end
   def self.max_cpus_per_node
-    128
+    64
   end
   def self.max_memory_per_node
     504
