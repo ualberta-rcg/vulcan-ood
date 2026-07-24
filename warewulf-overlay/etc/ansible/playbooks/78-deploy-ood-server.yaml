@@ -146,18 +146,6 @@
         dest: /var/www/ood/
         remote_src: true
 
-    # Apps deploy with the repo's source modes, which can leave dirs non-traversable
-    # (e.g. template/desktops/ at 0750) and break batch_connect staging (rsync
-    # opendir Permission denied). Normalize: dirs 0755, .sh/.sh.erb executable,
-    # other files 0644.
-    - name: Normalize app perms (dirs 0755, scripts +x, files 0644)
-      shell: |
-        find /var/www/ood/apps -type d -exec chmod 755 {} \;
-        find /var/www/ood/apps -type f \( -name "*.sh" -o -name "*.sh.erb" \) -exec chmod 755 {} \;
-        find /var/www/ood/apps -type f ! \( -name "*.sh" -o -name "*.sh.erb" \) -exec chmod 644 {} \;
-      args:
-        executable: /bin/bash
-
     - name: Deploy OOD operational scripts
       copy:
         src: "{{ repo_dir }}/opt/ood/"

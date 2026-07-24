@@ -15,6 +15,19 @@
 
   tasks:
 
+    # ── Normalize OOD app perms (apps deploy with the repo's source modes,
+    #    which can leave dirs non-traversable, e.g. template/desktops/ at 0750,
+    #    and break batch_connect staging with "rsync opendir Permission denied").
+    #    Dirs 0755, .sh/.sh.erb executable, other files 0644.
+    - name: Normalize OOD app permissions
+      ansible.builtin.shell: |
+        find /var/www/ood/apps -type d -exec chmod 755 {} \;
+        find /var/www/ood/apps -type f \( -name "*.sh" -o -name "*.sh.erb" \) -exec chmod 755 {} \;
+        find /var/www/ood/apps -type f ! \( -name "*.sh" -o -name "*.sh.erb" \) -exec chmod 644 {} \;
+      args:
+        executable: /bin/bash
+      changed_when: false
+
     # ── Mask cosmetic services that fail on an OOD login node ──────────────
     - name: Mask unneeded services (reduce failed-unit noise)
       ansible.builtin.systemd:
