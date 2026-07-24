@@ -1,13 +1,7 @@
 #!/bin/bash
-
-echo "[after.sh.erb] Waiting for OpenRefine Server to start on ${host}:${port}..."
-
-if wait_until_port_used "${host}:${port}" 600; then
-  echo "Discovered OpenRefine Server listening on port ${port}!"
-else
-  echo "Timed out waiting for OpenRefine server to open port ${port}!"
-  clean_up 1
-fi
-sleep 2
-
-echo "[after.sh.erb] OpenRefine Server exited."
+# after.sh.erb — wait for the openrefine server. Shared wait logic lives in
+# templates/web_after.sh (ERB-inlined here). Sets app name + timeout, nothing else.
+export OOD_APP_NAME="openrefine"
+export WAIT_TIMEOUT=600
+<% template_root = "/var/www/ood/apps/templates/" %>
+<% IO.foreach(template_root + "web_after.sh") do |line| %><%= line %><% end %>

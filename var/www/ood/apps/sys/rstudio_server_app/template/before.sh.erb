@@ -1,24 +1,7 @@
 #!/bin/bash
-
-echo "[before.sh.erb] Starting RStudio Server Setup..."
-
-# Export the module function if available (script needs it for module load)
-if [[ $(type -t module) == "function" ]]; then
-  echo "[before.sh.erb] 'module' function is available."
-  export -f module
-else
-  echo "[before.sh.erb] WARNING: 'module' function not available."
-fi
-
-# Job dir and port (script and after need these)
-export JOB_DIR="$PWD"
-export port=$(find_port ${host})
-if [[ -z "$port" ]]; then
-  echo "[before.sh.erb] ERROR: Failed to allocate a port."
-  exit 1
-fi
-echo "[before.sh.erb] JOB_DIR=${JOB_DIR} port=${port}"
-
-
-
-echo "[before.sh.erb] Setup complete."
+# before.sh.erb — RStudio Server setup. Shared preamble (port, module, CC_CLUSTER)
+# is ERB-included from templates/web_setup.sh; RStudio needs nothing app-specific here.
+export OOD_APP_NAME="rstudio"
+<% template_root = "/var/www/ood/apps/templates/" %>
+<% IO.foreach(template_root + "web_setup.sh") do |line| %><%= line %><% end %>
+echo "[before:${OOD_APP_NAME}] setup complete"

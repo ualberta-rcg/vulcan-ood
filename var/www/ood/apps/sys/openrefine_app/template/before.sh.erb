@@ -1,45 +1,13 @@
 #!/bin/bash
+# before.sh.erb — OpenRefine setup. Shared preamble from templates/web_setup.sh;
+# password + working dir below.
+export OOD_APP_NAME="openrefine"
+<% template_root = "/var/www/ood/apps/templates/" %>
+<% IO.foreach(template_root + "web_setup.sh") do |line| %><%= line %><% end %>
 
-echo "[before.sh.erb] Starting OpenRefine Setup..."
-
-# Export the module function if available
-if [[ $(type -t module) == "function" ]]; then
-  echo "[before.sh.erb] 'module' function is available."
-  export -f module
-else
-  echo "[before.sh.erb] WARNING: 'module' function not available."
-fi
-
-# Find available port to run server on
-export port=$(find_port ${host})
-if [[ -z "$port" ]]; then
-  echo "[before.sh.erb] ERROR: Failed to allocate a port."
-  exit 1
-else
-  echo "[before.sh.erb] Selected available port: $port"
-fi
-
-# Generate secure password for OpenRefine
+# --- OpenRefine-specific ---
 export password="$(create_passwd 16)"
-echo "[before.sh.erb] Generated OpenRefine password: $password"
-
-# Needed for Alliance Clusters
-export CC_CLUSTER=vulcan
-
-# OpenRefine working directory (data and logs; OpenRefine binary comes from CVMFS module)
 export OPENREFINE_WORKDIR="${PWD}/openrefine-data"
 export OPENREFINE_LOG_FILE="${PWD}/openrefine.log"
-
-echo "[before.sh.erb] OPENREFINE_WORKDIR: $OPENREFINE_WORKDIR"
-echo "[before.sh.erb] OPENREFINE_LOG_FILE: $OPENREFINE_LOG_FILE"
-
-# Create OpenRefine working directory
-mkdir -p "$OPENREFINE_WORKDIR"
-if [[ $? -ne 0 ]]; then
-  echo "[before.sh.erb] ERROR: Failed to create directory ${OPENREFINE_WORKDIR}"
-  exit 1
-else
-  echo "[before.sh.erb] Successfully created OpenRefine working directory."
-fi
-
-echo "[before.sh.erb] OpenRefine setup complete (using CVMFS module openrefine/3.9.3)."
+mkdir -p "$OPENREFINE_WORKDIR" || { echo "[before:${OOD_APP_NAME}] ERROR: mkdir $OPENREFINE_WORKDIR failed"; exit 1; }
+echo "[before:${OOD_APP_NAME}] workdir=${OPENREFINE_WORKDIR} (module: openrefine/3.9.3)"
