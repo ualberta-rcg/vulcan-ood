@@ -1,36 +1,51 @@
 <%# Shown when a user is authenticated but their Vulcan home isn't provisioned. %>
-<div class="jumbotron text-center mt-4">
-  <h1 class="display-4">
-    <% if @vulcan_reason == :no_access %>
-      Welcome to Vulcan
-    <% else %>
-      Your account is being set up
-    <% end %>
-  </h1>
-  <p class="lead">
-    <% if @vulcan_reason == :no_access %>
-      You're signed in, but this account doesn't have access to Vulcan yet.
-    <% else %>
-      You're signed in as <strong><%= current_user.username rescue "you" %></strong>,
-      and your Vulcan home directory is still being created.
-    <% end %>
-  </p>
-  <hr class="my-4">
-  <p>
-    <% if @vulcan_reason == :no_access %>
-      Please request Vulcan access through the Alliance, then return here once it's
-      been approved.
-    <% else %>
-      Please come back in about <strong>10 minutes</strong>. If this message persists
-      after an hour, contact support.
-    <% end %>
-  </p>
-  <p>
-    <a class="btn btn-success btn-lg" href="https://docs.alliancecan.ca/wiki/Vulcan" target="_blank" role="button">Vulcan documentation</a>
-    <a class="btn btn-outline-secondary btn-lg" href="mailto:support@tech.alliancecan.ca" role="button">Contact support</a>
-  </p>
-  <p class="text-muted small mt-3">
-    Need to sign out?
-    <a href="/logout">Log out</a>
-  </p>
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card shadow-sm mt-4" style="border-top: 6px solid #007C41;">
+      <div class="card-body text-center p-5">
+        <img src="/public/ualberta/logo.png" alt="University of Alberta" height="46" class="mb-3">
+        <h1 class="h3 mb-3" style="color:#005A2C;">
+          <% if @vulcan_reason == :no_access %>
+            Request Vulcan access
+          <% else %>
+            Your account is being set up
+          <% end %>
+        </h1>
+
+        <% if @vulcan_reason == :no_access %>
+          <p class="lead">
+            You're signed in, but this account doesn't have access to Vulcan yet.
+          </p>
+          <p>Request access to Vulcan (and other PAICE systems) through the CCDB:</p>
+        <% else %>
+          <p class="lead">
+            You're signed in as
+            <strong><%= current_user.username rescue "you" %></strong>, and your
+            Vulcan directories are still being created.
+          </p>
+          <p>
+            Please come back in about <strong>10 minutes</strong>. If this message
+            is still here after an hour, you may not have requested Vulcan access yet:
+          </p>
+        <% end %>
+
+        <p>
+          <a class="btn btn-success btn-lg" href="https://ccdb.alliancecan.ca/paice/general_access_to_paice_systems" target="_blank" role="button">
+            Request access in CCDB
+          </a>
+        </p>
+
+        <hr class="my-4">
+        <p class="text-muted small mb-1">
+          Need help?
+          <a href="mailto:support@tech.alliancecan.ca">support@tech.alliancecan.ca</a>
+          &middot;
+          <a href="https://docs.alliancecan.ca/wiki/Vulcan" target="_blank">Vulcan docs</a>
+        </p>
+        <p class="text-muted small">
+          <a href="/logout">Log out</a>
+        </p>
+      </div>
+    </div>
+  </div>
 </div>

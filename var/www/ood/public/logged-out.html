@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Send the user to the U of A Research Computing page after sign-out. -->
-  <meta http-equiv="refresh" content="3; url=https://www.ualberta.ca/en/information-services-and-technology/research-computing/index.html">
+  <!-- End the Alliance SSO session too (otherwise going back silently re-auths).
+       The IdP logout then returns to the U of A Research Computing page. -->
+  <meta http-equiv="refresh" content="2; url=https://idp.alliancecan.ca/idp/profile/Logout?return=https%3A%2F%2Fwww.ualberta.ca%2Fen%2Finformation-services-and-technology%2Fresearch-computing%2Findex.html">
   <title>Signed out — Vulcan OnDemand</title>
   <style>
     :root { --green:#007C41; --green-dk:#005A2C; }
@@ -29,15 +30,14 @@
   <div class="card">
     <img class="logo" src="/public/ualberta/logo.png" alt="University of Alberta">
     <h1>You're signed out of Vulcan</h1>
-    <p>Your OnDemand session has ended. Taking you to the
-       U of A Research Computing page…</p>
+    <p>Your OnDemand session has ended. Ending your Alliance login too&hellip;</p>
     <p>
-      <a class="btn primary" href="https://www.ualberta.ca/en/information-services-and-technology/research-computing/index.html">Go to Research Computing</a>
-      <a class="btn secondary" href="https://idp.alliancecan.ca/idp/profile/Logout?return=https%3A%2F%2Falliancecan.ca">End Alliance session too</a>
+      <a class="btn primary" href="https://idp.alliancecan.ca/idp/profile/Logout?return=https%3A%2F%2Fwww.ualberta.ca%2Fen%2Finformation-services-and-technology%2Fresearch-computing%2Findex.html">Finish signing out</a>
+      <a class="btn secondary" href="https://www.ualberta.ca/en/information-services-and-technology/research-computing/index.html">U of A Research Computing</a>
     </p>
     <p class="muted">
-      Use "End Alliance session too" to fully sign out of the shared Alliance login so
-      the next visit asks for your credentials.
+      You'll be sent to the Alliance login sign-out, then the U of A Research Computing
+      page. Until the Alliance session ends, returning to Vulcan may sign you back in.
     </p>
   </div>
 </body>
