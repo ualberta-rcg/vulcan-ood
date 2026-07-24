@@ -1,0 +1,21 @@
+<%
+app_name = "GPT4All"
+template_root = "/var/www/ood/apps/templates/"
+%>
+---
+title: <%= app_name %>
+attributes:
+  cluster:
+    widget: select
+    label: Cluster
+    options:
+      - "<%= CustomClusterInfo.cluster_name %>"
+<% IO.foreach(template_root+"job_params") do |line| %><%= line %><% end %>
+  memtask_checkbox:
+    value: "1"
+    cacheable: false
+    widget: hidden_field
+form:
+  - cluster
+  - bc_num_hours
+<% IO.foreach(template_root+"form_params_cpu") do |line| %><%= line %><% end %>
