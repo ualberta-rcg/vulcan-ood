@@ -4,26 +4,28 @@ echo "[script.sh.erb] Starting GPT4All Server"
 
 cd "${HOME}"
 
-# --- CVMFS Python ---
-module purge
-module load StdEnv/2023 python/3.12.4
-echo "[script.sh.erb] Python: $(python3 --version)"
+# --- OS Python only (NOT CVMFS) ---
+# CVMFS modules poison PYTHONPATH + PIP_CONFIG_FILE, pinning gpt4all to the
+# broken 0.1.7 (macOS .dylib only). OS python + clean env gets gpt4all 2.x
+# from real PyPI with proper Linux .so libraries.
+module --force purge 2>/dev/null
+unset PYTHONPATH PIP_CONFIG_FILE PIP_FIND_LINKS
+export PIP_INDEX_URL=https://pypi.org/simple/
+echo "[script.sh.erb] Python: $(/usr/bin/python3 --version)"
 
 # --- venv in $SCRATCH (persists across sessions) ---
 VENV="${SCRATCH:-$HOME/scratch}/gpt4all-venv"
 if [[ ! -d "$VENV" ]]; then
   echo "[script.sh.erb] Creating venv at $VENV ..."
-  python3 -m venv "$VENV"
+  /usr/bin/python3 -m venv "$VENV"
 fi
-source "$VENV/bin/activate"
+export PATH="$VENV/bin:$PATH"
 
 # --- install gpt4all + gradio if needed ---
 if ! python3 -c "import gpt4all" 2>/dev/null; then
   echo "[script.sh.erb] Installing gpt4all + gradio (first run, ~2 min) ..."
-  pip install --upgrade pip
-  pip install "setuptools<80"
-  pip install --index-url https://pypi.org/simple/ gpt4all
-  pip install gradio
+  pip install --upgrade pip "setuptools<80"
+  pip install gpt4all gradio
 fi
 
 # --- model directory ---
@@ -34,18 +36,14 @@ mkdir -p "$MODEL_DIR"
 cat > "${VENV}/gpt4all_server.py" << 'PYEOF'
 import gradio as gr
 from gpt4all import GPT4All
-import os, glob, sys
+import os, sys
 
 MODEL_DIR = os.environ.get("GPT4ALL_MODEL_DIR", os.path.expanduser("~/gpt4all-models"))
 PORT = int(os.environ.get("port", "7860"))
-DEFAULT = "orca-mini-3b-gguf2-q4_0"
 
-existing = glob.glob(os.path.join(MODEL_DIR, "*.bin")) + glob.glob(os.path.join(MODEL_DIR, "*.gguf"))
-name = os.path.basename(existing[0]) if existing else DEFAULT
-
-print(f"[GPT4All] Loading model: {name}", flush=True)
+print("[GPT4All] Loading default model ...", flush=True)
 try:
-    model = GPT4All(name, model_path=MODEL_DIR, allow_download=True)
+    model = GPT4All(model_path=MODEL_DIR, allow_download=True)
 except Exception as e:
     print(f"[GPT4All] ERROR: {e}", file=sys.stderr)
     sys.exit(1)
@@ -54,7 +52,7 @@ print(f"[GPT4All] Serving Gradio chat on port {PORT} ...", flush=True)
 gr.ChatInterface(
     fn=lambda msg, hist: model.chat(msg),
     title="GPT4All — Local LLM Chat",
-    description=f"Model: {name} (offline on CPU)",
+    description=f"Model: {model.config.get('system_message', 'default')} (offline on CPU)",
 ).launch(server_name="0.0.0.0", server_port=PORT)
 PYEOF
 
