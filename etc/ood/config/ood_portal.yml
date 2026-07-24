@@ -67,7 +67,6 @@ oidc_settings:
   #OIDCRedisCacheServer: "172.26.92.19:6379"   # Redis server address
   #OIDCRedisCachePassword: "REDIS_SECRET"      # Redis authentication password
   
-  OIDCXForwardedHeaders: "X-Forwarded-Proto"  # Trust X-Forwarded-Proto header for SSL detection
 
 # =============================================================================
 # SSL/TLS CONFIGURATION
