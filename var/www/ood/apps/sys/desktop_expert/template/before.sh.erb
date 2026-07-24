@@ -74,4 +74,13 @@ if command -v xdg-mime >/dev/null 2>&1; then
     application/xhtml+xml application/pdf 2>/dev/null || true
 fi
 gsettings set org.gnome.desktop.default-applications.browser exec 'google-chrome' 2>/dev/null || true
-echo "[before.sh.erb] Default browser set to Chrome"
+
+# XFCE panel "Web Browser" button uses exo-open, which reads helpers.rc
+# (xdg-settings/mimeapps don't affect it). Set Chrome as the XFCE helper.
+mkdir -p "${HOME}/.config/xfce4"
+cat > "${HOME}/.config/xfce4/helpers.rc" <<'RCEOF'
+WebBrowser=google-chrome
+MailReader=thunderbird
+TerminalEmulator=xfce4-terminal
+RCEOF
+echo "[before.sh.erb] Default browser set to Chrome (xdg-mime + XFCE helpers)"

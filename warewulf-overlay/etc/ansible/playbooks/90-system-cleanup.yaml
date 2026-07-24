@@ -60,3 +60,37 @@
     - name: Clean dpkg conffile cruft (.dpkg-tmp / .dpkg-dist)
       ansible.builtin.shell: find /etc \( -name '*.dpkg-tmp' -o -name '*.dpkg-dist' \) -delete
       changed_when: false
+
+    # ── Fix executable systemd unit files (systemd warns about +x on .service) ─
+    - name: Remove executable bit from systemd unit files
+      ansible.builtin.shell: find /etc/systemd/system -name '*.service' -perm /111 -exec chmod 644 {} \;
+      changed_when: false
+
+    # ── Clean stale /tmp/ondemand-bootstrap (78 playbook leftover) ─────────
+    - name: Remove stale OOD bootstrap temp directory
+      ansible.builtin.file:
+        path: /tmp/ondemand-bootstrap
+        state: absent
+
+    # ── Fix /dev/null perms (WW image boots it at 0644, breaks all redirects) ──
+    - name: Ensure /dev/null is world-writable
+      ansible.builtin.file:
+        path: /dev/null
+        mode: "0666"
+
+    # ── Restart rsyslog after boot (recovers from file-write suspension) ─────
+    - name: Ensure rsyslog is running and healthy
+      ansible.builtin.systemd:
+        name: rsyslog
+        state: restarted
+        enabled: yes
+
+    # ── Strip CRLF from cron.d files (prevents 'bad command' syntax errors) ──
+    - name: Fix CRLF in cron.d files
+      ansible.builtin.shell: |
+        for f in /etc/cron.d/*; do
+          if file "$f" | grep -q CRLF; then
+            sed -i 's/\r$//' "$f"
+          fi
+        done
+      changed_when: false

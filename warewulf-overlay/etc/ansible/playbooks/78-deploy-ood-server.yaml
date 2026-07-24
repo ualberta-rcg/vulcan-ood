@@ -330,6 +330,12 @@
     - name: Enable OOD site configuration
       command: a2ensite ood-portal.conf
 
+    # Clean PUNs before restarting apache (prevents 46+ "left-over process" warnings
+    # and ensures a clean restart without orphaned Passenger/nginx children)
+    - name: Clean stale PUNs before apache restart
+      shell: /opt/ood/nginx_stage/sbin/nginx_stage nginx_clean --force
+      failed_when: false
+
     - name: Restart Apache to apply all changes
       systemd:
         name: apache2
