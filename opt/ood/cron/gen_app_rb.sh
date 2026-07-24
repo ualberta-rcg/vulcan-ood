@@ -109,6 +109,10 @@ for app in "${apps[@]}"; do
 
   # Output versions into the Ruby method
   for v in "${versions[@]}"; do
+    # Skip known-broken versions (module loads but GUI binary not on PATH)
+    case "$app/$v" in
+      vmd/1.9.3) echo "  # skipping broken $app/$v" >&2; continue ;;
+    esac
     echo "      [\"$title $v\", \"$app/$v\"]," >> "$TMPFILE"
   done
 
