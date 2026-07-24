@@ -8,7 +8,7 @@ cd "${HOME}" || {
 }
 
 # Set the login shell
-export SHELL="$(getent passwd "$USER" | cut -d: -f7)"
+export SHELL="${SHELL:-/bin/bash}"
 echo "[script.sh.erb] SHELL set to: $SHELL"
 
 # Add xhost so that Firefox works

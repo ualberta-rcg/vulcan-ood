@@ -5,7 +5,7 @@
 
 # Get user and UID
 USER_NAME="${USER:-$(whoami)}"
-USER_UID="$(id -u "$USER_NAME" 2>/dev/null || getent passwd "$USER_NAME" | cut -d: -f3)"
+USER_UID="$(id -u)"
 echo "[before.sh.erb] User: $USER_NAME (UID: $USER_UID)"
 
 <% if context.launch_app && !context.launch_app.strip.empty? %>
