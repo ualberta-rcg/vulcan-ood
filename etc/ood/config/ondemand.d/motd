@@ -6,11 +6,10 @@ notice =
     ""
   end
 %>
-## Welcome to Vulcan
-
-Pick an app below to launch an interactive session, or use **Files**, **Shell**,
-and **Active Jobs** in the top bar. Live cluster usage, your fairshare, and disk
-quota are shown in the panels on this page.
+* **Support:** [support@tech.alliancecan.ca](mailto:support@tech.alliancecan.ca)
+* **Documentation:** [Vulcan Wiki](https://docs.alliancecan.ca/wiki/Vulcan) · [Getting Started](https://docs.alliancecan.ca/wiki/Getting_started) · [Running Jobs](https://docs.alliancecan.ca/wiki/Running_jobs) · [AMII Engineering Docs](https://docs.engineering.amii.ca)
+* **Portals:** [Alliance CCDB](https://ccdb.alliancecan.ca/) · [Metrix Portal](https://portal.vulcan.alliancecan.ca/) · [Aleph Inference Service](https://inference.vulcan.alliancecan.ca) · [Globus Transfer](https://app.globus.org)
+* **Partners:** [Alberta Machine Intelligence Institute (AMII)](https://www.amii.ca/) · [Digital Research Alliance of Canada](https://alliancecan.ca/)
 <% unless notice.empty? %>
 <%= notice %>
 <% end %>

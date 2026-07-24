@@ -106,11 +106,11 @@ dashboard_layout:
     - columns:
       - width: 12
         widgets:
-          - pinned_apps                  # 2 per row (small) / 4 per row (large)
+          - motd                         # Message of the Day (welcome + links)
     - columns:
       - width: 12
         widgets:
-          - system_status                # cluster node states (under the apps)
+          - pinned_apps                  # 2 per row (small) / 4 per row (large)
     - columns:
       - width: 6
         widgets:

@@ -175,7 +175,7 @@ en-CA:
     jobs_project_validation_error: Invalid Request. Please review the errors below
     launch: Launch
     motd_erb_render_error: 'MOTD was not parsed or rendered correctly: %{error_message}'
-    motd_title: Message of the Day
+    motd_title: Welcome to Vulcan
     nav_all_apps: All Apps
     nav_develop_docs: Developer Documentation
     nav_develop_my_sandbox_apps_dev: My Sandbox Apps (Development)
@@ -253,4 +253,4 @@ en-CA:
       support_ticket_error: support_ticket is misconfigured. "email" or "rt_api" sections are required in the configuration YAML.
     welcome_html: |
       %{logo_img_tag}
-      <h2 class="mt-3">Welcome to the Vulcan Cluster</h2>
+      <p class="lead">OnDemand provides an integrated, single access point for all of your HPC resources.</p>
