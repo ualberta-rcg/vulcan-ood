@@ -1,0 +1,12 @@
+help_menu:
+  - group: "Metrics"
+  - title: "Metrics"
+    icon: "fas://chart-bar"
+    page: "metrics"
+custom_pages:
+  metrics:
+    rows:
+      - columns:
+          - width: 8
+            widgets:
+              - "metrics/metrics"

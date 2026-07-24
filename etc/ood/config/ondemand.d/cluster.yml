@@ -1,0 +1,13 @@
+help_menu:
+  - group: "Metrics"
+  - title: "Partitions"
+    icon: "fas://chart-bar"
+    page: "partitions"
+custom_pages:
+  partitions:
+    rows:
+      - columns:
+          - width: 4
+            widgets:
+              - "cluster/partitions"
+
