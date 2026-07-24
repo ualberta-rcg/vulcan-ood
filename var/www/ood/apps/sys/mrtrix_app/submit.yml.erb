@@ -26,5 +26,9 @@ script:
     <%- if defined?(memtask_checkbox) && memtask_checkbox == "1" && memtask.present? && memtask != "0" -%>
     - "--mem=<%= memtask %>G"
     <%- end -%>
+    <%- if defined?(additional_environment) && additional_environment.present? -%>
+    # Additional environment setup will be handled in the job script
+    <%- end -%>
     - "--partition=gpubase_interac"
     - "--qos=interac"
+

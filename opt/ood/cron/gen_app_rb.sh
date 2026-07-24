@@ -38,12 +38,10 @@ apps=(
   afni
   gnuplot
   geant4
-  visit
   matlab
   vmd
   igv
   fsl
-  freesurfer
   mrtrix
 )
 
@@ -62,7 +60,6 @@ get_title() {
     octave) echo "Octave" ;;
     mujoco) echo "MuJoCo" ;;
     fsl) echo "FSL" ;;
-    freesurfer) echo "FreeSurfer" ;;
     mrtrix) echo "MRtrix" ;;
     *) echo "$1" ;;
   esac
