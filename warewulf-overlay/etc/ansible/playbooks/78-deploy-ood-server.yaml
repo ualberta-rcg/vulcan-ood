@@ -174,6 +174,25 @@
         archive: yes
         checksum: yes  # Force overwrite even if file sizes match
 
+    # ── Re-apply repo-owned dashboard config AFTER staging sync ─────────────
+    # Staging legitimately holds SECRETS / site-specific files
+    # (ood_portal.yml, clusters.d/vulcan.yml, nginx_stage.yml) which MUST win.
+    # But it ALSO ships stale copies of non-secret files this repo owns
+    # (ondemand.yml dashboard layout, motd) — staging's copies silently clobber
+    # our work on every boot, reverting the front page. Re-apply the repo
+    # versions LAST so the repo stays authoritative for the files it manages.
+    - name: Re-apply repo-owned dashboard config (staging ships stale copies)
+      copy:
+        src: "{{ repo_dir }}/etc/ood/config/ondemand.d/{{ item }}"
+        dest: "/etc/ood/config/ondemand.d/{{ item }}"
+        remote_src: true
+        owner: root
+        group: root
+        mode: '0644'
+      loop:
+        - ondemand.yml
+        - motd
+
     ############################################################################
     # PHASE 7: Dynamic Configuration Generation
     ############################################################################
