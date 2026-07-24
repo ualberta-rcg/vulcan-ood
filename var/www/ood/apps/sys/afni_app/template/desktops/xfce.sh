@@ -94,6 +94,7 @@ if [[ -n "$OOD_APP_LAUNCH" ]]; then
 
     if [[ -n "$PREREQS" ]]; then
       echo "[xfce.sh] Detected prerequisites: $PREREQS"
+      module --force purge 2>/dev/null
       module load $PREREQS
       echo "[xfce.sh] Retrying load of $TARGET_MODULE..."
       if module load "$TARGET_MODULE"; then
@@ -104,7 +105,7 @@ if [[ -n "$OOD_APP_LAUNCH" ]]; then
       fi
     else
       echo "[xfce.sh] No spider prereqs found; trying default StdEnv..."
-      module load StdEnv/2023 2>/dev/null || module load StdEnv/2020 2>/dev/null
+      module load StdEnv/2020 gcc/9.3.0 2>/dev/null || module load StdEnv/2023 2>/dev/null
       if module load "$TARGET_MODULE"; then
         echo "[xfce.sh] Loaded $TARGET_MODULE with default StdEnv."
       else
