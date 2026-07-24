@@ -15,6 +15,35 @@
 
   tasks:
 
+    # ── TLS hardening. This is a stateless Warewulf node (/etc on tmpfs), so
+    #    generate fresh 2048-bit DH params at startup, then inject the cipher/
+    #    protocol directives into the staging-managed ood_portal.yml and regen.
+    - name: Ensure OOD SSL dir exists
+      ansible.builtin.file:
+        path: /etc/ssl/ood
+        state: directory
+        mode: '0755'
+
+    - name: Generate DH params (fresh each boot on the stateless node)
+      ansible.builtin.command: openssl dhparam -out /etc/ssl/ood/dhparam.pem 2048
+      args:
+        creates: /etc/ssl/ood/dhparam.pem
+
+    - name: Harden TLS ciphers/protocol in ood_portal.yml
+      ansible.builtin.blockinfile:
+        path: /etc/ood/config/ood_portal.yml
+        insertafter: 'SSLCertificateKeyFile "/etc/ssl/ood/privkey.pem"'
+        marker: "  # {mark} ANSIBLE TLS HARDENING"
+        block: |
+            - 'SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1'
+            - 'SSLCipherSuite HIGH:!aNULL:!eNULL:!MD5:!3DES:!RC4:!CAMELLIA:!EXPORT:!PSK'
+            - 'SSLHonorCipherOrder on'
+            - 'SSLOpenSSLConfCmd DHParameters "/etc/ssl/ood/dhparam.pem"'
+
+    - name: Regenerate OOD portal after TLS hardening
+      ansible.builtin.command: /opt/ood/ood-portal-generator/sbin/update_ood_portal -f
+      changed_when: false
+
     # ── Normalize OOD app perms (apps deploy with the repo's source modes,
     #    which can leave dirs non-traversable, e.g. template/desktops/ at 0750,
     #    and break batch_connect staging with "rsync opendir Permission denied").
