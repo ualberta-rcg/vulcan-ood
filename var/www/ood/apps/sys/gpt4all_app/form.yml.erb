@@ -1,6 +1,5 @@
 <%
 app_name = "GPT4All"
-template_root = "/var/www/ood/apps/templates/"
 %>
 ---
 title: <%= app_name %>
@@ -10,12 +9,21 @@ attributes:
     label: Cluster
     options:
       - "<%= CustomClusterInfo.cluster_name %>"
-<% IO.foreach(template_root+"job_params") do |line| %><%= line %><% end %>
-  memtask_checkbox:
-    value: "1"
-    cacheable: false
-    widget: hidden_field
+  num_cores:
+    widget: number_field
+    label: "Number of CPU cores"
+    value: 4
+    min: 2
+    max: 64
+    step: 1
+  bc_num_hours:
+    widget: number_field
+    label: "Number of hours"
+    value: 2
+    min: 1
+    max: 8
+    step: 1
 form:
   - cluster
+  - num_cores
   - bc_num_hours
-<% IO.foreach(template_root+"form_params_cpu") do |line| %><%= line %><% end %>
