@@ -23,4 +23,5 @@ v2:
     host_allowlist:
       - "rack*"      # Allow submission from any rack node (compute nodes)
       - "vulcan*"    # Allow submission from vulcan login nodes
+      - "compute*"   # Allow submission from compute nodes (warewulf image)
 
