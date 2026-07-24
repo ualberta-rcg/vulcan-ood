@@ -1,58 +1,38 @@
 #!/bin/bash
+# before.sh.erb — runtime + GPU setup ONLY. All desktop logic (browser default,
+# chrome patch, autostart, proxy, DE session, app launch) lives in the shared
+# var/www/ood/apps/templates/desktops/<de>.sh, ERB-inlined by script.sh.erb.
+echo "[before] user=$USER uid=$(id -u)"
 
-# Export module if available
 [[ $(type -t module) == "function" ]] && export -f module
 
-# Get user and UID
-USER_NAME="${USER:-$(whoami)}"
-USER_UID="$(id -u)"
-echo "[before.sh.erb] User: $USER_NAME (UID: $USER_UID)"
-
-<% if context.launch_app && !context.launch_app.strip.empty? %>
-export OOD_APP_LAUNCH="<%= context.launch_app.strip %>"
-echo "[before.sh.erb] Launching App: <%= context.launch_app.strip %>"
-<% end %>
-
-# Setup /run/user
-sudo /usr/local/bin/create-ice.sh "$USER_UID"
-
-# Set working dir for OOD (used by launch scripts like kde.sh)
+# runtime dirs (root): /tmp/.ICE-unix + /run/user/$UID
+sudo /usr/local/bin/create-ice.sh "$(id -u)"
 export OOD_DIR="${PWD}"
 
-# Clean problematic env vars
-unset DBUS_SESSION_BUS_ADDRESS
-unset DBUS_SESSION_BUS_PID
-unset XDG_SESSION_TYPE
-unset WAYLAND_DISPLAY
-
+# app launch + thread count (form-driven; the desktop file reads them as env)
 export OMP_NUM_THREADS="<%= context.num_cores %>"
+<% if context.launch_app && !context.launch_app.strip.empty? %>
+export OOD_APP_LAUNCH="<%= context.launch_app.strip %>"
+echo "[before] app launch: <%= context.launch_app.strip %>"
+<% end %>
 
-# Set fallback XDG_RUNTIME_DIR
-export XDG_RUNTIME_DIR="/tmp/xdg-runtime-$USER_UID"
-mkdir -p "$XDG_RUNTIME_DIR"
-chmod 700 "$XDG_RUNTIME_DIR"
-echo "[before.sh.erb] XDG_RUNTIME_DIR set to $XDG_RUNTIME_DIR"
+# strip login-shell leftovers that confuse desktop sessions
+unset DBUS_SESSION_BUS_ADDRESS DBUS_SESSION_BUS_PID XDG_SESSION_TYPE WAYLAND_DISPLAY
+unset $(env | grep -o '^BASH_FUNC_.*%%' | cut -d= -f1) 2>/dev/null || true
+export XDG_RUNTIME_DIR="/tmp/xdg-runtime-$(id -u)"
+mkdir -p "$XDG_RUNTIME_DIR"; chmod 700 "$XDG_RUNTIME_DIR"
+echo "[before] XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
 
-# Unset bash-exported functions (KDE dislikes these)
-unset $(env | grep -o '^BASH_FUNC_.*%%' | cut -d= -f1)
-
-# GPU detection
-VGL_LIB_PATH="/usr/lib"
-GPU_PRESENT=$(nvidia-smi --query-gpu=name --format=csv,noheader,nounits 2>/dev/null | grep -v "^$" | head -n 1)
-
-if [[ -n "$GPU_PRESENT" && "$GPU_PRESENT" != "No devices were found" && -f "${VGL_LIB_PATH}/libdlfaker.so" && -f "${VGL_LIB_PATH}/libvglfaker.so" ]]; then
-  export OOD_GPU_AVAILABLE=true
-  export VGL_DISPLAY=egl
-  export LD_PRELOAD="${VGL_LIB_PATH}/libdlfaker.so:${VGL_LIB_PATH}/libvglfaker.so"
-  echo "[before.sh.erb] GPU detected: $GPU_PRESENT"
-  echo "[before.sh.erb] VirtualGL enabled"
+# GPU / VirtualGL — libvglfaker-nodl ONLY (libdlfaker hooks dlopen() and breaks app stacks)
+VGL_FAKER="/usr/lib/libvglfaker-nodl.so"
+GPU_PRESENT=$(nvidia-smi --query-gpu=name --format=csv,noheader,nounits 2>/dev/null | grep -v '^$' | head -n1)
+if [[ -n "$GPU_PRESENT" && "$GPU_PRESENT" != "No devices were found" && -f "$VGL_FAKER" ]]; then
+  export OOD_GPU_AVAILABLE=true VGL_DISPLAY=egl
+  export LD_PRELOAD="$VGL_FAKER${LD_PRELOAD:+:${LD_PRELOAD}}"
+  echo "[before] GPU=$GPU_PRESENT; VirtualGL enabled (libvglfaker-nodl + EGL)"
 else
-  export OOD_GPU_AVAILABLE=false
-  export LIBGL_ALWAYS_SOFTWARE=1
-  export QT_QUICK_BACKEND=software
-  echo "[before.sh.erb] No GPU or VirtualGL missing — using software rendering"
+  export OOD_GPU_AVAILABLE=false LIBGL_ALWAYS_SOFTWARE=1 QT_QUICK_BACKEND=software
+  echo "[before] no GPU/VirtualGL — software rendering"
 fi
-
-echo "[before.sh.erb] Setup complete."
-
-
+echo "[before] setup complete"
