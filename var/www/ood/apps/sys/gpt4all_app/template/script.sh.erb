@@ -21,7 +21,8 @@ source "$VENV/bin/activate"
 if ! python3 -c "import gpt4all" 2>/dev/null; then
   echo "[script.sh.erb] Installing gpt4all + gradio (first run, ~2 min) ..."
   pip install --upgrade pip
-  pip install gpt4all gradio setuptools
+  pip install "setuptools<80"
+  pip install gpt4all gradio
 fi
 
 # --- model directory ---
