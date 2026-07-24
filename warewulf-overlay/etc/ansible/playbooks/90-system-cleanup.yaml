@@ -94,3 +94,39 @@
           fi
         done
       changed_when: false
+
+    # ── TCP keepalive tuning (detect dead VNC/websocket connections faster) ──
+    # Default 7200s is too high for interactive sessions; dead PUNs linger.
+    - name: Tune TCP keepalive for interactive sessions
+      ansible.builtin.sysctl:
+        name: "{{ item.key }}"
+        value: "{{ item.val }}"
+        state: present
+        reload: yes
+      loop:
+        - { key: "net.ipv4.tcp_keepalive_time", val: "300" }
+        - { key: "net.ipv4.tcp_keepalive_intvl", val: "30" }
+        - { key: "net.ipv4.tcp_keepalive_probes", val: "5" }
+
+    # ── Apache ServerName (kills AH00558 FQDN warning on every restart) ──────
+    - name: Set Apache ServerName
+      ansible.builtin.copy:
+        dest: /etc/apache2/conf-available/servername.conf
+        content: "ServerName vulcan.alliancecan.ca\n"
+        mode: '0644'
+      notify: enable servername
+
+    # ── Session GC: prune stale OOD session dirs (>3 days) ─────────────────
+    - name: Install OOD session GC cron
+      ansible.builtin.cron:
+        name: "OOD session GC"
+        cron_file: ood-session-gc
+        user: root
+        minute: "0"
+        hour: "3"
+        job: "find /home/*/ondemand/data/sys/dashboard/batch_connect -maxdepth 4 -type d -name 'output' -mtime +3 -exec rm -rf {} \\; 2>/dev/null"
+
+  handlers:
+    - name: enable servername
+      ansible.builtin.command: a2enconf servername
+      changed_when: false
