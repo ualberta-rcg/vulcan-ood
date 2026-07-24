@@ -13,7 +13,8 @@ Warewulf compute-node overlay/image — not via the playbook.
 | `etc/sudoers.d/mkice` | Lets any user run `create-ice.sh` as root for their OWN uid (sets up `/run/user/$UID` + `/tmp/.ICE-unix` for VNC sessions). |
 | `usr/local/bin/create-ice.sh` | The hardened script (validates uid, enforces caller-owns-uid via SUDO_UID). |
 | `usr/bin/nvidia-smi` | SoftMig cgroup filter wrapper — non-root sees only GPU processes in their own SLURM job cgroup. |
-| `etc/cron.d/ood-generators` | Crontab that re-runs the OOD config generators (cluster/gpu/app) so dashboard configs track Slurm/CVMFS drift. |
+
+**This overlay is for COMPUTE nodes** (where OOD jobs run and GPUs live). Login/web-node-only files — e.g. the `ood-generators` crontab (which calls `/opt/ood/cron/gen_*.sh`, present only on the login node) — are **not** here; that cron is deployed by playbook 78 (`etc/cron.d/ood-generators`) onto the login node.
 
 ## nvidia-smi cgroup filter (SoftMig)
 
