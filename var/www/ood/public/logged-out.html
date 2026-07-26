@@ -3,9 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- End the Alliance SSO session too (otherwise going back silently re-auths).
-       The IdP logout then returns to the U of A Research Computing page. -->
-  <meta http-equiv="refresh" content="2; url=https://idp.alliancecan.ca/idp/profile/Logout?return=https%3A%2F%2Fwww.ualberta.ca%2Fen%2Finformation-services-and-technology%2Fresearch-computing%2Findex.html">
+  <!-- This page is the terminal destination after OOD logout (mod_auth_openidc
+       already destroyed the local OIDC cookie via /oidc?logout=...this page).
+       We do NOT auto-redirect into the IdP anymore: the Alliance Shibboleth IdP
+       silently drops the `return=` param (not on its allow-list) and has no OIDC
+       end_session_endpoint, so an automatic chain always dead-ends on the IdP's
+       own page. Instead the user chooses: end the Alliance SSO (opens in a new
+       tab — it cannot return here, by IdP design) and/or go to the RCG page. -->
   <title>Signed out — Vulcan OnDemand</title>
   <style>
     :root { --green:#007C41; --green-dk:#005A2C; }
@@ -30,14 +34,19 @@
   <div class="card">
     <img class="logo" src="/public/ualberta/logo.png" alt="University of Alberta">
     <h1>You're signed out of Vulcan</h1>
-    <p>Your OnDemand session has ended. Ending your Alliance login too&hellip;</p>
+    <p>Your OnDemand session has ended.</p>
     <p>
-      <a class="btn primary" href="https://idp.alliancecan.ca/idp/profile/Logout?return=https%3A%2F%2Fwww.ualberta.ca%2Fen%2Finformation-services-and-technology%2Fresearch-computing%2Findex.html">Finish signing out</a>
+      <!-- The Alliance SSO session is separate and only ends once you complete
+           sign-out on the Alliance page. Opens in a new tab because the IdP will
+           not redirect back here (no return / no end_session_endpoint). -->
+      <a class="btn primary" target="_blank" rel="noopener"
+         href="https://idp.alliancecan.ca/idp/profile/Logout">End Alliance single sign-on</a>
       <a class="btn secondary" href="https://www.ualberta.ca/en/information-services-and-technology/research-computing/index.html">U of A Research Computing</a>
     </p>
     <p class="muted">
-      You'll be sent to the Alliance login sign-out, then the U of A Research Computing
-      page. Until the Alliance session ends, returning to Vulcan may sign you back in.
+      Click <strong>End Alliance single sign-on</strong> to fully sign out &mdash; it opens the
+      Alliance sign-out page in a new tab; complete it there, then close that tab. Until you do,
+      returning to Vulcan may sign you straight back in.
     </p>
   </div>
 </body>
