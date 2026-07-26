@@ -239,13 +239,22 @@
         state: directory
         mode: '0755'
 
-    # Generate 2048-bit DH params fresh at boot (stateless node, /etc on tmpfs).
+    # Generate 2048-bit DH params for TLS.
     # MUST run before the portal regen/restart so the SSLOpenSSLConfCmd DHParameters
     # directive in ood_portal.yml resolves at apache startup.
-    - name: Generate DH params for TLS
+    # Validate any existing pem FIRST (parses + is 2048-bit): a weak (<2048), malformed,
+    # or placeholder DH param (e.g. a hand-pasted ffdhe2048 that crashes mod_ssl) is
+    # replaced rather than kept. On a stateless node /etc is tmpfs so the file is gone
+    # each boot and this generates fresh; on a persistent node a valid 2048-bit pem is reused.
+    - name: Check existing DH params are valid and 2048-bit
+      command: openssl dhparam -in /etc/ssl/ood/dhparam.pem -text -noout
+      register: dhparam_check
+      changed_when: false
+      failed_when: false
+
+    - name: Generate strong 2048-bit DH params (only if missing/weak/malformed)
       command: openssl dhparam -out /etc/ssl/ood/dhparam.pem 2048
-      args:
-        creates: /etc/ssl/ood/dhparam.pem
+      when: dhparam_check.rc != 0 or '2048 bit' not in (dhparam_check.stdout | default(''))
 
     ############################################################################
     # PHASE 11: Critical Permissions and Ownership
