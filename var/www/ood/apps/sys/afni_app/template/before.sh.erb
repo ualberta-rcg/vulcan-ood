@@ -35,4 +35,32 @@ else
   export OOD_GPU_AVAILABLE=false LIBGL_ALWAYS_SOFTWARE=1 QT_QUICK_BACKEND=software
   echo "[before] no GPU/VirtualGL — software rendering"
 fi
+
+# AFNI atlas datasets — cached per-user under $SCRATCH/.afni so whereami has
+# its default atlases. Fetched once from AFNI's public (public-domain) data
+# server; skipped on subsequent launches if already extracted. The two version
+# defaults the binary names (Julich_MNI2009c_v3.1 / Brodmann_Pijn_AFNI) are
+# license-restricted and NOT in the free package, so those warnings persist by
+# design — but all 103 redistributable atlases (TT_, MNI_, CAEZ, Glasser, ...)
+# become available and whereami works.
+export AFNI_ATLASDIR="${SCRATCH:-$HOME/scratch}/.afni/afni_atlases/atlases"
+if [[ -d "$AFNI_ATLASDIR" && -n "$(ls -A "$AFNI_ATLASDIR" 2>/dev/null)" ]]; then
+  echo "[before] AFNI atlases present: $AFNI_ATLASDIR"
+else
+  AFNI_HOME="$(dirname "$(dirname "$AFNI_ATLASDIR")")"   # $SCRATCH/.afni
+  mkdir -p "$AFNI_HOME"
+  echo "[before] AFNI atlases missing — fetching afni_atlases.tgz (~90 MB, one-time)"
+  if curl -fsSL --connect-timeout 20 -o "$AFNI_HOME/afni_atlases.tgz.partial" \
+        https://afni.nimh.nih.gov/pub/dist/data/afni_atlases.tgz; then
+    mv "$AFNI_HOME/afni_atlases.tgz.partial" "$AFNI_HOME/afni_atlases.tgz"
+    if tar -xzf "$AFNI_HOME/afni_atlases.tgz" -C "$AFNI_HOME"; then
+      echo "[before] AFNI atlases extracted to $AFNI_HOME/afni_atlases"
+    else
+      echo "[before] WARNING: atlas extraction failed — whereami default atlases unavailable this session"
+    fi
+  else
+    rm -f "$AFNI_HOME/afni_atlases.tgz.partial"
+    echo "[before] WARNING: atlas download failed — whereami default atlases unavailable this session"
+  fi
+fi
 echo "[before] setup complete"
