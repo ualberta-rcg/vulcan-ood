@@ -10,13 +10,17 @@ fi
 
 OUTDIR="/etc/ood/config/apps/dashboard/initializers"
 OUTFILE="${OUTDIR}/paice_app_versions.rb"
-# Run module spider as this user (must see Lmod/CVMFS like a normal login). Override: export MODULE_USER=otheruser
-MODULE_USER="${MODULE_USER:-amiildapreader}"
-
-if ! id -u "$MODULE_USER" &>/dev/null; then
-  echo "gen_app_rb.sh: user '$MODULE_USER' does not exist (NSS/SSSD may need a refresh: systemctl restart sssd)." >&2
+# Run module spider as a NON-ROOT user (root's UID 0 is outside the Lmod UID gate and
+# yields an empty spider). Pick the first regular local account by UID — UID >= 1000 is
+# the Linux convention for the first real user (present on every node image), so this is
+# name-independent: it doesn't depend on a service or personal account.
+# Override: export MODULE_UID=N
+MODULE_UID="${MODULE_UID:-$(awk -F: '$3>=1000 && $3<65534 && $1!="nobody" {print $3; exit}' /etc/passwd)}"
+if [[ -z "$MODULE_UID" ]]; then
+  echo "gen_app_rb.sh: no regular user (UID>=1000) in /etc/passwd to run module spider as." >&2
   exit 1
 fi
+echo "gen_app_rb.sh: running module spider as UID ${MODULE_UID}"
 
 mkdir -p "$OUTDIR"
 
@@ -77,7 +81,11 @@ for app in "${apps[@]}"; do
   # /etc/profile.d/zz-cvmfs.sh gates Lmod init by UID range and excludes service
   # accounts like amiildapreader (uid 13000030 sits in an uncovered gap), so
   # `module` is never defined for them. The CC profile defines it unconditionally.
-  output=$(sudo -u "$MODULE_USER" bash -c '. /cvmfs/soft.computecanada.ca/config/profile/bash.sh 2>/dev/null; module spider '"$app"' 2>/dev/null')
+  # CC_CLUSTER MUST be set BEFORE sourcing the profile: the profile reads it at
+  # source-time to select this cluster's module tree. Without it the spider falls
+  # back to a generic/stale tree and lists versions that aren't installed on Vulcan
+  # (e.g. removed rstudio-server/4.1, 4.2), which then fail at `module load`.
+  output=$(sudo -u "#${MODULE_UID}" bash -c 'export CC_CLUSTER=vulcan; . /cvmfs/soft.computecanada.ca/config/profile/bash.sh 2>/dev/null; module spider '"$app"' 2>/dev/null')
 
   inside_versions=false
   versions=()

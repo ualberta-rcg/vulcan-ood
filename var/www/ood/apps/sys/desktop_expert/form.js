@@ -2,10 +2,17 @@
 
 // SourceURL
 //# sourceURL=form.js
+//
+// Shared form.js for all Vulcan OOD interactive apps (symlinked from each app).
+// Handles GPU type/count (fractional/softmig), memory task, additional-environment,
+// and num_cores clamping. DEFENSIVE: every top-level getElementById is null-guarded
+// so this same file works for GPU apps (paraview, blender, …) AND CPU apps
+// (chainforge, openrefine, voyant, vs_code, tensorboard) whose forms omit those
+// fields — the jQuery selectors in the functions no-op on absent elements.
 
 // SETUP ----------------------------------------------------------------------------------------------------------------
 const gpuDataField = document.getElementById('batch_connect_session_context_gpudata');
-const gpuData = JSON.parse(gpuDataField.value);
+const gpuData = gpuDataField ? JSON.parse(gpuDataField.value) : {};
 
 const gpuMappings = gpuData.gpu_name_mappings || {};
 const gpuMaxCounts = gpuData.gpu_max_counts || {};
@@ -13,8 +20,8 @@ const gpuMaxCounts = gpuData.gpu_max_counts || {};
 const memoryDataField = document.getElementById('batch_connect_session_context_memorydata');
 const cpuDataField = document.getElementById('batch_connect_session_context_cpunum');
 
-const maxMemoryGB = parseInt(memoryDataField.value, 10) || 64;
-const maxCpus = parseInt(cpuDataField.value, 10) || 32;
+const maxMemoryGB = memoryDataField ? (parseInt(memoryDataField.value, 10) || 64) : 64;
+const maxCpus = cpuDataField ? (parseInt(cpuDataField.value, 10) || 32) : 32;
 
 const minCpuField = document.getElementById('batch_connect_session_context_mincpu');
 const minRamField = document.getElementById('batch_connect_session_context_minram');
@@ -40,10 +47,11 @@ function currentGpuCount() {
 function updateGpuTypeDropdown() {
   const gpuSelect = $('#batch_connect_session_context_gpu_type');
   const gpuCheckbox = $('#batch_connect_session_context_gpu_checkbox');
+  if (!gpuSelect.length) return;
 
   gpuSelect.empty();
 
-  if (!gpuCheckbox.is(':checked')) {
+  if (!gpuCheckbox.length || !gpuCheckbox.is(':checked')) {
     gpuSelect.append(new Option('none', 'none'));
     return;
   }
@@ -69,6 +77,7 @@ function updateGpuTypeDropdown() {
 function updateGpuCountMax() {
   const selectedGpu = $('#batch_connect_session_context_gpu_type').val();
   const gpuCountField = $('#batch_connect_session_context_gpu_count');
+  if (!gpuCountField.length) return;
 
   if (!selectedGpu || selectedGpu === 'none') {
     gpuCountField.attr('max', 1);
@@ -124,6 +133,7 @@ function toggleGpuFields() {
   const gpuCheckbox = $('#batch_connect_session_context_gpu_checkbox');
   const gpuType = $('#batch_connect_session_context_gpu_type');
   const gpuCount = $('#batch_connect_session_context_gpu_count');
+  if (!gpuCheckbox.length && !gpuType.length) return;
 
   const isHidden = gpuCheckbox.attr('type') === 'hidden';
   let showGpu;
@@ -151,6 +161,7 @@ function toggleGpuFields() {
 function toggleAdditionalEnv() {
   const addEnvCheckbox = $('#batch_connect_session_context_add_env_checkbox');
   const additionalEnv = $('#batch_connect_session_context_additional_environment');
+  if (!addEnvCheckbox.length && !additionalEnv.length) return;
 
   const showAddEnv = addEnvCheckbox.is(':checked');
   additionalEnv.parent().toggle(showAddEnv);
@@ -163,6 +174,7 @@ function toggleAdditionalEnv() {
 function toggleMemtask() {
   const memtaskCheckbox = $('#batch_connect_session_context_memtask_checkbox');
   const memtaskField = $('#batch_connect_session_context_memtask');
+  if (!memtaskCheckbox.length && !memtaskField.length) return;
 
   const isHidden = memtaskCheckbox.attr('type') === 'hidden';
   let checked;
@@ -209,11 +221,14 @@ $(document).ready(function () {
   $('#batch_connect_session_context_gpu_count').on('change input', onGpuCountChanged);
   $('#batch_connect_session_context_add_env_checkbox').change(toggleAdditionalEnv);
   $('#batch_connect_session_context_memtask_checkbox').change(toggleMemtask);
-  $('#batch_connect_session_context_num_cores').attr('max', maxCpus);
-  $('#batch_connect_session_context_num_cores').attr('min', minCpus);
 
-  const currentCores = parseInt($('#batch_connect_session_context_num_cores').val(), 10);
-  if (currentCores < minCpus) {
-    $('#batch_connect_session_context_num_cores').val(minCpus);
+  const numCores = $('#batch_connect_session_context_num_cores');
+  if (numCores.length) {
+    numCores.attr('max', maxCpus);
+    numCores.attr('min', minCpus);
+    const currentCores = parseInt(numCores.val(), 10);
+    if (currentCores < minCpus) {
+      numCores.val(minCpus);
+    }
   }
 });
