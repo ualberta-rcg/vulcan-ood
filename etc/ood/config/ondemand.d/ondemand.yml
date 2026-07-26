@@ -47,13 +47,13 @@ help_menu:
 
   # Portals
   - group: "Portals"
-  - title: "Alliance CCDB"
+  - title: "Alliance CCDB Portal"
     icon: "fas://database"
     url: "https://ccdb.alliancecan.ca/"
   - title: "Vulcan Metrix Portal"
     icon: "fas://chart-bar"
     url: "https://portal.vulcan.alliancecan.ca/"
-  - title: "Vulcan Globus Endpoint"
+  - title: "Globus Portal"
     icon: "fas://exchange-alt"
     url: "https://app.globus.org"
 

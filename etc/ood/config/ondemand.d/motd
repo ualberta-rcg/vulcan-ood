@@ -8,7 +8,7 @@ notice =
 %>
 * **Support:** [support@tech.alliancecan.ca](mailto:support@tech.alliancecan.ca)
 * **Documentation:** [Vulcan Wiki](https://docs.alliancecan.ca/wiki/Vulcan) · [Getting Started](https://docs.alliancecan.ca/wiki/Getting_started) · [Running Jobs](https://docs.alliancecan.ca/wiki/Running_jobs) · [AMII Engineering Docs](https://docs.engineering.amii.ca)
-* **Portals:** [Alliance CCDB](https://ccdb.alliancecan.ca/) · [Vulcan Metrix Portal](https://portal.vulcan.alliancecan.ca/) · [Vulcan Globus Endpoint](https://app.globus.org)
+* **Portals:** [Alliance CCDB Portal](https://ccdb.alliancecan.ca/) · [Vulcan Metrix Portal](https://portal.vulcan.alliancecan.ca/) · [Globus Portal](https://app.globus.org)
 * **AI Tools:** [Aleph Inference Service](https://inference.vulcan.alliancecan.ca) · [Vulcan Open WebUI](https://llm.vulcan.alliancecan.ca/) · [Vulcan RagFlow](https://ragflow.vulcan.alliancecan.ca/)
 * **Partners:** [Alberta Machine Intelligence Institute (AMII)](https://www.amii.ca/) · [Digital Research Alliance of Canada](https://alliancecan.ca/)
 <% unless notice.empty? %>
