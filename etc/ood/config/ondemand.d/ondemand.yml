@@ -45,20 +45,29 @@ help_menu:
     icon: "fas://book"
     url: "https://docs.engineering.amii.ca"
 
-  # Tools and portals
-  - group: "Tools and Portals"
-  - title: "CCDB Portal"
+  # Portals
+  - group: "Portals"
+  - title: "Alliance CCDB"
     icon: "fas://database"
     url: "https://ccdb.alliancecan.ca/"
-  - title: "Metrix Portal"
+  - title: "Vulcan Metrix Portal"
     icon: "fas://chart-bar"
     url: "https://portal.vulcan.alliancecan.ca/"
-  - title: "Aleph Inference"
-    icon: "fas://microchip"
-    url: "https://inference.vulcan.alliancecan.ca"
-  - title: "Globus Transfer"
+  - title: "Vulcan Globus Endpoint"
     icon: "fas://exchange-alt"
     url: "https://app.globus.org"
+
+  # AI Tools
+  - group: "AI Tools"
+  - title: "Aleph Inference Service"
+    icon: "fas://microchip"
+    url: "https://inference.vulcan.alliancecan.ca"
+  - title: "Vulcan Open WebUI"
+    icon: "fas://robot"
+    url: "https://llm.vulcan.alliancecan.ca/"
+  - title: "Vulcan RagFlow"
+    icon: "fas://stream"
+    url: "https://ragflow.vulcan.alliancecan.ca/"
 
   # Institutional links
   - group: "Vulcan Partners"
@@ -98,7 +107,7 @@ pinned_apps:
   - sys/jupyter_app        # Jupyter notebook environment
   - sys/rstudio_server_app # RStudio IDE for R development
   - sys/vs_code_html_app   # VS Code web interface
-  - sys/octave_app         # Octave numerical computing
+  - sys/voyant_app         # Voyant text analysis
 
 # Point the built-in Module Browser (Clusters menu) at the Lmod spider JSON
 # generated at boot by playbook 78 (PHASE 13) -> /ood/modules/vulcan.json.
