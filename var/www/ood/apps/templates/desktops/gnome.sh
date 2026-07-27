@@ -100,7 +100,7 @@ if [[ -n "$OOD_APP_LAUNCH" ]]; then
   APP_CMD=$(echo "$OOD_APP_LAUNCH" | awk -F/ '{print $1}')
   log "launching app: $APP_CMD (GPU=${OOD_GPU_AVAILABLE:-false})"
   sleep 5
-  if [[ "${OOD_GPU_AVAILABLE}" == "true" ]]; then "$APP_CMD" & else LIBGL_ALWAYS_SOFTWARE=1 "$APP_CMD" & fi
+  if [[ "${OOD_GPU_AVAILABLE}" == "true" ]]; then "$APP_CMD" ${OOD_APP_ARGS:-} & else LIBGL_ALWAYS_SOFTWARE=1 "$APP_CMD" ${OOD_APP_ARGS:-} & fi
   APP_PID=$!; wait "$APP_PID"
 else
   log "no app requested; waiting for desktop session"

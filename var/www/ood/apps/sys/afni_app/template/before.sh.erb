@@ -14,7 +14,12 @@ export OOD_DIR="${PWD}"
 export OMP_NUM_THREADS="<%= context.num_cores %>"
 <% if context.launch_app && !context.launch_app.strip.empty? %>
 export OOD_APP_LAUNCH="<%= context.launch_app.strip %>"
-echo "[before] app launch: <%= context.launch_app.strip %>"
+# AFNI daemonizes by default ("++ AFNI is detached from terminal"), so the shared
+# desktop launcher's `afni &; wait $!` returns instantly and tears the VNC session
+# down ~18s after start. -no_detach keeps it foregrounded so `wait` blocks on the
+# real GUI process and the session stays up until the user closes AFNI.
+export OOD_APP_ARGS="-no_detach"
+echo "[before] app launch: <%= context.launch_app.strip %> (no_detach)"
 <% end %>
 
 # strip login-shell leftovers that confuse desktop sessions

@@ -254,6 +254,14 @@ echo "[script] Seeded Vulcan provider -> ${FLOWS_DIR}/provider_scripts/vulcan_pr
 # (OOD's output.log still captures everything regardless; chainforge.log is a convenience copy.
 # Guard the log dir so a non-writable $PWD can never block the launch -- fall back to $HOME.)
 [ -d "$CF_LOG_DIR" ] && [ -w "$CF_LOG_DIR" ] || CF_LOG_DIR="${HOME}"
+# The Vulcan inference gateway is an INTERNAL service, but the compute-node task
+# prolog exports http(s)_proxy=http://squid:3128 (and a no_proxy without this host),
+# which would force the provider's requests through the squid egress proxy and
+# misroute it (503s / connection refused). Add the inference host to NO_PROXY so the
+# `requests` calls connect directly. External APIs a user adds later still use the proxy.
+_vulcan="inference.vulcan.alliancecan.ca"
+export no_proxy="${no_proxy:+$no_proxy,}$_vulcan"
+export NO_PROXY="$no_proxy"
 echo "[script] Launching chainforge on 0.0.0.0:${port} (log: ${CF_LOG_DIR}/chainforge.log) ..."
 set -o pipefail
 chainforge serve --host 0.0.0.0 --port "${port}" 2>&1 | tee "${CF_LOG_DIR}/chainforge.log"
