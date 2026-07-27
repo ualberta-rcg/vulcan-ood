@@ -95,19 +95,20 @@ directory (`~/ondemand/.../output`) holds only logs.
 `~/.local/share/chainforge/provider_scripts/vulcan_provider.py` that ChainForge auto-loads on
 startup. It:
 
-- calls `…/serving/api/v1/chat/completions` on each query (OpenAI-compatible);
+- calls `…/v1/chat/completions` on each query (OpenAI-compatible);
 - authenticates to the **Tyk gateway** with `Authorization: Bearer <token>`. By default all
   users share **one site key** at `/opt/ood/vulcan_tyk.key` (root-owned); `submit.yml.erb`
   injects it into every job as `CF_VULCAN_API_KEY` (rendered on the web node, so it reaches the
-  compute node). A per-user `~/.env_tyk` overrides it — the path to per-user keys later. The
-  secret is **not** baked into the app source;
+  compute node). A per-user `~/.aleph_tyk.env` (created by the aleph-tyk-key PAM hook at
+  session open, exported by `/etc/profile.d/aleph-tyk.sh`) overrides it. The secret is **not**
+  baked into the app source;
 - registers a single **"🌋 Vulcan"** provider whose model list is the always-on chat models
   (`gpt-oss-120b`, `gpt-oss-20b`, `command-r-7b` — truly always-on, `gemma-4-26b-a4b`,
   `qwen35-122b`). Add Vulcan, then pick the model in the node's Settings (ChainForge's add-menu
   `>` flyout is a built-in-provider-only feature, so this is the normal custom-provider shape);
 - exposes `temperature` / `max_tokens` settings and passes chat history for Chat Turn nodes;
 - returns **friendly errors** for the common gateway failures: missing token → "put your key in
-  `~/.env_tyk`"; `401` → token rejected; `503` → model warming up, retry;
+  `~/.aleph_tyk.env`"; `401` → token rejected; `503` → model warming up, retry;
 - **logs every request and error to stdout** → the OOD session `output.log` / `chainforge.log`
   (grep `[Vulcan <model>]`). Verified end-to-end: `command-r-7b` returns a completion.
 
@@ -122,11 +123,11 @@ The built-in OpenAI/Anthropic/etc. providers remain available for users who supp
 | Env var | Default | Purpose |
 |---|---|---|
 | `CF_DATA_HOME` | *(unset → `~/.local/share/chainforge`)* | Relocate the ChainForge workspace (`$XDG_DATA_HOME`) |
-| `CF_VULCAN_BASE_URL` | `https://inference.kubeflow.vulcan.alliancecan.ca/serving/api/v1` | Inference API base |
-| `CF_VULCAN_API_KEY` | *(shared `/opt/ood/vulcan_tyk.key`; overridden by `~/.env_tyk`)* | Tyk gateway bearer token |
+| `CF_VULCAN_BASE_URL` | `https://inference.vulcan.alliancecan.ca/v1` | Inference API base |
+| `CF_VULCAN_API_KEY` | *(shared `/opt/ood/vulcan_tyk.key`; overridden by `~/.aleph_tyk.env`)* | Tyk gateway bearer token |
 
 > The app intentionally does **not** source `~/.bashrc`. The Vulcan token is read directly from
-> `~/.env_tyk` (or `$CF_VULCAN_API_KEY` if already exported). Other providers' keys come from the
+> `~/.aleph_tyk.env` (or `$CF_VULCAN_API_KEY` if already exported). Other providers' keys come from the
 > in-UI settings or env vars present when the job starts. ChainForge also speaks **Ollama**.
 
 ### Patterns reused from the other Vulcan apps

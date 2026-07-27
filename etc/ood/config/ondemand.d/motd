@@ -1,7 +1,12 @@
 <%
+# Cluster notice: read the overlay file directly. vulcan-status just cats this
+# same file (/etc/vulcan-motd/announce.txt) with an ANSI-yellow "» Notice"
+# header; the OOD MOTD used --plain (no colour), which is why it showed no
+# yellow here. Reading the file directly avoids shelling out on every page
+# render, and the alert box below restores the yellow the SSH banner has.
 notice =
   begin
-    `timeout 8 vulcan-status --plain --only notice 2>/dev/null`.to_s.chomp
+    File.read('/etc/vulcan-motd/announce.txt').to_s.strip
   rescue StandardError
     ""
   end
@@ -12,5 +17,7 @@ notice =
 * **AI Tools:** [Aleph Inference Service](https://inference.vulcan.alliancecan.ca) · [Vulcan Open WebUI](https://llm.vulcan.alliancecan.ca/) · [Vulcan RagFlow](https://ragflow.vulcan.alliancecan.ca/)
 * **Partners:** [Alberta Machine Intelligence Institute (AMII)](https://www.amii.ca/) · [Digital Research Alliance of Canada](https://alliancecan.ca/)
 <% unless notice.empty? %>
-<%= notice %>
+<div class="alert alert-warning mb-2" role="alert">
+<strong>Notice:</strong> <%= notice %>
+</div>
 <% end %>

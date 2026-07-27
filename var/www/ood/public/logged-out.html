@@ -3,51 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- This page is the terminal destination after OOD logout (mod_auth_openidc
-       already destroyed the local OIDC cookie via /oidc?logout=...this page).
-       We do NOT auto-redirect into the IdP anymore: the Alliance Shibboleth IdP
-       silently drops the `return=` param (not on its allow-list) and has no OIDC
-       end_session_endpoint, so an automatic chain always dead-ends on the IdP's
-       own page. Instead the user chooses: end the Alliance SSO (opens in a new
-       tab — it cannot return here, by IdP design) and/or go to the RCG page. -->
-  <title>Signed out — Vulcan OnDemand</title>
-  <style>
-    :root { --green:#007C41; --green-dk:#005A2C; }
-    * { box-sizing: border-box; }
-    body { margin:0; font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-           background:#f7f8f7; color:#222; display:flex; min-height:100vh; align-items:center; justify-content:center; }
-    .card { background:#fff; border:1px solid #e3e6e3; border-top:6px solid var(--green);
-            border-radius:10px; padding:2.5rem 2.5rem 2rem; max-width:560px; width:90%; text-align:center;
-            box-shadow:0 6px 24px rgba(0,0,0,.06); }
-    h1 { color:var(--green-dk); margin:.2rem 0 .4rem; font-size:1.8rem; }
-    p { line-height:1.55; color:#444; }
-    .btn { display:inline-block; margin:.4rem .25rem 0; padding:.7rem 1.3rem; border-radius:6px;
-           text-decoration:none; font-weight:600; }
-    .btn.primary { background:var(--green); color:#fff; }
-    .btn.primary:hover { background:var(--green-dk); }
-    .btn.secondary { background:#eef; color:#335; border:1px solid #ccd; }
-    .muted { color:#888; font-size:.82rem; margin-top:1.4rem; }
-    .logo { height:46px; margin-bottom:.6rem; }
-  </style>
+  <!-- Terminal logout hop. mod_auth_openidc already destroyed the local OIDC
+       session cookie via /oidc?logout=...this page; now bounce the browser
+       straight to the Alliance IdP to end the SSO session. Static file only —
+       no Apache/OIDC config change, so the TLS-hardened vhost is untouched. -->
+  <meta http-equiv="refresh" content="0; url=https://idp.alliancecan.ca/idp/profile/Logout">
+  <title>Signing out — Vulcan OnDemand</title>
+  <script>window.location.replace("https://idp.alliancecan.ca/idp/profile/Logout");</script>
 </head>
 <body>
-  <div class="card">
-    <img class="logo" src="/public/ualberta/logo.png" alt="University of Alberta">
-    <h1>You're signed out of Vulcan</h1>
-    <p>Your OnDemand session has ended.</p>
-    <p>
-      <!-- The Alliance SSO session is separate and only ends once you complete
-           sign-out on the Alliance page. Opens in a new tab because the IdP will
-           not redirect back here (no return / no end_session_endpoint). -->
-      <a class="btn primary" target="_blank" rel="noopener"
-         href="https://idp.alliancecan.ca/idp/profile/Logout">End Alliance single sign-on</a>
-      <a class="btn secondary" href="https://www.ualberta.ca/en/information-services-and-technology/research-computing/index.html">U of A Research Computing</a>
-    </p>
-    <p class="muted">
-      Click <strong>End Alliance single sign-on</strong> to fully sign out &mdash; it opens the
-      Alliance sign-out page in a new tab; complete it there, then close that tab. Until you do,
-      returning to Vulcan may sign you straight back in.
-    </p>
-  </div>
+  <p>Signing you out&hellip; If you are not redirected automatically,
+     <a href="https://idp.alliancecan.ca/idp/profile/Logout">continue to the Alliance sign-out page</a>.</p>
 </body>
 </html>
