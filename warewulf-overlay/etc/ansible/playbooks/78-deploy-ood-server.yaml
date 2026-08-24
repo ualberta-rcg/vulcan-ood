@@ -332,6 +332,23 @@
     ############################################################################
     # Clean stale nginx configurations and regenerate portal config
 
+    - name: Point Passenger instance registry away from polyinstantiated /tmp
+      # pam_namespace.so (common-session) gives every session -- including
+      # apache's sudo -> nginx_stage PUN launch -- a private /tmp (NFS,
+      # root-squashed). Passenger's watchdog (running as the PUN user with
+      # user_switching off) cannot create its instance registry there, dies,
+      # and the PUN falls back to serving static files from public/ => 403
+      # Forbidden on the dashboard. /var/tmp has the same world-writable +
+      # sticky semantics Passenger expects from /tmp, but is local disk and
+      # not polyinstantiated. Do NOT point this at <%= tmp_root %>: it is
+      # root:root 0755 and Passenger cannot mkdir inside it (EACCES), and a
+      # fresh subdirectory ENOENTs (Passenger does not mkdir -p).
+      lineinfile:
+        path: /opt/ood/nginx_stage/templates/pun.conf.erb
+        regexp: '^\s*passenger_instance_registry_dir'
+        insertafter: '^\s*passenger_temp_path'
+        line: '  passenger_instance_registry_dir /var/tmp;'
+
     - name: Clean OOD nginx stage (remove stale per-user instances)
       command: >
         /opt/ood/nginx_stage/sbin/nginx_stage nginx_clean --force
