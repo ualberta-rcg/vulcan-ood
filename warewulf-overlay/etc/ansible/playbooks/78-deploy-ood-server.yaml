@@ -332,34 +332,48 @@
     ############################################################################
     # Clean stale nginx configurations and regenerate portal config
 
-    - name: Point Passenger instance registry away from polyinstantiated /tmp
-      # pam_namespace.so (common-session) gives every session -- including
-      # apache's sudo -> nginx_stage PUN launch -- a private /tmp (NFS,
-      # root-squashed). Passenger's watchdog (running as the PUN user with
-      # user_switching off) cannot create its instance registry there, dies,
-      # and the PUN falls back to serving static files from public/ => 403
-      # Forbidden on the dashboard. /var/tmp has the same world-writable +
-      # sticky semantics Passenger expects from /tmp, but is local disk and
-      # not polyinstantiated. Do NOT point this at <%= tmp_root %>: it is
-      # root:root 0755 and Passenger cannot mkdir inside it (EACCES), and a
-      # fresh subdirectory ENOENTs (Passenger does not mkdir -p).
-      lineinfile:
-        path: /opt/ood/nginx_stage/templates/pun.conf.erb
-        regexp: '^\s*passenger_instance_registry_dir'
-        insertafter: '^\s*passenger_temp_path'
-        line: '  passenger_instance_registry_dir /var/tmp;'
+    # ── Passenger instance registry: boot-cleared tmpfs ─────────────────────
+    # pam_namespace.so (common-session) polyinstantiates /tmp per session onto
+    # NFS /tmpdirs/<user>, so a PUN launched from a polyinstantiated context
+    # (e.g. an admin's ssh session -> sudo nginx_stage; sudo-to-root INHERITS
+    # the caller's poly /tmp because excluded users are skipped without
+    # unmounting) gets a /tmp its Passenger watchdog cannot write -> watchdog
+    # dies -> PUN serves static public/ -> 403 on the dashboard.
+    #
+    # Put the registry on /run tmpfs instead of /tmp or /var/tmp:
+    #   * /run is never polyinstantiated -> PUN launch works from ANY context
+    #   * /run is rebuilt every boot -> stale passenger.* dirs from hard-killed
+    #     PUNs cannot survive a reboot (no wipe task needed; /var/tmp was a
+    #     trap: it persists warm reboots AND /etc/tmpfiles.d/tmp.conf ages it)
+    #   * no dpkg-owned template is patched: pun.conf.erb renders the
+    #     passenger_options hash from /etc/ood/config/nginx_stage.yml natively
+    # Dead ends (do not retry): <%= tmp_root %> is root:root 0755 -> watchdog
+    # EACCES; a not-yet-existing subdir -> ENOENT (Passenger has no mkdir -p).
 
-    - name: Wipe stale Passenger instance dirs from persistent /var/tmp
-      # /var/tmp is a local-disk partition that SURVIVES reimages. Passenger
-      # instance dirs (passenger.*) left there by hard-killed PUNs (node crash,
-      # nginx_clean --force at provisioning) can contain mixed-ownership files
-      # that Passenger's user-context garbage collector cannot remove, which
-      # can make freshly provisioned PUNs fail app spawn ("Web application
-      # could not be started"). At provisioning no PUN is running yet, so
-      # every passenger.* dir is stale by definition -- wipe them all.
-      # NB: with_fileglob silently skipped in testing; use find like PHASE 4.
-      command: >
-        find /var/tmp -maxdepth 1 -name 'passenger.*' -exec rm -rf {} +
+    - name: Create boot-cleared tmpfs dir for the Passenger instance registry
+      copy:
+        dest: /etc/tmpfiles.d/ondemand-passenger.conf
+        content: |
+          # Passenger instance registry for OOD PUNs (see playbook 78).
+          # Age '-' = never cleaned by systemd-tmpfiles; /run empties at boot.
+          d /run/ondemand-passenger 1777 root root -
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Apply tmpfiles config now (dir must exist before any PUN spawns)
+      command: systemd-tmpfiles --create /etc/tmpfiles.d/ondemand-passenger.conf
+
+    - name: Point Passenger instance registry at the tmpfs dir (nginx_stage.yml)
+      # Runs after the staging sync (PHASE 6), which ships nginx_stage.yml and
+      # must win for its own keys -- this only appends the passenger_options
+      # block, and is idempotent via the blockinfile markers.
+      blockinfile:
+        path: /etc/ood/config/nginx_stage.yml
+        marker: "# {mark} ANSIBLE MANAGED: passenger instance registry (playbook 78)"
+        block: |
+          passenger_options:
+            passenger_instance_registry_dir: "/run/ondemand-passenger"
 
     - name: Clean OOD nginx stage (remove stale per-user instances)
       command: >
