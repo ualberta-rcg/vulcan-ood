@@ -31,7 +31,3 @@ script:
         -# chainforge install). Use the user's choice if they enabled it, else 4 GB. -%>
     <%- memval = (defined?(memtask_checkbox) && memtask_checkbox == "1" && memtask.present? && memtask != "0") ? "#{memtask}G" : "4G" -%>
     - "--mem=<%= memval %>"
-    # Use the same interactive partition as the other Vulcan apps.
-    # No --gres is requested: ChainForge only calls external LLM APIs and needs no GPU.
-    - "--partition=gpubase_interac"
-    - "--qos=interac"
