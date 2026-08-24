@@ -19,6 +19,3 @@ script:
     <%- if defined?(memtask_checkbox) && memtask_checkbox == "1" && memtask.present? && memtask != "0" -%>
     - "--mem=<%= memtask %>G"
     <%- end -%>
-    - "--partition=gpubase_interac"
-    - "--qos=interac"
-
