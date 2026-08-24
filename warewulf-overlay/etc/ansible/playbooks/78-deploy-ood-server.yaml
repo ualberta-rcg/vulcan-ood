@@ -349,6 +349,18 @@
         insertafter: '^\s*passenger_temp_path'
         line: '  passenger_instance_registry_dir /var/tmp;'
 
+    - name: Wipe stale Passenger instance dirs from persistent /var/tmp
+      # /var/tmp is a local-disk partition that SURVIVES reimages. Passenger
+      # instance dirs (passenger.*) left there by hard-killed PUNs (node crash,
+      # nginx_clean --force at provisioning) can contain mixed-ownership files
+      # that Passenger's user-context garbage collector cannot remove, which
+      # can make freshly provisioned PUNs fail app spawn ("Web application
+      # could not be started"). At provisioning no PUN is running yet, so
+      # every passenger.* dir is stale by definition -- wipe them all.
+      # NB: with_fileglob silently skipped in testing; use find like PHASE 4.
+      command: >
+        find /var/tmp -maxdepth 1 -name 'passenger.*' -exec rm -rf {} +
+
     - name: Clean OOD nginx stage (remove stale per-user instances)
       command: >
         /opt/ood/nginx_stage/sbin/nginx_stage nginx_clean --force
