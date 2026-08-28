@@ -18,6 +18,8 @@ script:
     # Shared Vulcan Tyk gateway key (all users). Overridden by a per-user ~/.aleph_tyk.env
     # (TYK_KEY=, created by the aleph-tyk-key PAM hook) in script.sh.erb.
     CF_VULCAN_API_KEY: "<%= vulcan_tyk %>"
+    # Aleph inference API (OpenAI-compatible) behind the Tyk gateway; /v1 is required.
+    CF_VULCAN_BASE_URL: "https://inference.vulcan.alliancecan.ca/v1"
   <% if defined?(bc_email_on_started) && bc_email_on_started == "1" && emailaddr != "" %>
   email: <%= emailaddr.inspect %>
   <% end %>
